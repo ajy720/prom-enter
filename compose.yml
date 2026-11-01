@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    environment:
+      AI_PROVIDER: ${AI_PROVIDER:-demo}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-}
+      DATABASE_PATH: /data/game.sqlite3
+    volumes:
+      - game-data:/data
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - backend
+volumes:
+  game-data:

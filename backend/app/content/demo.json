@@ -1,0 +1,25 @@
+{
+  "version": "demo-1",
+  "notice": "동작 검증용 축약 시나리오입니다. 캐릭터·수치·일부 규칙은 예시이며 프로듀서 확정 설정이 아닙니다. 1 → 6 → 13 → 24개월차로 이동합니다.",
+  "characters": [
+    {"id":"a","name":"연습생 A","tag":"조용한 노력가","description":"말보다 연습으로 자신을 증명한다. 믿을 수 있는 사람에게 조금씩 마음을 연다.","persona":"신중하고 책임감이 강하다. 존댓말을 쓰며 자신을 과시하지 않는다.","color":"#527ac5"},
+    {"id":"b","name":"연습생 B","tag":"솔직한 도전자","description":"무대에 대한 열정이 크다. 솔직한 피드백과 작은 약속을 소중히 여긴다.","persona":"솔직하고 적극적이다. 존댓말을 쓰되 의문과 요구를 구체적으로 표현한다.","color":"#98758f"},
+    {"id":"c","name":"연습생 C","tag":"다정한 관찰자","description":"팀의 분위기를 먼저 살핀다. 자신의 고민을 이야기하는 데는 시간이 필요하다.","persona":"다정하고 눈치가 빠르다. 다른 멤버를 배려하며 조심스럽게 말한다.","color":"#698b7a"}
+  ],
+  "events": [
+    {"id":"m01_training","month":1,"title":"첫 합숙, 첫 번째 선택","subtitle":"데뷔 준비","scene":"연습실","briefing":"신입과 기존 멤버들이 처음으로 합숙을 시작했습니다. 훈련 또는 휴식을 배정하고, 신입의 고민을 들어주세요.","goal":"활동을 한 가지 이상 실행한 뒤 이번 장면을 마무리하세요.","actions":[{"id":"train_variety","label":"예능 훈련","hint":"자금 −4천만 · 피로 +10"},{"id":"rest","label":"휴식 배정","hint":"피로 −15"},{"id":"support","label":"격려하기","hint":"신뢰 +3 · 장면당 1회"},{"id":"finish_event","label":"활동 확정","hint":"6개월차 예능 제안으로"}],"resolver":"training","next":"m06_variety","outcomes":{"success":{"teamwork":5}}},
+    {"id":"m06_variety","month":6,"title":"카메라 앞에 설 준비","subtitle":"첫 예능 제안","scene":"대표실","briefing":"신입에게 예능 출연 제안이 왔습니다. 지금까지의 훈련 기록을 살펴보고 출연 여부를 결정하세요.","goal":"출연 · 다른 멤버 추천 · 거절 중 하나를 확정하세요.","actions":[{"id":"accept_offer","label":"신입 출연","hint":"예능 훈련 이력으로 판정"},{"id":"recommend_other","label":"다른 멤버 추천","hint":"준비된 기존 멤버"},{"id":"decline_offer","label":"이번에는 거절","hint":"중립 결과"},{"id":"support","label":"마음 들어주기","hint":"신뢰 +3 · 장면당 1회"}],"resolver":"variety","next":"m13_rumor","outcomes":{"success":{"awareness":8,"fans":10000,"funds_won":60000000},"failure":{"awareness":-5,"fatigue":10},"neutral":{}}},
+    {"id":"m13_rumor","month":13,"title":"소문 너머의 목소리","subtitle":"과거 논란 조사","scene":"상담실","briefing":"신입의 과거에 대한 글이 퍼지고 있습니다. 성급한 발표에 앞서 기록과 증언을 확인할 수 있습니다.","goal":"서로 다른 증거를 모으고 최종 대응을 결정하세요. 조사 도중에도 결정을 내릴 수 있습니다.","actions":[{"id":"check_sns","label":"SNS 기록 확인","hint":"계정 기록 조사"},{"id":"contact_hana","label":"친구 하나에게 연락","hint":"목격자 증언"},{"id":"check_school","label":"상담 기록 확인","hint":"학교 기록 조사"},{"id":"support","label":"신입 격려","hint":"신뢰 +3 · 장면당 1회"},{"id":"protect_member","label":"조사 결과로 신입 보호","hint":"증거 3개: 성공 · 1~2개: 부분 성공"},{"id":"publish_apology","label":"조사 없이 책임 인정","hint":"실패 경로 확인"}],"resolver":"investigation","next":"m24_contract","outcomes":{"success":{"awareness":-2,"fans":15000,"teamwork":5,"trust":5},"partial":{"awareness":-8,"fans":-10000,"teamwork":-2},"failure":{"awareness":-15,"fans":-50000,"teamwork":-10,"funds_won":-150000000,"fatigue":20}}},
+    {"id":"m24_contract","month":24,"title":"우리의 다음 페이지","subtitle":"계약 종료","scene":"대표실","briefing":"축약 시나리오의 마지막입니다. 지금까지의 성과와 관계를 바탕으로 계약의 결말을 확인합니다.","goal":"계약 결과를 확인하세요.","actions":[{"id":"finish_game","label":"결말 확인","hint":"성과·관계·조사 결과 반영"}],"resolver":"contract","next":null,"outcomes":{}}
+  ],
+  "evidence": [
+    {"id":"sns_block","action_id":"check_sns","event_id":"m13_rumor","title":"SNS 차단 기록","text":"당시 신입 계정에는 상대를 차단한 기록이 있습니다. 신입이 상대에게 호응했다는 주장과 맞지 않습니다."},
+    {"id":"hana_statement","action_id":"contact_hana","event_id":"m13_rumor","title":"친구 하나의 증언","text":"친구 하나는 신입이 상대를 피하며 힘들어했다고 증언했습니다."},
+    {"id":"school_record","action_id":"check_school","event_id":"m13_rumor","title":"담임 상담 기록","text":"원치 않는 접근 때문에 담임에게 상담을 요청한 기록이 확인됐습니다."}
+  ],
+  "endings": [
+    {"id":"together","title":"함께 쓰는 다음 장","description":"성과와 신뢰를 함께 지켰습니다. 프로뮤는 같은 방향으로 다시 출발합니다.","condition":{"min_teamwork":45,"min_trust":40,"investigation":"success"}},
+    {"id":"rebuild","title":"다시, 첫 연습부터","description":"위기의 흔적이 남았습니다. 새로운 출발에는 회복과 관계 정비가 필요합니다.","condition":{"max_teamwork":34}},
+    {"id":"steady","title":"아직 끝나지 않은 이야기","description":"모든 선택이 완벽하지는 않았습니다. 남은 과제를 마주하며 다음 활동을 준비합니다.","condition":{}}
+  ]
+}
