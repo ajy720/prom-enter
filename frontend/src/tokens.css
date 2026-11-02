@@ -1,20 +1,22 @@
 :root {
-  /* User-selected palette: https://coolors.co/palette/ffd6ff-e7c6ff-c8b6ff-b8c0ff-bbd0ff */
-  --pink: #ffd6ff;
-  --orchid: #e7c6ff;
-  --lavender: #c8b6ff;
-  --periwinkle: #b8c0ff;
-  --blue: #bbd0ff;
+  /* Current palette: https://coolors.co/palette/d8e2dc-ffe5d9-ffcad4-f4acb7-9d8189 */
+  --sage: #d8e2dc;
+  --peach: #ffe5d9;
+  --pink: #ffcad4;
+  --rose: #f4acb7;
+  --mauve: #9d8189;
   --white: #ffffff;
-  --ink: #302a46;
-  --ink-muted: #655b79;
-  --accent: #69519b;
+  --ink: #382d32;
+  --ink-muted: #725f66;
+  --accent: #805462;
   --error-ink: #8c294e;
-  --surface: color-mix(in srgb, var(--orchid) 13%, var(--white));
+  --surface: var(--white);
+  --surface-tint: color-mix(in srgb, var(--pink) 12%, var(--white));
+  --pink-soft: color-mix(in srgb, var(--pink) 45%, var(--white));
   --glass: color-mix(in srgb, var(--surface) 92%, transparent);
-  --dialogue-surface: color-mix(in srgb, var(--pink) 48%, var(--white));
-  --choice-surface: color-mix(in srgb, var(--blue) 80%, var(--white));
-  --border: color-mix(in srgb, var(--lavender) 75%, var(--accent));
+  --dialogue-surface: color-mix(in srgb, var(--pink) 9%, var(--white));
+  --choice-surface: color-mix(in srgb, var(--pink) 32%, var(--white));
+  --border: color-mix(in srgb, var(--mauve) 32%, var(--white));
   --scrim: color-mix(in srgb, var(--ink) 38%, transparent);
   --shadow: 0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent);
   --font-body: 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
