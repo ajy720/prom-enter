@@ -1,0 +1,37 @@
+:root {
+  /* User-selected palette: https://coolors.co/palette/ffd6ff-e7c6ff-c8b6ff-b8c0ff-bbd0ff */
+  --pink: #ffd6ff;
+  --orchid: #e7c6ff;
+  --lavender: #c8b6ff;
+  --periwinkle: #b8c0ff;
+  --blue: #bbd0ff;
+  --white: #ffffff;
+  --ink: #302a46;
+  --ink-muted: #655b79;
+  --accent: #69519b;
+  --error-ink: #8c294e;
+  --surface: color-mix(in srgb, var(--orchid) 13%, var(--white));
+  --glass: color-mix(in srgb, var(--surface) 92%, transparent);
+  --dialogue-surface: color-mix(in srgb, var(--pink) 48%, var(--white));
+  --choice-surface: color-mix(in srgb, var(--blue) 80%, var(--white));
+  --border: color-mix(in srgb, var(--lavender) 75%, var(--accent));
+  --scrim: color-mix(in srgb, var(--ink) 38%, transparent);
+  --shadow: 0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent);
+  --font-body: 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  --text-small: 0.8125rem;
+  --text-body: 1rem;
+  --text-dialogue: clamp(1rem, 1.4vw, 1.1875rem);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-small: 10px;
+  --radius-panel: 18px;
+  --radius-dialogue: 24px;
+  --speed-fast: 160ms;
+  --stats-width: 232px;
+  --dialogue-width: 1000px;
+}
