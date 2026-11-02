@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
+import { InterviewHub } from './InterviewHub';
+import { createInterviewState, readInterviewState, type InterviewState } from './interviewState';
 import { debutMembers, newcomers, introAssets, introScenes, type IntroCharacter } from './introContent';
 
 const progressKey = 'prom-intro-v1';
-type IntroProgress = { step: number; nickname: string; selectedId: string | null };
-const initialProgress: IntroProgress = { step: 0, nickname: '', selectedId: null };
+type IntroProgress = { step: number; nickname: string; selectedId: string | null; interviews: InterviewState };
+const initialProgress: IntroProgress = { step: 0, nickname: '', selectedId: null, interviews: createInterviewState() };
 
 export function readIntroProgress(): IntroProgress | null {
   try {
     const value = JSON.parse(localStorage.getItem(progressKey) ?? 'null');
     if (!value || !Number.isInteger(value.step) || value.step < 0 || value.step >= introScenes.length || typeof value.nickname !== 'string') return null;
-    return { step: value.step, nickname: value.nickname.slice(0, 12), selectedId: newcomers.some(c => c.id === value.selectedId) ? value.selectedId : null };
+    return { step: value.step, nickname: value.nickname.slice(0, 12), selectedId: newcomers.some(c => c.id === value.selectedId) ? value.selectedId : null, interviews: readInterviewState(value.interviews) };
   } catch { return null; }
 }
 
@@ -56,7 +58,6 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
   const [storageError, setStorageError] = useState(false);
   const scene = introScenes[progress.step];
   const character = newcomers.find(c => c.id === scene.characterId);
-  const selected = newcomers.find(c => c.id === progress.selectedId);
   const profile = debutMembers.find(c => c.id === profileId)!;
   const nickname = progress.nickname.trim();
   const canAdvance = scene.kind !== 'nickname' || !!nickname;
@@ -66,7 +67,7 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
     catch { setStorageError(true); }
   }, [progress]);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [progress.step]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [progress.step, progress.interviews.activeId]);
 
   function advance() {
     if (canAdvance) setProgress(current => ({ ...current, nickname: current.nickname.trim(), step: Math.min(current.step + 1, introScenes.length - 1) }));
@@ -83,12 +84,11 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
     {scene.kind === 'introduction' && character ? <section className="character-introduction" aria-label={`${character.name} 소개`}>
       <div className="introduction-photo"><PhotoSlot src={character.portrait} name={character.name} caption="반신 사진 자리"/></div>
       <div className="introduction-copy"><p className="section-kicker">MEET OUR TRAINEE · 0{newcomers.indexOf(character) + 1}</p><blockquote>{scene.text}</blockquote><CharacterDetails character={character}/>{navigation}</div>
-    </section> : scene.kind === 'selection' ? <section className="selection-screen">
-      <div className="selection-heading"><p className="section-kicker">첫 번째 면담</p><h1>{scene.title}</h1><p>{scene.text}</p></div>
-      <div className="gallery-layout"><CharacterGallery characters={newcomers} selectedId={progress.selectedId ?? ''} onSelect={id => setProgress(current => ({ ...current, selectedId: id }))}/>
-        <aside className="profile-detail glass-panel" aria-live="polite">{selected ? <><span className="selection-confirmed">면담 상대 선택 완료</span><CharacterDetails character={selected}/><p className="selection-invitation">첫 면담 상대는 <strong>{selected.name}</strong>입니다.</p><button className="quiet-button" onClick={() => setProgress(current => ({ ...current, selectedId: null }))}>선택 취소</button></> : <><p className="section-kicker">대표님의 선택</p><h2>먼저 듣고 싶은<br/>이야기는?</h2><p>사진을 선택하면 연습생의 기본 정보를 다시 확인할 수 있어요.</p></>}</aside>
-      </div>{navigation}
-    </section> : <section className={`intro-scene intro-${scene.location}`} aria-label={scene.title} style={introAssets[scene.location] ? { backgroundImage: `url("${introAssets[scene.location]}")` } : undefined}>
+    </section> : scene.kind === 'selection' ? <InterviewHub state={progress.interviews} selectedId={progress.selectedId} nickname={nickname}
+      onSelect={id => setProgress(current => ({ ...current, selectedId: id }))}
+      onUpdate={update => setProgress(current => ({ ...current, interviews: update(current.interviews) }))}
+      onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}/>
+    : <section className={`intro-scene intro-${scene.location}`} aria-label={scene.title} style={introAssets[scene.location] ? { backgroundImage: `url("${introAssets[scene.location]}")` } : undefined}>
       <div className="intro-location"><span>Prom::Enter</span><strong>{{ office: '대표실', corridor: '복도', practice: '연습실' }[scene.location]}</strong></div>
       <div className="secretary-photo"><PhotoSlot src={introAssets.secretary} name={scene.speaker === '이야기' ? 'Prom::Enter' : '백하연'} caption={scene.speaker === '이야기' ? '대표실 배경 사진 자리' : '대표 비서실장 · 반신 사진 자리'}/></div>
       <div className="intro-dialogue-dock"><section className="dialogue-box"><header className="dialogue-header"><h2>{scene.speaker}</h2><span className="mode-label">{scene.title}</span></header>
