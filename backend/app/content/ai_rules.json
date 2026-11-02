@@ -1,0 +1,16 @@
+{
+  "common_criteria": [
+    {"id":"support","description":"책임을 전가하지 않고 고민을 받아들이거나 구체적으로 지원한다. 부정·가정·인용과 구분한다.","scope":"current","effect":"support"},
+    {"id":"promise","description":"대표가 앞으로 자신이 할 구체적인 보호·조사를 약속한다. 완료나 일반적인 희망과 구분한다.","scope":"current","effect":"promise"}
+  ],
+  "events": {
+    "m01_training": [{"id":"training_plan","description":"훈련 또는 휴식이라는 구체적인 활동을 지정한다.","scope":"event","effect":"record"}],
+    "m06_variety": [{"id":"consider_readiness","description":"출연 확정 전에 준비 이력이나 적합성을 검토하겠다고 명시한다.","scope":"event","effect":"record"}],
+    "m13_rumor": [
+      {"id":"investigate_first","description":"공개 입장 발표에 앞서 기록 또는 증언을 확인하겠다고 명시한다.","scope":"event","effect":"record"},
+      {"id":"protect_member","description":"확인되지 않은 책임을 신입에게 인정시키지 않고 조사 결과로 보호하겠다고 명시한다.","scope":"event","effect":"record"}
+    ]
+  },
+  "action_targets": {"train_variety":"newcomer","rest":"newcomer","support":"newcomer","accept_offer":"newcomer","recommend_other":"secretary","check_sns":"newcomer","contact_hana":"hana","check_school":"school","protect_member":"newcomer","publish_apology":"secretary"},
+  "action_criteria": {"train_variety":["training_plan"],"rest":["training_plan"],"check_sns":["investigate_first"],"contact_hana":["investigate_first"],"check_school":["investigate_first"],"protect_member":["protect_member"]}
+}

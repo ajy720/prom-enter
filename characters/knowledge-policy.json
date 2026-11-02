@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "description": "데모 초기 인지 범위. 성향 문구는 원문 3절에서 가져오며, 누가 알고 시작하는지는 이 정책으로 별도 지정한다. 실제 사건을 목격했다는 뜻은 아니다.",
+  "observable_traits_known_by": {
+    "baek_hayeon": ["baek_hayeon"],
+    "dahyun": ["dahyun", "baek_hayeon", "haram", "yuna"],
+    "haram": ["haram", "baek_hayeon", "dahyun", "yuna"],
+    "yuna": ["yuna", "baek_hayeon", "dahyun", "haram"],
+    "seoyeon": ["seoyeon", "baek_hayeon"],
+    "hyerin": ["hyerin", "baek_hayeon"],
+    "jiwoo": ["jiwoo", "baek_hayeon"]
+  }
+}
