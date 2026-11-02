@@ -19,4 +19,4 @@ build-backend = "setuptools.build_meta"
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["content/*.json"]
+app = ["content/*.json", "ai/prompts/*.txt"]
