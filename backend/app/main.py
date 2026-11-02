@@ -19,10 +19,7 @@ def create_app(database_path=None, provider=None):
     if provider is None:
         mode = os.getenv("AI_PROVIDER", "demo")
         if mode == "openai":
-            key, model = os.getenv("OPENAI_API_KEY"), os.getenv("OPENAI_MODEL")
-            if not key or not model:
-                raise RuntimeError("openai 모드에는 OPENAI_API_KEY와 OPENAI_MODEL이 필요합니다.")
-            provider = OpenAIProvider(key, model)
+            provider = OpenAIProvider.from_env()
         elif mode == "demo":
             provider = DemoProvider()
         else:

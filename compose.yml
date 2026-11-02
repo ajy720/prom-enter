@@ -5,6 +5,7 @@ services:
       AI_PROVIDER: ${AI_PROVIDER:-demo}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_MODEL: ${OPENAI_MODEL:-}
+      OPENAI_REASONING_EFFORT: ${OPENAI_REASONING_EFFORT:-}
       DATABASE_PATH: /data/game.sqlite3
     volumes:
       - game-data:/data
