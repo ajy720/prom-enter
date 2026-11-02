@@ -6,6 +6,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 IDS = ["baek_hayeon", "dahyun", "haram", "yuna", "seoyeon", "hyerin", "jiwoo"]
+# Persisted character/knowledge IDs are stable across the authored name revision.
+ALIASES = dict(zip(["rian", "doha", "sein", "yeoul", "ido", "saya"], IDS[1:]))
 
 
 def compile_profiles(root=ROOT):
@@ -26,7 +28,7 @@ def compile_profiles(root=ROOT):
         source = str(path.relative_to(root))
         # Share company-directory facts, never another character's private persona,
         # narrative arc, initial skills, past, or secret sections.
-        identity_fields = {'이름', '활동명', '나이', '직업', '소속', '연습생 기간', '포지션', '데뷔 여부', '직책'}
+        identity_fields = {'이름', '활동명', '나이', '국적', '출신', '언어 능력', '직업', '소속', '연습생 기간', '포지션', '데뷔 여부', '직책'}
         identity = '\n'.join(line for line in sections[1].splitlines()
                              if line.partition(':')[0].strip() in identity_fields)
         public_roster.append({'id': f'profile:{character_id}:public_identity',
@@ -56,7 +58,8 @@ def compile_profiles(root=ROOT):
                               'source': f'{source}#section-3', 'visibility': 'public',
                               'kind': 'observation', 'initial_known_by': sorted(set(observers)),
                               'disclosure': 'ordinary'})
-    return {"version": 3, "slot_mapping": {"a":"hyerin", "b":"seoyeon", "c":"jiwoo"},
+    return {"version": 4, "slot_mapping": {"a":"hyerin", "b":"seoyeon", "c":"jiwoo"},
+            "aliases": ALIASES,
             "secretary_id":"baek_hayeon", "profiles":profiles,
             'knowledge_policy_source':str(policy_path.relative_to(root)),
             'knowledge_policy_sha256':hashlib.sha256(policy_raw.encode()).hexdigest(),

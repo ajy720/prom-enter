@@ -70,7 +70,7 @@ def test_knowing_secret_does_not_authorize_its_disclosure():
 
 def test_private_reports_are_heard_claims_and_are_not_relayed_to_bystanders():
     s=state(); before=s.stats.model_copy()
-    record_report(s,'혜린의 피로도가 99고 오늘 훈련을 끝냈어',['player','baek_hayeon'],event_id='meeting',turn_id='private-report')
+    record_report(s,'이도의 피로도가 99고 오늘 훈련을 끝냈어',['player','baek_hayeon'],event_id='meeting',turn_id='private-report')
     report=catalog(s)['report:private-report']
     assert report.kind=='report' and report.certainty=='reported' and s.stats==before
     assert may_disclose(s,'baek_hayeon',report,['player','baek_hayeon'])
@@ -86,15 +86,15 @@ def test_private_reports_are_heard_claims_and_are_not_relayed_to_bystanders():
 def test_validated_ordinary_disclosures_teach_only_actual_listeners():
     s=state(); record=catalog(s)['profile:seoyeon:observable_traits']
     assert not knows(s,'hyerin',record)
-    actor=scope_actor(build_dialogue_context(s,[]),s,'서연의 특징','secretary')
+    actor=scope_actor(build_dialogue_context(s,[]),s,'여울의 특징','secretary')
     assert record.id in identities(actor.knowledge)
-    part=validate_dialogue(Dialogue(messages=[Message(speaker_id='secretary',text='서연은 적극적입니다.',emotion='neutral',knowledge_ids=[record.id])]),actor)
+    part=validate_dialogue(Dialogue(messages=[Message(speaker_id='secretary',text='여울은 적극적입니다.',emotion='neutral',knowledge_ids=[record.id])]),actor)
     learn_cited_records(s,part,actor,'public-report')
     learn_cited_records(s,part,actor,'public-report')
     assert not knows(s,'hyerin',record)  # The rest of the profile was not spoken.
     spoken=catalog(s)['speech:public-report:secretary:0']
     assert knows(s,'hyerin',spoken) and not knows(s,'yuna',spoken)
-    assert spoken.text=='서연은 적극적입니다.' and spoken.certainty=='reported'
+    assert spoken.text=='여울은 적극적입니다.' and spoken.certainty=='reported'
     assert len([g for g in s.knowledge_grants if g.character_id=='hyerin' and g.knowledge_id==spoken.id])==1
 
 
@@ -242,7 +242,7 @@ def test_console_switches_keep_learned_information_separate_and_failure_is_atomi
     provider=Capture(); session=PersonaSession(provider,'백하연')
     session.chat('내 별명은 청록별이야. 너에게만 말할게.')
     report=session.state.knowledge_records[-1]
-    session.switch('혜린')
+    session.switch('이도')
     assert report.id not in identities(session.context('청록별 별명').knowledge)
     session.switch('백하연')
     assert report.id in identities(session.context('청록별 별명').knowledge)

@@ -74,7 +74,7 @@ class DemoProvider:
         elif actor.get('phase') == 'ending':
             body='지금까지 함께해주셔서 감사합니다. 우리가 지나온 시간도 기억할게요.'
         elif profile['id'] == 'seoyeon':
-            body='제가 해볼게요! 아직 걱정은 되지만, 같이 방법을 찾아보고 싶어요.'
+            body='제가 해볼게예! 아직 걱정은 되지만, 같이 방법을 찾아보고 싶어요.'
         elif profile['id'] == 'jiwoo':
             body='알겠습니다. 지금 할 수 있는 일부터 정확히 확인하겠습니다.'
         elif profile['id'] == 'baek_hayeon':
