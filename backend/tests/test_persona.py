@@ -2,7 +2,7 @@ import json
 from types import SimpleNamespace
 import pytest
 from app.ai.persona import PersonaSession, resolve_character
-from app.ai.profiles import PROFILES
+from app.ai.profiles import PROFILES, character_profile, profile_id
 from app.ai.providers import OpenAIProvider
 from app.models import Analysis, Dialogue, Message
 
@@ -32,13 +32,13 @@ def test_seven_personas_use_their_own_profile(character_id):
     assert all(record.visibility=='public' for record in actor.knowledge)
     roster={record.character_id:record for record in actor.knowledge if record.id.endswith(':public_identity')}
     assert set(roster)==set(PROFILES)
-    assert '나이: 22세' in roster['dahyun'].text
+    assert '나이: 21세' in roster['dahyun'].text
     assert '기존 데뷔조 확정 멤버' in roster['dahyun'].text
     assert '후보' in roster['hyerin'].text
 
 
 def test_history_switch_and_failed_turn_are_isolated(tmp_path):
-    provider=FakeProvider(); session=PersonaSession(provider,'서연')
+    provider=FakeProvider(); session=PersonaSession(provider,'여울')
     session.chat('내 이름은 테스트대표야')
     session.chat('내가 뭐라고 했지?')
     assert provider.actors[-1].recent_turns[0].text=='내 이름은 테스트대표야'
@@ -57,13 +57,40 @@ def test_history_switch_and_failed_turn_are_isolated(tmp_path):
 
 
 def test_settings_validation_keeps_history_and_valid_values():
-    session=PersonaSession(FakeProvider(),'혜린')
+    session=PersonaSession(FakeProvider(),'이도')
     session.configure(trust=80,fatigue=70)
     with pytest.raises(ValueError): session.configure(trust=101)
     assert session.options.trust==80 and session.options.fatigue==70
     assert resolve_character('0')=='baek_hayeon'
     with pytest.raises(ValueError): session.switch('없는 캐릭터')
     assert session.character_id=='hyerin'
+
+
+@pytest.mark.parametrize('alias,stored_id,name,age', [
+    ('rian','dahyun','리안',21), ('doha','haram','도하',20),
+    ('sein','yuna','세인',19), ('yeoul','seoyeon','여울',17),
+    ('ido','hyerin','이도',16), ('saya','jiwoo','사야',18),
+])
+def test_updated_personas_keep_saved_identity_and_accept_current_names(alias,stored_id,name,age):
+    assert profile_id(alias)==resolve_character(name)==resolve_character(alias)==stored_id
+    profile=character_profile(stored_id)
+    assert character_profile(alias)==profile
+    assert profile.name==name and f'나이: {age}세' in profile.basic_profile
+
+
+def test_current_origin_speech_and_appearance_reach_model_context():
+    yeoul=PersonaSession(FakeProvider(),'여울').context('외모와 말투가 궁금해')
+    assert '경상북도 구미시' in yeoul.character.basic_profile
+    assert '제가 해볼게예' in yeoul.character.speech_style
+    assert '모든 문장에 억지로 넣지는 않는다' in yeoul.character.speech_style
+    assert any('왼쪽에만 약한 보조개' in r.text for r in yeoul.knowledge)
+    saya=PersonaSession(FakeProvider(),'사야').context('외모와 한국어 실력이 궁금해')
+    assert '국적: 일본' in saya.character.basic_profile
+    assert '한국어를 능숙하게 구사한다' in saya.character.speech_style
+    assert any('키는 167cm' in r.text for r in saya.knowledge)
+    roster={r.character_id:r for r in saya.knowledge if r.kind=='identity'}
+    assert '출신: 경상북도 구미시' in roster['seoyeon'].text
+    assert '언어 능력: 일본어가 모국어' in roster['jiwoo'].text
 
 
 @pytest.mark.parametrize('effort',[None,'none','low','medium','high','xhigh','max'])

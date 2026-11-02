@@ -41,7 +41,7 @@ def safe_error(exc):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--character',help='예: 백하연, seoyeon, hyerin 또는 0~6')
+    parser.add_argument('--character',help='예: 백하연, 여울, yeoul, ido, saya 또는 0~6')
     parser.add_argument('--provider',choices=['openai','demo'],default='openai')
     parser.add_argument('--message',help='한 번만 질문하고 종료')
     parser.add_argument('--trust',type=int,default=35)

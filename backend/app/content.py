@@ -12,7 +12,7 @@ for slot, character in CHARACTERS.items():
     profile = character_profile(slot)
     character.update(name=profile.name, persona=profile.persona,
                      description=profile.persona.split("\n")[0], profile_id=profile.id)
-    character["tag"] = {"a":"조심스러운 보컬 연습생", "b":"열정적인 성장형 연습생", "c":"차분한 실력파 연습생"}[slot]
+    character["tag"] = {"a":"무대가 두려운 천재 보컬", "b":"구미 출신 성장형 연습생", "c":"일본 출신 올라운더"}[slot]
 
 
 def public_event(event_id: str):

@@ -7,7 +7,8 @@ PROFILES = {p["id"]: p for p in DATA["profiles"]}
 
 
 def profile_id(slot: str) -> str:
-    return DATA["slot_mapping"].get(slot, slot)
+    selected = DATA["slot_mapping"].get(slot, slot)
+    return DATA.get("aliases", {}).get(selected, selected)
 
 
 def character_profile(slot: str) -> CharacterContext:

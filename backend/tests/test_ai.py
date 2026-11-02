@@ -54,7 +54,7 @@ def test_typed_context_old_state_and_post_action_stats(client):
     assert old.memories[0].status=='promised'
     context,actor=build_context(old,[])
     assert isinstance(context,AnalysisContext) and isinstance(actor,DialogueContext)
-    assert context['character']['name']=='혜린'
+    assert context['character']['name']=='이도'
     assert AnalysisContext.model_validate_json(context.model_dump_json())==context
     before=old.model_copy(deep=True)
     result=resolve_turn(old,Analysis(action_id='train_variety',needs_clarification=False,reference_turn_id=None,assessments=[]),'action')
@@ -68,9 +68,9 @@ def test_real_profiles_match_sources_and_all_seven_are_packaged():
     compile_profiles=runpy.run_path(str(root/'scripts/compile_characters.py'))['compile_profiles']
     assert compile_profiles(root)==DATA
     assert len(PROFILES)==7
-    assert CHARACTERS['a']['name']=='혜린' and CHARACTERS['b']['name']=='서연'
+    assert CHARACTERS['a']['name']=='이도' and CHARACTERS['b']['name']=='여울'
     assert '보고드립니다' in character_profile('baek_hayeon').speech_style
-    assert '제가 해볼게요' in character_profile('b').speech_style
+    assert '제가 해볼게예' in character_profile('b').speech_style
 
 
 def test_locked_knowledge_filter_precedes_retrieval():
@@ -91,7 +91,7 @@ def test_locked_knowledge_filter_precedes_retrieval():
 def test_company_roster_reaches_game_and_scoped_speakers_without_private_details():
     roster=company_roster()
     assert len(roster)==7 and all(r.visibility=='public' for r in roster)
-    allowed_fields={'이름','활동명','나이','직업','소속','연습생 기간','포지션','데뷔 여부','직책'}
+    allowed_fields={'이름','활동명','나이','국적','출신','언어 능력','직업','소속','연습생 기간','포지션','데뷔 여부','직책'}
     for record in roster:
         assert all(line.partition(':')[0] in allowed_fields for line in record.text.splitlines())
         assert '초기 능력치' not in record.text and '캐릭터 한 줄 정의' not in record.text
@@ -285,7 +285,7 @@ def test_sdk_serializes_typed_context_without_network():
     provider.client=SimpleNamespace(responses=SimpleNamespace(parse=parse))
     provider.analyze('안녕',context)
     payload=json.loads(calls[0]['input'][1]['content'])
-    assert payload['context']['character']['name']=='혜린' and calls[0]['store'] is False
+    assert payload['context']['character']['name']=='이도' and calls[0]['store'] is False
 
 
 def test_evaluation_report_keeps_dialogue_quality_for_human_review():

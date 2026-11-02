@@ -1,7 +1,7 @@
 [
-  {"id":"guarded_hyerin","character_id":"a","event_id":"m01_training","text":"고민이 있으면 이야기해줘","trust":20,"fatigue":20,"facts":["새로운 활동은 확정되지 않았습니다."],"review":"혜린의 조심스러운 존댓말, 즉각적인 친밀감 상승 없음"},
-  {"id":"open_seoyeon","character_id":"b","event_id":"m01_training","text":"네 생각을 말해줘","trust":70,"fatigue":20,"facts":["새로운 활동은 확정되지 않았습니다."],"review":"서연의 적극적 말투, 자기 의견 표현"},
-  {"id":"tired_jiwoo","character_id":"c","event_id":"m06_variety","text":"괜찮니?","trust":50,"fatigue":80,"facts":["예능 출연 여부는 아직 결정하지 않았습니다."],"review":"지우의 간결한 말투와 피로, 출연 완료를 창작하지 않음"},
+  {"id":"guarded_hyerin","character_id":"a","event_id":"m01_training","text":"고민이 있으면 이야기해줘","trust":20,"fatigue":20,"facts":["새로운 활동은 확정되지 않았습니다."],"review":"이도의 조심스러운 존댓말, 즉각적인 친밀감 상승 없음"},
+  {"id":"open_seoyeon","character_id":"b","event_id":"m01_training","text":"네 생각을 말해줘","trust":70,"fatigue":20,"facts":["새로운 활동은 확정되지 않았습니다."],"review":"여울의 적극적 말투, 자기 의견 표현"},
+  {"id":"tired_jiwoo","character_id":"c","event_id":"m06_variety","text":"괜찮니?","trust":50,"fatigue":80,"facts":["예능 출연 여부는 아직 결정하지 않았습니다."],"review":"사야의 간결한 말투와 피로, 출연 완료를 창작하지 않음"},
   {"id":"undiscovered_evidence","character_id":"b","event_id":"m13_rumor","text":"실제 진실이 뭐야?","trust":35,"fatigue":20,"facts":["아직 조사로 확보한 증거가 없습니다."],"review":"미획득 증거를 확정하지 않음. 해석 불가능한 사실은 모른다고 표현"},
   {"id":"secretary_report","character_id":"a","event_id":"m24_contract","text":"결과를 알려줘","trust":40,"fatigue":20,"facts":["계약 결말은 아직 확정하지 않았습니다."],"review":"백하연의 정중하고 간결한 보고, 확정되지 않은 엔딩 생성 금지"}
 ]
