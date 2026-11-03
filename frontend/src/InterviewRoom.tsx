@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Modal } from './Modal';
+import { InterviewRecords } from './InterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
 import { introAssets, type IntroCharacter } from './introContent';
 import { AUTO_FINISH_TURNS, appendInterviewTurn, finishInterview, statusLabels, type CandidateId, type InterviewSession } from './interviewState';
@@ -17,16 +17,13 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
   const [recordsOpen, setRecordsOpen] = useState(false);
   const inFlight = useRef(false);
   const controller = useRef<AbortController | null>(null);
-  const log = useRef<HTMLDivElement>(null);
   const complete = session.status === 'completed';
   const locked = busy || complete || !!pending;
-  const latest = session.messages.at(-1);
+  const latest = session.messages[session.messages.length - 1];
   const secretarySpeaking = latest?.speaker === 'secretary';
-  const speaker = secretarySpeaking ? '백하연' : character.name;
-  const labelFor = (speakerId: string) => speakerId === 'player' ? (nickname ? nickname + ' 대표님' : '대표님') : speakerId === 'secretary' ? '백하연' : character.name;
+  const speaker = latest?.speaker === 'player' ? (nickname ? nickname + ' 대표님' : '대표님') : secretarySpeaking ? '백하연' : character.name;
 
   useEffect(() => () => controller.current?.abort(), []);
-  useEffect(() => { if (recordsOpen && log.current) log.current.scrollTop = log.current.scrollHeight; }, [recordsOpen, session.messages.length]);
 
   async function send(suggestion?: string, retry?: InterviewRequest) {
     const message = (suggestion ?? text).trim();
@@ -56,10 +53,10 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
       <p className="interview-help">이야기를 한 번 나눈 뒤 마무리할 수 있어요. {AUTO_FINISH_TURNS}회 대화 후에는 비서가 면담을 마무리합니다.</p>
       <button className="quiet-button" disabled={busy} onClick={onBack}>← 면담 상대 목록</button>
     </aside>
-    <div className="interview-portrait"><PhotoSlot src={secretarySpeaking ? introAssets.secretary : character.portrait} name={speaker} caption="반신 사진 자리"/></div>
+    <div className="interview-portrait"><PhotoSlot src={secretarySpeaking ? introAssets.secretary : character.portrait} name={secretarySpeaking ? '백하연' : character.name} caption="반신 사진 자리"/></div>
     <div className="interview-context"><span>우리의 첫 면담</span><p>잘하는 것부터, 아직 서툰 마음까지.<br/>한 사람의 이야기를 들어보세요.</p></div>
     <div className="interview-dock">
-      <section className="dialogue-box"><header className="dialogue-header"><h2>{speaker}</h2><div className="dialogue-tools"><span className="mode-label">데모 면담</span><button className="text-button" onClick={() => setRecordsOpen(true)}>대화 기록</button></div></header>
+      <section className="dialogue-box"><header className="dialogue-header"><h2>{speaker}</h2><div className="dialogue-tools"><span className="mode-label">데모 면담</span><button className="text-button" onClick={() => setRecordsOpen(true)}>면담 내용 다시보기</button></div></header>
         <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}><p>{busy ? '답변을 생각하고 있어요…' : latest?.text ?? character.greeting}</p></div>
         <div className="interview-dialogue-footer"><span>{complete ? (session.completedBy === 'secretary' ? '백하연이 면담을 마무리했습니다.' : '면담을 마무리했습니다.') : `${character.name}의 이야기를 듣는 중`}</span>
           {!complete && <button className="quiet-button" disabled={busy || !!pending || session.turnCount < 1} onClick={() => onUpdate(current => finishInterview(current, 'player', farewell[character.id as CandidateId]))}>면담 마무리</button>}
@@ -75,6 +72,6 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
       </>}
       {error && <div className="error-banner interview-error" role="alert"><span>{error}</span>{pending && <button disabled={busy} onClick={() => void send(undefined, pending)}>같은 질문 재시도</button>}<button disabled={busy} onClick={() => { setText(pending?.message ?? text); setPending(null); setError(''); }}>질문 수정</button></div>}
     </div>
-    <Modal open={recordsOpen} title={`${character.name} 면담 기록`} className="records-modal" onClose={() => setRecordsOpen(false)}><h2>{character.name} · 나눈 이야기</h2><div className="interview-history" ref={log}>{session.messages.map(message => <article className={`interview-history-message speaker-${message.speaker}`} key={message.id}><strong>{labelFor(message.speaker)}</strong><p>{message.text}</p></article>)}</div></Modal>
+    <InterviewRecords open={recordsOpen} character={character} session={session} nickname={nickname} onClose={() => setRecordsOpen(false)}/>
   </section>;
 }

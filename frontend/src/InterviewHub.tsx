@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { InterviewRoom } from './InterviewRoom';
+import { InterviewRecords } from './InterviewRecords';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { debutMembers, newcomers } from './introContent';
@@ -11,6 +12,8 @@ export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, 
 }) {
   const [recruiting, setRecruiting] = useState(!!state.recruitedId);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [recordsId, setRecordsId] = useState<CandidateId | null>(null);
+  const recordCharacter = newcomers.find(character => character.id === recordsId);
   const selected = newcomers.find(character => character.id === selectedId);
   const recruited = newcomers.find(character => character.id === state.recruitedId);
   const completedCount = candidateIds.filter(id => state.sessions[id].status === 'completed').length;
@@ -37,10 +40,14 @@ export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, 
       return <button key={id} className={`profile-card ${selectedId === id ? 'is-selected' : ''}`} aria-pressed={selectedId === id} onClick={() => onSelect(id)}><span className={`profile-number interview-status status-${state.sessions[id].status}`}>{statusLabels[state.sessions[id].status]}</span><PhotoSlot src={character.profile ?? character.portrait} name={character.name}/><span className="profile-card-label"><strong>{character.name}{state.recruitedId === id ? ' · 영입' : ''}</strong><small>{character.role}</small></span></button>;
     })}</div>
       <aside className="profile-detail glass-panel" aria-live="polite">{recruited && recruiting ? <><p className="section-kicker">WELCOME TO PROM::ENTER</p><h2>{recruited.name}</h2><p>{debutMembers.map(member => member.name).join('·')}과 함께할 네 번째 멤버로 영입했습니다.</p><p>세 사람과 나눈 대화는 면담 기록에서 다시 볼 수 있습니다.</p><button className="quiet-button" onClick={() => setRecruiting(false)}>면담 기록 살펴보기</button></> : selected && isCandidateId(selected.id) ? <><p className="section-kicker">{selected.role}</p><h2>{selected.name}</h2><p className="character-meta">{selected.fullName} · {selected.age}세</p><div className="character-keywords">{selected.keywords.map(keyword => <span key={keyword}>{keyword}</span>)}</div><p className="character-description">{selected.description}</p>
-        {recruiting ? <button className="primary-button" disabled={!eligible || !!state.recruitedId} onClick={() => setConfirmOpen(true)}>{selected.name} 영입하기</button> : <button className="primary-button" onClick={() => openInterview(selected.id as CandidateId)}>{state.sessions[selected.id].status === 'completed' ? '면담 기록 보기' : state.sessions[selected.id].status === 'in_progress' ? '면담 이어하기' : '면담 시작하기'} →</button>}
+        {recruiting ? <button className="primary-button" disabled={!eligible || !!state.recruitedId} onClick={() => setConfirmOpen(true)}>{selected.name} 영입하기</button> : <>
+          {state.sessions[selected.id].status !== 'completed' && <button className="primary-button" onClick={() => openInterview(selected.id as CandidateId)}>{state.sessions[selected.id].status === 'in_progress' ? '면담 이어하기' : '면담 시작하기'} →</button>}
+          {state.sessions[selected.id].messages.length > 0 && <button className="quiet-button" onClick={() => setRecordsId(selected.id as CandidateId)}>면담 내용 다시보기</button>}
+        </>}
       </> : <><p className="section-kicker">대표님의 선택</p><h2>먼저 듣고 싶은<br/>이야기는?</h2><p>사진을 선택해 연습생의 정보를 확인해주세요.</p></>}</aside>
     </div>
     <div className="interview-hub-footer"><button className="quiet-button" onClick={recruiting ? () => setRecruiting(false) : onBack}>{recruiting ? '← 면담 목록' : '← 소개 다시 보기'}</button>{!recruiting && <div><p>{eligible ? '세 명의 면담을 모두 마쳤습니다.' : `남은 면담 ${3 - completedCount}명 · 모두 완료하면 영입이 열립니다.`}</p><button className="primary-button" disabled={!eligible} onClick={() => setRecruiting(true)}>{state.recruitedId ? '영입 결과 보기' : '최종 영입 선택'} →</button></div>}</div>
+    {recordCharacter && recordsId && <InterviewRecords open={true} character={recordCharacter} session={state.sessions[recordsId]} nickname={nickname} onClose={() => setRecordsId(null)}/>}
     <Modal open={confirmOpen} title="최종 영입 확인" className="recruitment-modal" onClose={() => setConfirmOpen(false)}><p className="section-kicker">최종 결정</p><h2>{selected?.name} · 영입을 확정할까요?</h2><p>데뷔조에 합류할 신입 한 명을 확정합니다. 확정 후에는 이번 플레이에서 바꿀 수 없습니다.</p><button className="primary-button" disabled={!eligible || !!state.recruitedId || !selected || !isCandidateId(selected.id)} onClick={() => { if (selected && isCandidateId(selected.id)) { const id = selected.id; onUpdate(current => recruitCandidate(current, id)); setConfirmOpen(false); } }}>영입 확정</button></Modal>
   </section>;
 }
