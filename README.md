@@ -16,6 +16,8 @@ React + TypeScript 화면과 FastAPI 서버를 연결한 실행 가능한 프로
 
 AI 모듈과 웹(프런트·백엔드)을 나누어 개발합니다. 역할과 Git 사용 방법은 [협업 가이드](docs/git-workflow.md), 에이전트가 따를 규칙은 [AGENTS.md](AGENTS.md)를 참고하세요.
 
+웹 담당자는 [프런트엔드 연결 명세](docs/frontend-integration.md)에서 API·상태·대화 상대·사건 도입·오류 처리 규칙과 변경 이력을 확인하세요. 웹에 영향을 주는 기능 변경 시 이 명세도 함께 갱신합니다.
+
 ## 처음 실행
 
 Python 3.12 이상, Node.js 24 LTS, npm이 필요합니다. API 키 없이 기본 데모가 실행됩니다. 아래 명령은 프로젝트 루트에서 실행합니다.
@@ -35,6 +37,8 @@ python3 scripts/dev.py
 설정 변경은 `backend/.env.example`을 `backend/.env`로 복사한 뒤 적용합니다. 수정 후 백엔드를 재시작하세요. 의존성 전체의 검증 시점 버전은 `backend/requirements-dev.lock.txt`와 `frontend/package-lock.json`에 기록합니다.
 
 ## 데모에서 확인할 것
+
+캐릭터 선택 직후와 사건이 바뀔 때 대화창에 **시간·장소·상황·백하연의 설명·이번 선택지**가 표시됩니다. 도입 자체는 모델을 호출하지 않으며, 이전 플레이도 현재 사건의 안내를 복원합니다. 상세 계약은 [사건 도입 문서](docs/event-openings.md)에 있습니다.
 
 1. 연습생 선택 후 **예능 훈련 → 활동 확정 → 신입 출연**을 선택하면 훈련 이력에 따라 성공합니다. 휴식만 하고 신입을 출연시키면 실패합니다.
 2. 조사 장면에서 **SNS 기록·친구 하나·상담 기록**을 확인합니다. 증거 3개를 모아도 사용자가 최종 대응을 고를 때까지 조사가 계속됩니다.
@@ -69,7 +73,7 @@ OPENAI_REASONING_EFFORT=none
 
 `OPENAI_REASONING_EFFORT`는 분석과 대사 생성 모두에 적용됩니다. 빈 값이면 모델 기본값을 사용하고, `none`은 추론을 사용하지 않도록 명시하는 값입니다. 허용 값은 모델마다 다르며, 현재 예시 모델 `gpt-6-luna`는 `none`, `low`, `medium`, `high`, `xhigh`, `max`를 지원합니다. 설정 변경 후 서버나 콘솔을 다시 시작하세요. [OpenAI 모델 문서](https://developers.openai.com/api/docs/models/gpt-6-luna)
 
-OpenAI 모드의 공개 자유 입력은 분석 1회와 화자별 대사 생성 2회로 총 3회, 선택지는 생성 2회입니다. 1:1 대화와 캐릭터 콘솔은 생성 1회입니다. 서로 다른 인물의 지식을 한 모델 요청에 합치지 않습니다. `responses.parse`와 Pydantic 형식을 사용하고, 거절·불완전 출력·시간 초과는 저장 전 실패로 처리합니다. 실패를 데모 답변으로 바꾸지 않습니다. `store=False`, 요청당 25초 제한, SDK 자동 재시도 0회로 시작합니다. 이 값과 모델 설정은 실제 품질·지연·비용을 확인한 뒤 조정하세요.
+OpenAI 모드의 일반 공개 자유 입력은 분석 1회와 화자별 대사 생성 2회로 총 3회, 선택지는 생성 2회입니다. 1:1 대화와 캐릭터 콘솔의 일반 입력은 해석 1회 + 생성 1회입니다. 자연어 상대 전환과 대상 되묻기는 해석 1회만 호출하고, 명시적 상대 선택은 호출하지 않습니다. 서로 다른 인물의 지식을 한 모델 요청에 합치지 않습니다. `responses.parse`와 Pydantic 형식을 사용하고, 거절·불완전 출력·시간 초과는 저장 전 실패로 처리합니다. 실패를 데모 답변으로 바꾸지 않습니다. `store=False`, 요청당 25초 제한, SDK 자동 재시도 0회로 시작합니다. 이 값과 모델 설정은 실제 품질·지연·비용을 확인한 뒤 조정하세요.
 
 참고한 API 계약: [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
 
@@ -82,7 +86,7 @@ OpenAI 모드의 공개 자유 입력은 분석 1회와 화자별 대사 생성 
 backend/.venv/bin/python scripts/chat_character.py --check
 backend/.venv/bin/python scripts/chat_character.py --list
 
-# 실제 모델로 대화: 질문마다 생성 요청 1회 과금
+# 실제 모델로 대화: 일반 입력은 해석 1회 + 생성 1회 과금
 backend/.venv/bin/python scripts/chat_character.py --character 백하연
 backend/.venv/bin/python scripts/chat_character.py --character 여울
 
@@ -97,6 +101,8 @@ backend/.venv/bin/python scripts/chat_character.py --character 이도 --message 
 대화 맥락과 인물별 지식은 실행 중 유지됩니다. 스탯은 자동으로 변하지 않고 게임 사건·보상·엔딩·DB 저장을 실행하지 않습니다. 숨겨진 과거사 자료는 잠긴 상태이며, 저장한 JSON을 불러와 이어 하는 기능은 없습니다. `/profile`·`/knowledge`와 JSON 내보내기는 개발용이며 플레이어용 화면에 노출하는 기능이 아닙니다.
 
 회사 공통 인물 정보(이름·설정상 나이·포지션·기존 데뷔조/신입 후보 구분)는 모든 대화에 전달합니다. 백하연에게 `멤버들 이름, 나이, 포지션을 정리해줘`라고 물어 확인할 수 있습니다. 콘솔에는 다른 멤버의 오늘 피로도나 훈련 진행 상태가 없으므로, 이런 최신 현황은 만들어 답하지 않습니다.
+
+`사야랑 얘기하고 싶어`, `백 실장 연결해줘`처럼 자연어로도 콘솔 상대를 바꿀 수 있습니다. 성공하면 `[시스템] 대화 상대를 변경했습니다`를 출력하고 다음 입력부터 새 인물이 답합니다. `사야 특징 알려줘`처럼 인물을 언급한 것만으로는 바꾸지 않고, `연결해줘`처럼 모호하면 상대를 되묻습니다. 콘솔은 7명 모두와 1:1 대화할 수 있으며 공개 그룹 대화는 지원하지 않습니다.
 
 성향 정보는 인물별로 다릅니다. 초기 인지 범위는 [knowledge-policy.json](characters/knowledge-policy.json)에서 수정하고 `scripts/compile_characters.py`를 다시 실행합니다. 예를 들어 백하연에게만 별명을 알려준 뒤 `/character 이도`로 바꾸면 이도는 그 발언을 전달받지 않습니다. 자세한 권한·정보 습득·공개 조건은 [인물별 지식 시스템](docs/character-knowledge.md)에 있습니다.
 
@@ -121,10 +127,14 @@ CharacterDirector는 `ai/director.py`, 기억 선택·약속 이행은 `ai/memor
 
 ## API와 저장
 
+- 현재 대화방은 `conversation`으로 반환합니다. 육성 대상 `character`와 구분하며, 대화방 ID·모드·대상·참여자 이름·선택 가능한 상대가 포함됩니다. 생성·조회 응답은 `conversation`, 턴 응답은 `game.conversation`을 기준으로 화면을 갱신합니다.
+- 사건 도입은 `event_openings`로 반환합니다. 시작 안내는 대화 앞에, 다음 사건 안내는 `after_turn_id`가 가리키는 결과 턴 뒤에 표시합니다. 일반 턴과 분리해 저장하므로 사용자 입력이나 행동 근거로 취급하지 않습니다.
+- 웹 대화창의 **대화 상대** 선택에서 함께 대화 / 현재 신입과 1:1 / 백하연과 1:1로 전환합니다. 서버가 전환을 확정한 뒤 표시하며 새로고침 후에도 복원합니다. 세부 계약과 예시는 [대화 세션 문서](docs/conversation-session.md)를 참고하세요.
 - `POST /api/games`: `character_id`로 생성. HttpOnly·SameSite 쿠키로 익명 소유자를 구분합니다.
 - `GET /api/games/{id}`: 이 브라우저 소유 플레이의 상태와 대화 복원.
 - `POST /api/games/{id}/turns`: `request_id`, `state_version`, `input_type`, `text` 또는 `action_id`.
-- 자유 대화에 선택 항목 `recipient_id`를 지정하면 현재 신입 또는 백하연과 1:1 대화합니다. 생략하면 두 인물이 함께 듣습니다. 웹에는 아직 대상 선택 UI가 없으며 [API 예시](docs/character-knowledge.md)에 설명했습니다.
+- 지속되는 상대 변경은 턴 API에 `input_type=conversation`, `conversation_mode`, `target_character_id`로 요청합니다. 자유 입력의 자연어 전환 의도도 해석 후 동일한 서버 검증·저장 경로로 연결합니다. 이후 입력은 저장된 방을 사용합니다. 프런트의 명시적 선택은 모델을 호출하지 않습니다.
+- 기존 `recipient_id`는 이번 자유 대화만 대상을 지정하는 호환 경로입니다. 저장된 대화방은 바꾸지 않으며 실제 턴의 청중은 `turn.conversation`에 표시합니다.
 - 서버가 실제 상태를 읽고 계산합니다. 브라우저가 보낸 스탯은 사용하지 않습니다.
 - 같은 요청 ID와 같은 내용은 저장된 턴을 재사용합니다. 같은 ID를 다른 내용에 재사용하면 409입니다.
 - 상태 버전 검사·상태 변경·응답 기록은 한 트랜잭션입니다. 모델 호출 중 DB 쓰기 잠금을 잡지 않습니다.

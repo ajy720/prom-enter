@@ -1,4 +1,5 @@
 from app.models import Analysis, Dialogue
+from app.ai.routing import CLARIFY_TARGET, PRIVATE_ONLY, validate_intent
 
 
 def validate_analysis(analysis: Analysis, text: str, context) -> Analysis:
@@ -8,6 +9,15 @@ def validate_analysis(analysis: Analysis, text: str, context) -> Analysis:
     turns = {t['id']:t for t in context.get('recent_turns',[]) + context.get('related_turns',[])}
     if analysis.reference_turn_id is not None and analysis.reference_turn_id not in turns:
         raise ValueError('Model invented a conversation reference')
+    if analysis.conversation_change is not None:
+        routing=context.get('conversation')
+        if routing is None:
+            raise ValueError('Conversation routing context is missing')
+        intent=validate_intent(analysis.conversation_change,text,routing)
+        question=PRIVATE_ONLY if analysis.conversation_change.mode=='public' and not routing['supports_public'] else CLARIFY_TARGET
+        return analysis.model_copy(update={'action_id':'talk','target_id':None,'assessments':[],
+            'promised_action_id':None,'conversation_change':intent,'needs_clarification':intent.needs_clarification,
+            'clarification_question':question if intent.needs_clarification else None})
     specs = {c['id']:c for c in context.get('criteria',[])}
     if not specs:
         specs = {k:{'scope':'current'} for k in ('support','promise')}
@@ -46,6 +56,8 @@ def validate_dialogue(dialogue: Dialogue, actor) -> Dialogue:
         raise ValueError('A private speaker must return exactly one message')
     facts = set(actor.get('resolved_facts',{}))
     knowledge = {r['id'] for r in actor.get('knowledge',[])} | {e['id'] for e in actor.get('known_evidence',[])}
+    if actor.get('event_opening') is not None:
+        knowledge.add(actor['event_opening']['id'])
     checked = []
     for message in dialogue.messages:
         if message.speaker_id not in actor['allowed_speakers']:

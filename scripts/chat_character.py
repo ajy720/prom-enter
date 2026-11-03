@@ -75,11 +75,13 @@ def main():
         # Local configuration errors contain only our fixed messages, not SDK payloads.
         print(str(exc),file=sys.stderr); return 2
     print(f"[{session.profile.name}] {provider.name} / 모델 {getattr(provider,'model','없음')} / effort {getattr(provider,'reasoning_effort',None) or '미지정'}")
-    print('실제 모델 모드: 질문마다 생성 요청 1회가 과금됩니다.' if provider.name=='openai' else '데모 모드: 실제 AI 페르소나 품질을 검증하는 응답이 아닙니다.')
+    print('실제 모델 모드: 일반 대화는 입력 해석 1회 + 생성 1회, 상대 전환·대상 확인은 해석 1회가 과금됩니다.' if provider.name=='openai' else '데모 모드: 실제 AI 페르소나 품질을 검증하는 응답이 아닙니다.')
 
     def ask(text):
         try:
             dialogue=session.chat(text)
+            if dialogue.kind=='conversation_change':
+                print(f'\n[시스템] {dialogue.notice}\n')
             for message in dialogue.messages:
                 print(f'\n{session.profile.name}: {message.text}\n')
             return True

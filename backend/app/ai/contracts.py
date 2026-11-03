@@ -2,7 +2,7 @@
 from collections.abc import Iterator, Mapping
 from typing import Any, Literal, Protocol
 from pydantic import Field
-from app.models import Analysis, Dialogue, Direction, KnowledgeRecord, Model, Stats
+from app.models import Analysis, Dialogue, Direction, EventOpening, KnowledgeRecord, Model, Stats
 
 
 class ContextModel(Model, Mapping[str, Any]):
@@ -71,6 +71,20 @@ class MemoryContext(Model):
     action_id: str | None = None
 
 
+class RoutingTarget(Model):
+    id: str
+    name: str
+    aliases: list[str] = Field(default_factory=list)
+    available: bool = True
+
+
+class RoutingContext(Model):
+    current_character_id: str | None = None
+    supports_public: bool = True
+    targets: list[RoutingTarget] = Field(default_factory=list)
+    pending_target_selection: bool = False
+
+
 class AnalysisContext(ContextModel):
     event: EventContext
     allowed_actions: list[str]
@@ -87,6 +101,9 @@ class AnalysisContext(ContextModel):
     criterion_progress: dict[str, str]
     allowed_targets: list[str]
     related_turns: list[TurnContext] = Field(default_factory=list)
+    conversation: RoutingContext | None = None
+    conversation_only: bool = False
+    event_opening: EventOpening | None = None
 
 
 class DialogueContext(ContextModel):
@@ -110,6 +127,8 @@ class DialogueContext(ContextModel):
     audience_ids: list[str] = Field(default_factory=lambda: ['player'])
     output_audience: list[Literal['newcomer', 'secretary']] | None = None
     disclosure_guidance: list[str] = Field(default_factory=list)
+    conversation: RoutingContext | None = None
+    event_opening: EventOpening | None = None
 
 
 class AIProvider(Protocol):

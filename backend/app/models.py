@@ -83,6 +83,37 @@ class DisclosureGrant(Model):
     source_turn_id: str
 
 
+class Conversation(Model):
+    id: str
+    mode: Literal['public', 'private']
+    target_character_id: str | None = None
+    participant_ids: list[str]
+
+
+class OpeningMessage(Model):
+    character_id: str
+    name: str
+    text: str
+
+
+class OpeningChoice(Model):
+    id: str
+    label: str
+
+
+class EventOpening(Model):
+    id: str
+    event_id: str
+    after_turn_id: str | None = None
+    month: int
+    title: str
+    scene: str
+    narration: str
+    messages: list[OpeningMessage]
+    goal: str
+    choices: list[OpeningChoice]
+
+
 class State(Model):
     game_id: str
     character_id: str
@@ -102,6 +133,8 @@ class State(Model):
     knowledge_records: list[KnowledgeRecord] = Field(default_factory=list)
     knowledge_grants: list[KnowledgeGrant] = Field(default_factory=list)
     disclosure_grants: list[DisclosureGrant] = Field(default_factory=list)
+    conversation: Conversation | None = None
+    event_openings: list[EventOpening] = Field(default_factory=list)
 
 
 class CreateGame(Model):
@@ -111,10 +144,12 @@ class CreateGame(Model):
 class TurnRequest(Model):
     request_id: str = Field(min_length=8, max_length=100)
     state_version: int = Field(ge=0)
-    input_type: Literal["chat", "action"]
+    input_type: Literal["chat", "action", "conversation"]
     text: str = Field(default="", max_length=2000)
     action_id: str | None = Field(default=None, max_length=60)
     recipient_id: str | None = Field(default=None, max_length=40)
+    conversation_mode: Literal['public', 'private'] | None = None
+    target_character_id: str | None = Field(default=None, max_length=40)
 
 
 class Assessment(Model):
@@ -122,6 +157,13 @@ class Assessment(Model):
     status: Literal["met", "not_met", "unclear"]
     quote: str
     source_turn_id: str | None = None
+
+
+class ConversationIntent(Model):
+    mode: Literal['public', 'private'] | None = None
+    target_character_id: str | None = None
+    quote: str = Field(min_length=1, max_length=2000)
+    needs_clarification: bool = False
 
 
 class Analysis(Model):
@@ -133,6 +175,7 @@ class Analysis(Model):
     target_id: str | None = None
     clarification_question: str | None = Field(default=None, max_length=300)
     promised_action_id: str | None = None
+    conversation_change: ConversationIntent | None = None
 
 
 class Direction(Model):
