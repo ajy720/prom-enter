@@ -2,6 +2,9 @@ import json
 from pathlib import Path
 
 CONTENT = json.loads((Path(__file__).parent / "content" / "demo.json").read_text())
+PART2 = json.loads((Path(__file__).parent / "content" / "part2.json").read_text())
+CONTENT['events'].extend(PART2['events'])
+CONTENT['endings'].append(PART2['ending'])
 EVENTS = {e["id"]: e for e in CONTENT["events"]}
 CHARACTERS = {c["id"]: c for c in CONTENT["characters"]}
 EVIDENCE = {e["id"]: e for e in CONTENT["evidence"]}

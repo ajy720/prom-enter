@@ -11,6 +11,14 @@ from app.ai.routing import routing_context
 from app.game.openings import openings_for_view
 
 
+def participant_history(state: State, history: list[dict], roles: list[str]) -> list[dict]:
+    """Role slots can represent different candidates; compare actual identities."""
+    required = {people(state)[role] for role in roles}
+    return [turn for turn in history if not turn.get('conversation') or required <= {
+        person['id'] for person in turn['conversation']['participants']
+    }]
+
+
 def build_context(state: State, history: list[dict], query: str = '', *, conversation=None) -> tuple[AnalysisContext, DialogueContext]:
     event = EVENTS[state.event_id]
     character = character_profile(state.character_id)
@@ -19,6 +27,7 @@ def build_context(state: State, history: list[dict], query: str = '', *, convers
     room=conversation or current_conversation(state)
     roles=roles_for(state,room)
     private=room.mode=='private'
+    history = participant_history(state, history, roles)
     if private:
         actions=[]; criteria=[]
         character=character_profile(room.target_character_id)
@@ -99,6 +108,7 @@ def scope_actor(actor: DialogueContext, state: State, query: str, role: str,
                            or all(knows(state,person,records[f"evidence:{item['id']}"])
                                   for person in view.audience_ids)]
     source = history if history is not None else history_for_actor(actor)
+    source = participant_history(state, source, group)
     view.recent_turns = recent_turns(source, speaker=role, audience=group)
     view.related_turns = related_turns(source,query,{t.id for t in view.recent_turns},speaker=role,audience=group)
     return view

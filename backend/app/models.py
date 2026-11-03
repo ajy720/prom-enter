@@ -139,6 +139,7 @@ class State(Model):
 
 class CreateGame(Model):
     character_id: str = Field(max_length=40)
+    scenario: Literal['demo', 'part2'] = 'demo'
 
 
 class TurnRequest(Model):

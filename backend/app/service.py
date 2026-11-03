@@ -16,10 +16,13 @@ class TurnService:
     def __init__(self, repository, provider):
         self.repository, self.provider = repository, provider
 
-    def create(self, owner, character_id):
+    def create(self, owner, character_id, scenario='demo'):
         if character_id not in CHARACTERS:
             raise GameError("캐릭터를 선택해주세요.", 422)
         state = State(game_id=str(uuid.uuid4()), character_id=character_id)
+        if scenario == 'part2':
+            state.event_id = 'p2_interview_a'
+            state.character_id = 'a'
         state.conversation = make_conversation(state)
         ensure_opening(state,[])
         self.repository.create(state, owner)
@@ -104,7 +107,9 @@ class TurnService:
                 analysis = analysis.model_copy(update={'action_id':'talk','target_id':None,
                                                        'assessments':[],'promised_action_id':None})
         proposal = resolve_turn(state, analysis, request.request_id)
-        proposal.state.conversation = current_conversation(state)
+        changed_character = proposal.state.character_id != state.character_id
+        if not changed_character:
+            proposal.state.conversation = current_conversation(state)
         if proposal.state.event_id != state.event_id:
             ensure_opening(proposal.state,history,after_turn_id=request.request_id)
         if request.input_type == 'chat':
@@ -115,14 +120,20 @@ class TurnService:
         if not analysis.needs_clarification:
             advance_mood(state,proposal.state,proposal.outcome)
         direction = character_direction(proposal.state, proposal.outcome)
+        # The departing candidate answers the completed interview; the next
+        # candidate arrives in the separately saved opening, never in that reply.
+        acting_state = proposal.state.model_copy(deep=True)
+        if changed_character:
+            acting_state.character_id = state.character_id
+            acting_state.conversation = room
         actor_context = build_dialogue_context(
-            proposal.state, history, text, result_event_id=state.event_id,
+            acting_state, history, text, result_event_id=state.event_id,
             outcome=proposal.outcome, facts=proposal.facts, clarification=analysis.needs_clarification,
             speaker_roles=roles,
         )
         actor_context.input_kind = analysis.utterance_kind
         actor_context.clarification_question = analysis.clarification_question
-        views = {role:scope_actor(actor_context,proposal.state,text,role,history) for role in actor_context.allowed_speakers}
+        views = {role:scope_actor(actor_context,acting_state,text,role,history) for role in actor_context.allowed_speakers}
         messages=[]
         # Even ordinary observations can be known to only one person. Never send
         # two characters' personas or knowledge in the same generation request.
@@ -134,7 +145,7 @@ class TurnService:
         proposal.state.version += 1
         turn = {
             "id": request.request_id, "input": text, "event_id": event["id"], "event_title": event["title"],
-            'kind':'dialogue', 'conversation':conversation_view(proposal.state,room),
+            'kind':'dialogue', 'conversation':conversation_view(state,room),
             'input_audience':roles,
             "messages": [m.model_dump() for m in dialogue.messages],
             "analysis": analysis.model_dump(), "direction": direction.model_dump(),
