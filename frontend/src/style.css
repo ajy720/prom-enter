@@ -385,6 +385,32 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
 .dialogue-history-navigation { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); padding: var(--space-2) 0; }
 .dialogue-history-navigation > span { margin-right: auto; font-size: 11px; color: var(--ink-muted); }
 .dialogue-history-navigation .text-button { font-size: 12px; }
+.resource-status { min-width: 0; }
+.remaining-time { padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-left: 3px solid var(--pink); border-radius: var(--radius-small); background: var(--white); }
+.remaining-time > span { display: block; font-size: 11px; color: var(--ink-muted); }
+.remaining-time strong { display: block; margin-top: var(--space-1); font-size: 24px; }
+.remaining-time strong small { margin-left: var(--space-1); font-size: 12px; font-weight: 400; }
+.remaining-time p { font-size: 11px; color: var(--ink-muted); line-height: 1.7; margin: var(--space-1) 0 0; }
+.scene-resource-status { position: absolute; top: var(--space-4); right: var(--space-6); width: 160px; z-index: 2; }
+.character-introduction { position: relative; }
+.resource-status-compact { display: grid; gap: 4px; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-small); background: var(--glass); }
+.resource-status-compact > p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--ink-muted); }
+.resource-status-compact > p strong { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.scene-resource-status ~ .interview-context { top: 150px; }
+.character-introduction:has(.scene-resource-status) .introduction-copy { padding-top: 130px; }
+.resource-notice-modal { padding-top: var(--space-7); }
+.resource-notice-modal > p { line-height: 1.9; }
+.resource-notice-modal > small { display: block; color: var(--ink-muted); line-height: 1.7; }
+.resource-notice-modal > .primary-button { margin-top: var(--space-4); }
+
+.company-funds { margin: var(--space-3) 0; padding: var(--space-3) var(--space-4); border: 1px solid var(--border); border-left: 3px solid #f2c94c; border-radius: var(--radius-small); background: var(--white); }
+.company-funds > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.company-funds span { font-size: 12px; color: var(--ink-muted); }
+.company-funds strong { font-size: 24px; font-variant-numeric: tabular-nums; }
+.company-funds strong small { margin-left: var(--space-1); font-size: 12px; font-weight: 400; }
+.company-funds p { margin: var(--space-1) 0 0; font-size: 11px; color: var(--ink-muted); line-height: 1.7; }
+.company-funds.is-warning { border-left-color: #e74c3c; }
+.company-funds.is-warning strong, .company-funds.is-warning p { color: #e74c3c; }
 .team-status-summary { margin: var(--space-4) 0; }
 .team-status-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .team-status-value { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
@@ -559,4 +585,36 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
   .interview-dock .chat-composer .primary-button { margin-left: auto; }
   .interview-complete { flex-direction: column; align-items: stretch; }
   .interview-complete .primary-button { font-size: 13px; }
+}
+
+/* Reserve a row for resources before portraits and dialogue on narrow screens. */
+@media (max-width: 1000px) {
+  .scene-resource-status { position: static; width: 150px; max-width: 100%; justify-self: end; align-self: flex-end; margin: var(--space-3); }
+  .resource-status-compact { gap: 2px; padding: 8px 10px; }
+  .resource-status-compact > p { font-size: 12px; }
+
+  .intro-scene:not(.recruitment-briefing):has(> .scene-resource-status) { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto minmax(250px, 1fr) auto; align-items: start; }
+  .intro-scene > .scene-resource-status { position: static; grid-column: 2; grid-row: 1; }
+  .intro-scene:has(> .scene-resource-status) > .intro-location { position: static; grid-column: 1; grid-row: 1; justify-self: start; margin: var(--space-3); padding: var(--space-2); }
+  .intro-scene:has(> .scene-resource-status) > .secretary-photo { grid-column: 1 / -1; grid-row: 2; margin: var(--space-3) auto 0; }
+  .intro-scene:has(> .scene-resource-status) > .intro-dialogue-dock { grid-column: 1 / -1; grid-row: 3; }
+
+  .recruitment-briefing > .scene-resource-status { position: static; grid-column: 1 / -1; grid-row: 1; }
+  .recruitment-briefing > .formation-status, .recruitment-briefing > .secretary-photo { grid-row: 2; }
+
+  .interview-room:has(> .scene-resource-status) { display: flex; flex-direction: column; }
+  .interview-room:has(> .scene-resource-status) > .scene-resource-status { position: static; margin: 0 0 var(--space-3) auto; }
+  .interview-room:has(> .scene-resource-status) > .interview-info { position: static; width: 100%; }
+  .interview-room:has(> .scene-resource-status) > .interview-portrait { position: relative; inset: auto; height: 260px; margin: var(--space-3) var(--space-6) 0; }
+  .interview-room:has(> .scene-resource-status) > .interview-context { display: none; }
+  .interview-room:has(> .scene-resource-status) > .interview-dock { margin-top: var(--space-3); }
+
+  .character-introduction:has(> .scene-resource-status) { grid-template-rows: auto auto; }
+  .character-introduction > .scene-resource-status { position: static; grid-column: 1 / -1; grid-row: 1; }
+  .character-introduction:has(> .scene-resource-status) > .introduction-photo { grid-column: 1; grid-row: 2; padding-top: var(--space-3); }
+  .character-introduction:has(> .scene-resource-status) > .introduction-copy { grid-column: 2; grid-row: 2; padding-top: var(--space-5); }
+}
+@media (max-width: 700px) {
+  .character-introduction:has(> .scene-resource-status) { grid-template-columns: minmax(0, 1fr); }
+  .character-introduction:has(> .scene-resource-status) > .introduction-copy { grid-column: 1; grid-row: 3; }
 }

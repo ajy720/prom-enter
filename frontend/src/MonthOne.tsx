@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { useDialogueHistory } from './DialogueNavigation';
 import { TeamStatus } from './TeamStatus';
+import { ResourceStatus } from './ResourceStatus';
 import { debutMembers, introAssets, type IntroCharacter } from './introContent';
 import type { CandidateId } from './interviewState';
 import { dormRules, monthQuestions, monthReply, trainingOptions } from './monthOneContent';
@@ -52,6 +53,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   return <div className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
     <section className="interview-room month-one" aria-label="1개월차 어색한 첫 합숙" style={introAssets.practice ? { backgroundImage: `url("${introAssets.practice}")`, backgroundSize: 'cover' } : undefined}>
+    <div className="scene-resource-status"><ResourceStatus compact/></div>
       <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
 
         <TeamStatus/>
