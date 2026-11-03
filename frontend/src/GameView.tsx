@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
+import { DialogueNavigation, useDialogueHistory } from './DialogueNavigation';
 import type { Game, Stats, TurnInput } from './types';
 
-const labels: Record<keyof Stats, string> = { teamwork: '팀워크', fatigue: '피로도', trust: '신뢰', awareness: '인지도', fans: '팬', funds_won: '자금' };
+const labels: Record<keyof Stats, string> = { teamwork: '팀워크', fatigue: '스트레스·피로도', trust: '신뢰', awareness: '인지도', fans: '팬 수', funds_won: '자금' };
 const outcomes: Record<string, string> = { pending: '대화 중', success: '성공', partial: '부분 성공', failure: '실패', neutral: '보류', ending: '결말' };
 const emotions: Record<string, string> = { anxious: '조심스러운 마음', hopeful: '조금씩 열리는 마음', tired: '잠시 쉬어갈 시간', relieved: '안도하는 마음' };
 const format = (key: keyof Stats, value: number) => key === 'funds_won' ? `${(value / 100000000).toFixed(1)}억` : value.toLocaleString();
@@ -31,16 +32,20 @@ export function GameView({ game, busy, pending, error, text, onTextChange, onSen
   const [choicesOpen, setChoicesOpen] = useState(decisionScenes.has(game.event.id) && !game.ending);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [recordPanel, setRecordPanel] = useState<'history' | 'memory' | 'evidence' | 'system'>('history');
-  const [messageIndex, setMessageIndex] = useState(0);
   const last = game.history.at(-1);
-  const emotion = last?.direction.emotion ?? 'anxious';
-  const messages = last?.messages.length ? last.messages : [{ speaker_id: 'secretary', text: game.event.briefing, emotion: 'neutral' }];
-  const index = Math.min(messageIndex, messages.length - 1);
-  const message = messages[index];
-  const speaker = message.speaker_id === 'secretary' ? '비서' : game.character.name;
-  const locked = busy || !!pending || !!game.ending;
+  const recorded = game.history.flatMap(turn => [
+    { speaker_id: 'player', text: turn.input, emotion: 'neutral', image: turn.image },
+    ...turn.messages.map(message => ({ ...message, image: turn.image })),
+  ]);
+  const messages = recorded.length ? recorded : [{ speaker_id: 'secretary', text: game.event.briefing, emotion: 'neutral', image: '/portraits/anxious.svg' }];
+  const frames = game.ending ? [...messages, { speaker_id: 'secretary', text: game.ending.description, emotion: 'relieved', image: last?.image }] : messages;
+  const history = useDialogueHistory(frames.length, game.game_id);
+  const index = history.index;
+  const message = frames[index];
+  const emotion = message.emotion ?? 'anxious';
+  const speaker = message.speaker_id === 'player' ? '대표님' : message.speaker_id === 'secretary' ? '비서' : game.character.name;
+  const locked = busy || !!pending || !!game.ending || history.reviewing;
 
-  useEffect(() => { setMessageIndex(0); }, [last?.id]);
   useEffect(() => { setChoicesOpen(decisionScenes.has(game.event.id) && !game.ending); }, [game.event.id, game.ending]);
 
   async function choose(actionId: string) {
@@ -56,24 +61,24 @@ export function GameView({ game, busy, pending, error, text, onTextChange, onSen
       <div className="scene-heading glass-panel"><p>{String(game.event.month).padStart(2, '0')}개월차 <span>· {game.event.scene}</span></p><h1>{game.event.title}</h1><span>{game.event.subtitle}</span></div>
       <div className="character-stage">
         <div className="character-halo" aria-hidden="true"/>
-        <img className="character-portrait" src={last?.image ?? '/portraits/anxious.svg'} alt={`${game.character.name}, ${emotions[emotion]}`}/>
+        <img className="character-portrait" src={message.image ?? '/portraits/anxious.svg'} alt={`${game.character.name}, ${emotions[emotion] ?? '대화 중'}`}/>
         <span className="portrait-note">임시 캐릭터 · 배경 시안</span>
       </div>
       <aside className="scene-note glass-panel"><span>이번 장면의 목표</span><p>{game.event.goal}</p></aside>
 
       <div className="dialogue-dock">
         <section className="dialogue-box" aria-label="캐릭터 대사">
-          <header className="dialogue-header"><h2>{game.ending ? '우리의 이야기' : speaker}</h2><div className="dialogue-tools">
+          <header className="dialogue-header"><h2>{game.ending && !history.reviewing ? '우리의 이야기' : speaker}</h2><div className="dialogue-tools">
             <span className="mode-label">{game.provider === 'demo' ? '데모 대화' : 'AI 대화'}</span>
             <button className="text-button" onClick={() => setRecordsOpen(true)}>대화 기록</button>
           </div></header>
           <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>
-            {game.ending ? <><h3>{game.ending.title}</h3><p>{game.ending.description}</p></> : busy ? <p className="thinking">다음 말을 고르고 있어요<span aria-hidden="true"> · · ·</span></p> : <p key={`${last?.id ?? 'intro'}-${index}`}>{message.text}</p>}
+            {game.ending && !history.reviewing ? <><h3>{game.ending.title}</h3><p>{game.ending.description}</p></> : busy ? <p className="thinking">다음 말을 고르고 있어요<span aria-hidden="true"> · · ·</span></p> : <p key={`${last?.id ?? 'intro'}-${index}`}>{message.text}</p>}
           </div>
-          <footer className="dialogue-footer"><span>{game.ending ? '여정 완료' : emotions[emotion]}</span>
-            {!game.ending && messages.length > 1 && <div className="dialogue-pagination"><button aria-label="이전 대사" disabled={busy || index === 0} onClick={() => setMessageIndex(index - 1)}>‹</button><span>{index + 1} / {messages.length}</span><button aria-label="다음 대사" disabled={busy || index === messages.length - 1} onClick={() => setMessageIndex(index + 1)}>다음 대사 ▷</button></div>}
+          <footer className="dialogue-footer"><span>{history.reviewing ? '지난 대화 · 진행은 유지됩니다' : game.ending ? '여정 완료' : emotions[emotion] ?? '대화 중'}</span>
+            <DialogueNavigation index={index} count={frames.length} onPrevious={history.previous} onNext={history.next} onLatest={history.latest} disabled={busy}/>
           </footer>
-          {last && !busy && <div className="turn-result" aria-label="최근 선택 결과">
+          {last && !busy && !history.reviewing && <div className="turn-result" aria-label="최근 선택 결과">
             {last.outcome !== 'pending' && <span>{outcomes[last.outcome]}</span>}
             {Object.entries(last.stat_delta).map(([key, value]) => <span key={key}>{labels[key as keyof Stats]} {value! > 0 ? '+' : ''}{format(key as keyof Stats, value!)}</span>)}
             {last.new_evidence.map(evidence => <span key={evidence.id}>새 증거 · {evidence.title}</span>)}
