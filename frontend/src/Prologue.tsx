@@ -2,18 +2,22 @@ import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { InterviewHub } from './InterviewHub';
+import { MonthOne } from './MonthOne';
+import { createMonthOneState, readMonthOneState, type MonthOneState } from './monthOneState';
 import { createInterviewState, readInterviewState, type InterviewState } from './interviewState';
 import { debutMembers, newcomers, introAssets, introScenes, type IntroCharacter } from './introContent';
 
 const progressKey = 'prom-intro-v1';
-type IntroProgress = { step: number; nickname: string; selectedId: string | null; interviews: InterviewState };
-const initialProgress: IntroProgress = { step: 0, nickname: '', selectedId: null, interviews: createInterviewState() };
+type IntroProgress = { step: number; nickname: string; selectedId: string | null; interviews: InterviewState; monthOne: MonthOneState | null };
+const initialProgress: IntroProgress = { step: 0, nickname: '', selectedId: null, interviews: createInterviewState(), monthOne: null };
 
 export function readIntroProgress(): IntroProgress | null {
   try {
     const value = JSON.parse(localStorage.getItem(progressKey) ?? 'null');
-    if (!value || !Number.isInteger(value.step) || value.step < 0 || value.step >= introScenes.length || typeof value.nickname !== 'string') return null;
-    return { step: value.step, nickname: value.nickname.slice(0, 12), selectedId: newcomers.some(c => c.id === value.selectedId) ? value.selectedId : null, interviews: readInterviewState(value.interviews) };
+    if (!value || !Number.isInteger(value.step) || value.step < 0 || value.step > introScenes.length || typeof value.nickname !== 'string') return null;
+    const interviews = readInterviewState(value.interviews);
+    if (interviews.recruitedId && value.monthOne && value.interviews?.recruitmentStep === undefined) interviews.recruitmentStep = 4;
+    return { step: value.step === introScenes.length && (!interviews.recruitedId || !value.monthOne) ? introScenes.length - 1 : value.step, nickname: value.nickname.slice(0, 12), selectedId: newcomers.some(c => c.id === value.selectedId) ? value.selectedId : null, interviews, monthOne: interviews.recruitedId ? readMonthOneState(value.monthOne) : null };
   } catch { return null; }
 }
 
@@ -56,9 +60,10 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
   const [profilesOpen, setProfilesOpen] = useState(false);
   const [profileId, setProfileId] = useState(debutMembers[0].id);
   const [storageError, setStorageError] = useState(false);
-  const scene = introScenes[progress.step];
+  const scene = introScenes[Math.min(progress.step, introScenes.length - 1)];
   const character = newcomers.find(c => c.id === scene.characterId);
   const profile = debutMembers.find(c => c.id === profileId)!;
+  const recruited = newcomers.find(c => c.id === progress.interviews.recruitedId);
   const nickname = progress.nickname.trim();
   const canAdvance = scene.kind !== 'nickname' || !!nickname;
 
@@ -67,7 +72,7 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
     catch { setStorageError(true); }
   }, [progress]);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [progress.step, progress.interviews.activeId]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [progress.step, progress.interviews.activeId, progress.monthOne?.scene, progress.monthOne?.completed]);
 
   function advance() {
     if (canAdvance) setProgress(current => ({ ...current, nickname: current.nickname.trim(), step: Math.min(current.step + 1, introScenes.length - 1) }));
@@ -78,8 +83,15 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
     {scene.kind !== 'selection' && <button className="primary-button" disabled={!canAdvance} onClick={advance}>{scene.nextLabel ?? '다음'} →</button>}
   </div>;
 
+  if (progress.monthOne && recruited && progress.step === introScenes.length) return <>
+    {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
+    <MonthOne candidate={recruited} nickname={nickname} state={progress.monthOne}
+      onUpdate={update => setProgress(current => ({ ...current, monthOne: update(current.monthOne ?? createMonthOneState()) }))}
+      onTitle={onTitle} onCasting={() => setProgress(current => ({ ...current, step: introScenes.length - 1 }))}/>
+  </>;
+
   return <div className="prologue-shell">
-    <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>프롤로그 · {scene.title}</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
+    <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
     {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
     {scene.kind === 'introduction' && character ? <section className="character-introduction" aria-label={`${character.name} 소개`}>
       <div className="introduction-photo"><PhotoSlot src={character.portrait} name={character.name} caption="반신 사진 자리"/></div>
@@ -87,14 +99,15 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
     </section> : scene.kind === 'selection' ? <InterviewHub state={progress.interviews} selectedId={progress.selectedId} nickname={nickname}
       onSelect={id => setProgress(current => ({ ...current, selectedId: id }))}
       onUpdate={update => setProgress(current => ({ ...current, interviews: update(current.interviews) }))}
-      onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}/>
+      onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}
+      onProceed={() => setProgress(current => current.interviews.recruitedId && current.interviews.recruitmentStep >= 4 ? ({ ...current, step: introScenes.length, monthOne: current.monthOne ?? createMonthOneState() }) : current)}/>
     : <section className={`intro-scene intro-${scene.location}`} aria-label={scene.title} style={introAssets[scene.location] ? { backgroundImage: `url("${introAssets[scene.location]}")` } : undefined}>
       <div className="intro-location"><span>Prom::Enter</span><strong>{{ office: '대표실', corridor: '복도', practice: '연습실' }[scene.location]}</strong></div>
       <div className="secretary-photo"><PhotoSlot src={introAssets.secretary} name={scene.speaker === '이야기' ? 'Prom::Enter' : '백하연'} caption={scene.speaker === '이야기' ? '대표실 배경 사진 자리' : '대표 비서실장 · 반신 사진 자리'}/></div>
       <div className="intro-dialogue-dock"><section className="dialogue-box"><header className="dialogue-header"><h2>{scene.speaker}</h2><span className="mode-label">{scene.title}</span></header>
         <div className="dialogue-content" role="log" aria-live="polite"><p>{scene.text.replace('{name}', nickname ? nickname + ' ' : '')}</p></div>
-        {scene.kind === 'nickname' && <form className="nickname-form" onSubmit={event => { event.preventDefault(); advance(); }}><label htmlFor="nickname">대표님 이름 또는 호칭</label><div><input autoComplete="off" id="nickname" value={progress.nickname} maxLength={12} placeholder="예: 민지" onChange={event => setProgress(current => ({ ...current, nickname: event.target.value }))} onKeyDown={event => { if (event.key === 'Enter' && (event.nativeEvent.isComposing || event.keyCode === 229)) event.preventDefault(); }}/><span>대표님</span></div><small>최대 12자 · 이후 안내에 이 호칭을 사용합니다.</small></form>}
-        {scene.kind === 'profiles' && <button className="profile-open-button choice-trigger" onClick={() => setProfilesOpen(true)}>데뷔조 프로필 보기 ↗</button>}
+        {scene.kind === 'nickname' && <form className="nickname-form" onSubmit={event => { event.preventDefault(); advance(); }}><label htmlFor="nickname">이름을 입력해주세요</label><div><input autoComplete="off" id="nickname" value={progress.nickname} maxLength={12} placeholder="예: 민지" onChange={event => setProgress(current => ({ ...current, nickname: event.target.value }))} onKeyDown={event => { if (event.key === 'Enter' && (event.nativeEvent.isComposing || event.keyCode === 229)) event.preventDefault(); }}/><span>대표님</span></div><small>최대 12자 · 이후 안내에 이 호칭을 사용합니다.</small></form>}
+        {scene.kind === 'profiles' && <button className="profile-open-button choice-trigger" onClick={() => setProfilesOpen(true)}>데뷔조 프로필 보기</button>}
         {navigation}
       </section></div>
     </section>}

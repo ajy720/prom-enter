@@ -7,12 +7,12 @@ export type InterviewSession = {
   status: keyof typeof statusLabels; messages: InterviewMessage[]; turnCount: number;
   completedBy?: 'player' | 'secretary';
 };
-export type InterviewState = { sessions: Record<CandidateId, InterviewSession>; activeId: CandidateId | null; recruitedId: CandidateId | null };
+export type InterviewState = { sessions: Record<CandidateId, InterviewSession>; activeId: CandidateId | null; recruitedId: CandidateId | null; recruitmentStep: number };
 
 export function isCandidateId(id: unknown): id is CandidateId { return candidateIds.some(candidate => candidate === id); }
 export function createInterviewState(): InterviewState {
   const empty = (): InterviewSession => ({ status: 'not_started', messages: [], turnCount: 0 });
-  return { sessions: { seoyeon: empty(), hyerin: empty(), jiwoo: empty() }, activeId: null, recruitedId: null };
+  return { sessions: { seoyeon: empty(), hyerin: empty(), jiwoo: empty() }, activeId: null, recruitedId: null, recruitmentStep: 0 };
 }
 export function canRecruit(state: InterviewState): boolean { return candidateIds.every(id => state.sessions[id].status === 'completed'); }
 
@@ -38,7 +38,12 @@ export function appendInterviewTurn(session: InterviewSession, turn: { requestId
 
 export function recruitCandidate(state: InterviewState, id: CandidateId): InterviewState {
   if (!isCandidateId(id) || !canRecruit(state) || state.recruitedId) return state;
-  return { ...state, activeId: null, recruitedId: id };
+  return { ...state, activeId: null, recruitedId: id, recruitmentStep: 0 };
+}
+
+// 0: portrait announcement; 1–3: secretary briefing; 4: briefing finished.
+export function advanceRecruitment(state: InterviewState): InterviewState {
+  return state.recruitedId ? { ...state, recruitmentStep: Math.min(4, state.recruitmentStep + 1) } : state;
 }
 
 // Upgrade the previous prologue save and reject malformed interview fields.
@@ -62,5 +67,6 @@ export function readInterviewState(value: unknown): InterviewState {
   }
   state.activeId = isCandidateId(saved.activeId) && state.sessions[saved.activeId].status !== 'not_started' ? saved.activeId : null;
   state.recruitedId = isCandidateId(saved.recruitedId) && canRecruit(state) ? saved.recruitedId : null;
+  state.recruitmentStep = state.recruitedId && Number.isInteger(saved.recruitmentStep) ? Math.max(0, Math.min(4, saved.recruitmentStep as number)) : 0;
   return state;
 }
