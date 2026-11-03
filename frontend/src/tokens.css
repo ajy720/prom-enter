@@ -1,0 +1,39 @@
+:root {
+  /* Current palette: https://coolors.co/palette/d8e2dc-ffe5d9-ffcad4-f4acb7-9d8189 */
+  --sage: #d8e2dc;
+  --peach: #ffe5d9;
+  --pink: #ffcad4;
+  --rose: #f4acb7;
+  --mauve: #9d8189;
+  --white: #ffffff;
+  --ink: #382d32;
+  --ink-muted: #725f66;
+  --accent: #805462;
+  --error-ink: #8c294e;
+  --surface: var(--white);
+  --surface-tint: color-mix(in srgb, var(--pink) 12%, var(--white));
+  --pink-soft: color-mix(in srgb, var(--pink) 45%, var(--white));
+  --glass: color-mix(in srgb, var(--surface) 92%, transparent);
+  --dialogue-surface: color-mix(in srgb, var(--pink) 9%, var(--white));
+  --choice-surface: color-mix(in srgb, var(--pink) 32%, var(--white));
+  --border: color-mix(in srgb, var(--mauve) 32%, var(--white));
+  --scrim: color-mix(in srgb, var(--ink) 38%, transparent);
+  --shadow: 0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent);
+  --font-body: 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  --text-small: 0.8125rem;
+  --text-body: 1rem;
+  --text-dialogue: clamp(1rem, 1.4vw, 1.1875rem);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --radius-small: 10px;
+  --radius-panel: 18px;
+  --radius-dialogue: 24px;
+  --speed-fast: 160ms;
+  --stats-width: 232px;
+  --dialogue-width: 1000px;
+}
