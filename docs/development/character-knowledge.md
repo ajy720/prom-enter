@@ -1,5 +1,7 @@
 # 인물별 지식과 공개 조건
 
+[문서 안내](../README.md)
+
 각 정보의 내용, 누가 아는지, 누구에게 말할 수 있는지, 언제 어떤 경로로 알게 됐는지를 분리합니다. 권한은 서버가 검사하며 모델이 해금하거나 사실을 확정하지 않습니다.
 
 ## 자료와 상태
@@ -12,7 +14,7 @@
 
 `subject_id`는 정보의 대상입니다. 기존 `character_id`는 호환을 위해 남겼습니다. `initial_known_by`는 처음부터 아는 인물입니다. `kind=report`, `certainty=reported`는 사용자의 발언을 들었다는 뜻이며 내용이 참이라는 뜻이 아닙니다. 서버에서 확정한 사건 결과만 `fact` / `confirmed`로 기록합니다.
 
-기획 원문은 `characters/sources/`와 `characters/archive/`에 보존하고, 현재 사용하는 Markdown 7개는 `characters/` 바로 아래에 둡니다. [이름 변경과 원문 우선순위](../characters/README.md)를 따릅니다. 컴파일된 `characters.json`에는 현재 자료와 초기 인지 정책의 해시·출처를 보존합니다.
+기획 원문은 `characters/sources/`와 `characters/archive/`에 보존하고, 현재 사용하는 Markdown 7개는 `characters/` 바로 아래에 둡니다. [이름 변경과 원문 우선순위](../../characters/README.md)를 따릅니다. 컴파일된 `characters.json`에는 현재 자료와 초기 인지 정책의 해시·출처를 보존합니다.
 
 ## 초기 인지 범위 편집
 
@@ -70,7 +72,7 @@ permit_disclosure(state, knowledge_id, "baek_hayeon", ["player"],
 
 상대 전환 원문은 이전 방의 청중에게만 보고로 남고 새 상대에게 전달하지 않습니다. 순차 생성 중 후반 호출이 실패하면 앞선 호출 비용이 발생할 수 있지만 게임 상태와 지식은 저장하지 않습니다.
 
-HTTP 요청·응답과 상대 전환·저장 호환은 [프런트엔드 연결 명세](frontend-integration.md#상대와-화자), 콘솔 명령과 기록 저장은 [README](../README.md#화면-없이-캐릭터와-대화하기)를 따릅니다. 콘솔의 인물별 습득 상태는 실행 중 유지되며 게임에서는 SQLite에 저장됩니다.
+HTTP 요청·응답과 상대 전환·저장 호환은 [프런트엔드 연결 명세](frontend-integration.md#상대와-화자), 콘솔 명령과 기록 저장은 [캐릭터 콘솔](../guides/character-console.md)를 따릅니다. 콘솔의 인물별 습득 상태는 실행 중 유지되며 게임에서는 SQLite에 저장됩니다.
 
 ## 보장 범위와 평가
 

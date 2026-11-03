@@ -1,5 +1,7 @@
 # 프런트엔드 연결 명세
 
+[문서 안내](../README.md)
+
 현재 실행 코드에 맞춘 웹 담당자용 연결 계약입니다. AI 기능을 추가하면서 웹에 영향을 주는 요청·응답·처리 규칙도 이 문서에서 함께 갱신합니다. 미구현 기능은 아래에서 구분합니다.
 
 ## 담당과 코드 기준
@@ -10,11 +12,11 @@
 
 | 기준 | 위치 |
 |---|---|
-| 프런트 자료형 | [types.ts](../frontend/src/types.ts) |
-| HTTP 요청 및 쿠키 전달 예시 | [api.ts](../frontend/src/api.ts) |
-| 경로·요청 모델 | [main.py](../backend/app/main.py), [models.py](../backend/app/models.py) |
-| 응답 구성·처리 순서 | [service.py](../backend/app/service.py) |
-| AI 내부 입력·출력 | [contracts.py](../backend/app/ai/contracts.py), [AI 모듈 문서](ai-module.md) |
+| 프런트 자료형 | [types.ts](../../frontend/src/types.ts) |
+| HTTP 요청 및 쿠키 전달 예시 | [api.ts](../../frontend/src/api.ts) |
+| 경로·요청 모델 | [main.py](../../backend/app/main.py), [models.py](../../backend/app/models.py) |
+| 응답 구성·처리 순서 | [service.py](../../backend/app/service.py) |
+| AI 내부 입력·출력 | [contracts.py](../../backend/app/ai/contracts.py), [AI 모듈 문서](ai-module.md) |
 
 실행 서버의 `/docs`에서 요청 스키마를 확인할 수 있습니다. 현재 응답에는 별도 `response_model`이 없어 응답 전체 스키마가 자동 문서화되지는 않습니다. 응답 필드는 이 문서·자료형·서비스 구현을 함께 확인합니다.
 
