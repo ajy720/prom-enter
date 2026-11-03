@@ -94,7 +94,7 @@ export default function App() {
       <button className="nav-item active" onClick={()=>setChooser(false)}><span>◈</span> 우리의 이야기 <i>01</i></button>
       <button className="nav-item" onClick={()=>setChooser(true)} disabled={busy}><span>＋</span> 새 플레이</button>
       <div className="rail-note"><span className="live-dot"/> {catalog?.provider==='openai'?'AI 연결 모드':'로컬 데모 모드'}<p>대화와 선택으로<br/>다음 장면을 만듭니다.</p></div>
-      <div className="rail-bottom">PROM::ENTER<br/><span>PROJECT BASE · 0.1</span></div>
+      <div className="rail-bottom">PROM::ENTER<br/><span>STORY GAME · 0.1</span></div>
     </aside>
     <main className="workspace">
       <header className="topbar"><span>우리의 이야기 <b>/</b> {isChoosing?'새로운 시작':game.event.subtitle}</span><div className="saved"><span className="live-dot"/>{busy?'장면을 준비하는 중':game?'자동 저장됨':'시작할 준비가 됐어요'}</div></header>

@@ -26,7 +26,7 @@ def create_app(database_path=None, provider=None):
             raise RuntimeError("AI_PROVIDER must be demo or openai")
     repository = Repository(database_path or os.getenv("DATABASE_PATH", "data/game.sqlite3"))
     service = TurnService(repository, provider)
-    app = FastAPI(title="Prom::Enter Base", version="0.1.0")
+    app = FastAPI(title="Prom::Enter", version="0.1.0")
     app.state.service = service
 
     @app.exception_handler(GameError)
