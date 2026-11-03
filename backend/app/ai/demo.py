@@ -1,6 +1,7 @@
 """Conservative Korean fixtures for offline development; not a general NLU model."""
 import re
 from app.models import Analysis, Assessment, Dialogue, Message
+from app.ai.routing import offline_intent
 
 PATTERNS = {
     'train_variety':r'예능.{0,8}(?:훈련|연습)', 'rest':r'(?:휴식|휴가|쉬게)',
@@ -30,6 +31,13 @@ class DemoProvider:
 
     def analyze(self, text, context):
         text = text.strip()
+        routing=offline_intent(text,context.get('conversation'))
+        if routing is not None:
+            return Analysis(action_id='talk',needs_clarification=routing.needs_clarification,
+                            reference_turn_id=None,assessments=[],conversation_change=routing)
+        if context.get('conversation_only',False):
+            return Analysis(action_id='talk',needs_clarification=False,reference_turn_id=None,
+                            assessments=[],utterance_kind=classify(text))
         actions = context.get('event',{}).get('actions',[])
         exact = next((a['id'] for a in actions if a['label'] == text), None)
         kind = 'command' if exact else classify(text)

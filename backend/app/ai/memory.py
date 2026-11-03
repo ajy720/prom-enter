@@ -15,6 +15,8 @@ def recent_turns(history: list[dict], limit: int = 8, char_budget: int = 8000,
     chosen = []
     audience = set(audience) if audience is not None else {speaker} if speaker else {"newcomer", "secretary"}
     for turn in reversed(history):
+        if turn.get('kind') == 'conversation_change':
+            continue  # A server notice is not a user utterance or NPC disclosure.
         if not audience <= set(turn.get("input_audience", ["newcomer", "secretary"])):
             continue
         messages = [{**m, "text":m["text"][:500]} for m in turn["messages"]

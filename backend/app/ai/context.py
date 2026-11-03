@@ -6,28 +6,43 @@ from app.ai.profiles import DATA, character_profile, company_roster
 from app.ai.rules import action_target, criteria_for
 from app.ai.knowledge import catalog, disclosure_guidance, knows, retrieve
 from app.game.engine import character_direction
+from app.game.conversation import current_conversation, people, roles_for
+from app.ai.routing import routing_context
+from app.game.openings import openings_for_view
 
 
-def build_context(state: State, history: list[dict], query: str = '') -> tuple[AnalysisContext, DialogueContext]:
+def build_context(state: State, history: list[dict], query: str = '', *, conversation=None) -> tuple[AnalysisContext, DialogueContext]:
     event = EVENTS[state.event_id]
     character = character_profile(state.character_id)
     criteria = criteria_for(state.event_id)
     actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions']]
-    recent = recent_turns(history)
+    room=conversation or current_conversation(state)
+    roles=roles_for(state,room)
+    private=room.mode=='private'
+    if private:
+        actions=[]; criteria=[]
+        character=character_profile(room.target_character_id)
+    recent = recent_turns(history,audience=roles)
+    routing=routing_context(room.target_character_id,list(people(state).values()),recent)
+    if history and history[-1].get('kind')=='conversation_change':
+        routing.pending_target_selection=False
     analysis = AnalysisContext(
         event=EventContext(**{k:event[k] for k in ('id','title','briefing','goal','resolver')}, actions=actions),
         allowed_actions=[a.id for a in actions] + ['talk'], character=character,
         character_direction=character_direction(state,'pending'),
-        resolution={'resolver':event['resolver'],'next_event_id':event['next'],'result_effects':event['outcomes']},
+        resolution={} if private else {'resolver':event['resolver'],'next_event_id':event['next'],'result_effects':event['outcomes']},
         stats=state.stats, training_history=state.training_history, evidence_ids=state.evidence_ids,
-        recent_turns=recent, memories=[m for m in retrieve_memories(state,query,character.id)
+        recent_turns=recent, memories=[] if private else [m for m in retrieve_memories(state,query,character.id)
                                      if m.visibility == 'shared'],
         rubric={c.id:c.description for c in criteria}, criteria=criteria,
-        criterion_progress=state.criterion_progress.get(state.event_id,{}),
+        criterion_progress={} if private else state.criterion_progress.get(state.event_id,{}),
         allowed_targets=sorted({a.target_id for a in actions if a.target_id}),
-        related_turns=related_turns(history,query,{t.id for t in recent}),
+        related_turns=related_turns(history,query,{t.id for t in recent},audience=roles),
+        conversation=routing,
+        conversation_only=private,
+        event_opening=next(o for o in openings_for_view(state,history) if o.event_id==state.event_id),
     )
-    return analysis, build_dialogue_context(state, history, query)
+    return analysis, build_dialogue_context(state, history, query,speaker_roles=roles)
 
 
 def build_dialogue_context(state: State, history: list[dict], query: str = '', *,
@@ -55,6 +70,9 @@ def build_dialogue_context(state: State, history: list[dict], query: str = '', *
         resolved_facts={f'fact_{i}':fact for i,fact in enumerate(facts)},
         allowed_speakers=roles, output_audience=roles,
         audience_ids=['player'] + [people[role] for role in roles],
+        conversation=routing_context(people[roles[0]] if len(roles)==1 else None,list(people.values())),
+        event_opening=(next(o for o in openings_for_view(state,history) if o.event_id==event['id'])
+                       if outcome=='pending' and (not result_event_id or result_event_id==state.event_id) else None),
     )
 
 

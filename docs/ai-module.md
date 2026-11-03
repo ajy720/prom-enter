@@ -26,6 +26,8 @@ provider.generate(text, actor: DialogueContext, direction, facts, clarification)
 
 대사 문맥의 `phase`는 `conversation`, `clarification`, `event_result`, `ending`입니다. `event_result`에서는 `scene` / `result_event_id`가 끝난 사건을 가리키고 `next_event`가 다음 장면을 가리킵니다. 결과 대사가 다음 사건의 일처럼 섞이는 것을 피합니다.
 
+첫 시작과 사건 진입의 설명은 서버가 만든 `event_openings`로 대화창에 별도 표시합니다. 분석과 일반 대사 문맥의 `event_opening`에도 현재 도입을 전달합니다. 결과·엔딩 대사에는 도입을 넣지 않아 과거 마무리와 새 상황이 섞이지 않게 합니다. 공개 상황을 묻는 질문에 미확정 개인 사정이나 갈등을 만들어 회피하지 않도록 프롬프트를 보완했습니다. [저장·복원과 프런트 계약](event-openings.md)에 상세히 설명합니다.
+
 `resolved_facts`는 현재 턴의 확정 사실을 `fact_0`, `fact_1`처럼 참조합니다. 다음 턴에서는 의미가 달라지므로 영속적인 증거 ID로 사용하지 않습니다.
 
 ## 2. 행동 해석과 사건별 평가
@@ -88,7 +90,7 @@ python3 scripts/compile_characters.py
 
 모든 게임 대사는 `scope_actor`로 화자를 나누고 별도로 생성합니다. 공통 명단을 제외한 인물별 관찰·보고·개인 기억을 합친 요청을 보내지 않습니다. 생성 대상(`allowed_speakers`)과 실제 청중(`audience_ids`, `output_audience`)을 구분하며, 공개 대화에는 과거 1:1 대화와 개인 기억이 포함되지 않습니다. 기존 기록은 노출 정보가 없으므로 공유된 대화로 취급합니다. 상세 정책과 API는 [인물별 지식 시스템](character-knowledge.md)을 참고하세요.
 
-공개 자유 대화는 분석 1회 + 생성 2회입니다. 선택지는 분석을 생략하고 생성 2회입니다. 1:1 대화는 행동 분석을 생략하고 해당 화자 생성 1회이며 게임 행동이나 수치를 변경하지 않습니다. 실제 모델을 켜면 비용·시간이 증가하므로 `ai_trace.generation_calls`를 확인하세요.
+일반 공개 자유 대화는 분석 1회 + 생성 2회입니다. 선택지는 분석을 생략하고 생성 2회입니다. 1:1과 콘솔은 상대 전환 의도를 포함한 해석 1회 + 생성 1회이며 게임 행동이나 수치를 변경하지 않습니다. 자연어 상대 전환·대상 확인 질문은 해석 1회만 사용하고, 명시적 전환은 호출 0회입니다. `ai_trace.analysis_calls`와 `generation_calls`로 호출 수를 확인합니다.
 
 `director.py`는 신뢰·피로·직전 사건과 지속되는 감정을 조합합니다. 불안 중 격려를 받으면 불안과 희망이 함께 남을 수 있고, 성공해도 신뢰가 낮으면 경계가 남습니다. 피로가 높으면 피로 표현을 우선합니다. 현재 게임의 스탯은 선택 신입 중심의 공통 수치이며, 인물별 독립 관계 수치와 그에 따른 비서 심경은 별도 게임 상태 확장이 필요합니다.
 
@@ -124,7 +126,7 @@ backend/.venv/bin/python scripts/evaluate_ai.py --provider openai --allow-paid -
 
 `scripts/chat_character.py`와 `ai/persona.py`는 7개 프로필을 개별 대화로 점검하는 콘솔입니다. 사용법은 [README](../README.md#화면-없이-캐릭터와-대화하기)에 있습니다.
 
-`PersonaSession.chat(text)`는 현재 캐릭터·장면·신뢰·피로와 같은 화자의 최근/관련 대화를 `DialogueContext`로 만들고, `generate` 1회 → `validate_dialogue` → 메모리 내 기록 순서로 처리합니다. 행동 분석·게임 resolver·DB를 호출하지 않습니다. 비서는 `secretary`, 나머지 인물은 기존 출력 계약의 `newcomer` 역할을 사용하되 `speakers`에는 선택한 인물의 실제 프로필을 넣습니다. 캐릭터를 바꾸면 최근 대화는 비우되 인물별 습득 정보는 유지합니다. 다른 인물의 1:1 발언은 검색에서 제외합니다. `/reset`은 전체 습득 정보도 지웁니다.
+`PersonaSession.chat(text)`는 `conversation_only=true`, 허용 행동 `talk`뿐인 분석 문맥으로 상대 전환 의도를 먼저 해석합니다. 일반 대화이면 같은 화자의 문맥으로 `generate` → `validate_dialogue` → 메모리 내 기록 순서로 처리합니다. 전환이면 로컬 세션을 변경하고 `PersonaReply(kind=conversation_change)`의 시스템 안내를 반환하며, 대상이 모호하면 현재 화자의 확인 질문을 반환합니다. 게임 resolver·DB는 호출하지 않습니다. 비서는 `secretary`, 나머지 인물은 기존 출력 계약의 `newcomer` 역할을 사용하되 실제 프로필을 넣습니다. 캐릭터를 바꾸면 최근 대화는 비우되 인물별 습득 정보는 유지합니다. 다른 인물의 1:1 발언은 검색에서 제외합니다. `/reset`은 전체 습득 정보도 지웁니다.
 
 잠긴 자료는 콘솔에서도 해금하지 않습니다. `trust`·`fatigue`는 개발자가 지정하는 조건이며 대화로 자동 상승하지 않습니다. 개발용 내보내기에는 캐릭터·모델·effort·조건·대화와 로컬 습득 상태를 저장하며 API 키는 포함하지 않습니다. 모델 오류는 대화 이력과 지식에 추가하지 않고, 원본 SDK 오류에 키가 포함될 수 있어 콘솔에는 오류 종류에 따른 안내만 출력합니다.
 
@@ -136,7 +138,9 @@ backend/.venv/bin/python scripts/evaluate_ai.py --provider openai --allow-paid -
 
 ## 웹 담당과 맞출 사항
 
-- HTTP 경로와 기존 입력 필드는 유지됩니다. 선택 입력 `recipient_id`와 기록의 `input_audience`를 추가했으며 `frontend/src/types.ts`도 함께 갱신했습니다. 웹의 대상 선택 UI는 아직 없습니다.
+웹 담당자가 먼저 확인할 통합 계약은 [프런트엔드 연결 명세](frontend-integration.md)입니다. 웹에 영향을 주는 변경은 해당 문서와 관련 자료형·기능별 명세도 함께 갱신합니다.
+
+- HTTP 경로와 기존 입력 필드는 유지됩니다. 선택 입력 `recipient_id`와 기록의 `input_audience`를 추가했으며 `frontend/src/types.ts`도 함께 갱신했습니다. 현재는 저장되는 `conversation` 상태와 웹 대상 선택 UI를 연결했습니다. [대화 세션 계약](conversation-session.md)에 응답·전환·호환 동작을 설명합니다.
 - `State`에 평가 달성·해금 자료·지속 감정과 지식 원본·습득·공개 허가가 추가됐습니다. 이전 상태는 기본값으로 읽습니다. 지식 내부 상태는 플레이어용 HTTP 응답에 그대로 노출하지 않습니다.
 - `Memory`의 기존 약속 기록은 읽을 때 `promised`로 해석합니다. 원본 DB를 파괴적으로 변환하지 않습니다.
 - 결과 대사는 처리 후 스탯을 받습니다. 장면 전환의 현재/다음 사건을 혼동하지 않도록 `phase` 계약을 유지해야 합니다.

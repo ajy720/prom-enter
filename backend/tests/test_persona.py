@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 from app.ai.persona import PersonaSession, resolve_character
 from app.ai.profiles import PROFILES, character_profile, profile_id
-from app.ai.providers import OpenAIProvider
+from app.ai.providers import DemoProvider, OpenAIProvider
 from app.models import Analysis, Dialogue, Message
 
 
@@ -14,7 +14,9 @@ class FakeProvider:
     reasoning_effort='low'
 
     def __init__(self): self.actors=[]
-    def analyze(self,*args): raise AssertionError('Persona chat must not analyze or execute game actions')
+    def analyze(self,text,context):
+        assert context.conversation_only and context.allowed_actions==['talk'] and not context.criteria
+        return DemoProvider().analyze(text,context)
     def generate(self,text,actor,*args):
         self.actors.append(actor)
         return Dialogue(messages=[Message(speaker_id=actor.allowed_speakers[0],text=actor.character.name+'입니다.',emotion='neutral')])
