@@ -43,6 +43,9 @@ def determine_ending(state: State):
 
 
 def resolve_turn(original: State, analysis: Analysis, turn_id: str) -> Proposal:
+    if original.event_id.startswith('p2_'):
+        from app.game.part2 import resolve_part2
+        return resolve_part2(original, analysis, turn_id)
     state = original.model_copy(deep=True)
     event = EVENTS[state.event_id]
     action = analysis.action_id

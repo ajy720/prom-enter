@@ -37,7 +37,7 @@ export function GameView({ game, busy, pending, error, text, onTextChange, onSen
   const last = game.history.at(-1);
   const recorded = game.history.flatMap(turn => [
     { speaker_id: 'player', text: turn.input, emotion: 'neutral', image: turn.image },
-    ...turn.messages.map(message => ({ ...message, name: turn.conversation?.participants.find(person => person.id === message.speaker_id)?.name, image: turn.image })),
+    ...turn.messages.map(message => ({ ...message, name: turn.conversation?.participants.find(person => person.role === message.speaker_id || person.id === message.speaker_id)?.name, image: turn.image })),
   ]);
   const messages = recorded.length ? recorded : [{ speaker_id: 'secretary', text: game.event.briefing, emotion: 'neutral', image: '/portraits/anxious.svg' }];
   const frames = game.ending ? [...messages, { speaker_id: 'secretary', text: game.ending.description, emotion: 'relieved', image: last?.image }] : messages;

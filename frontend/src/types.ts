@@ -1,3 +1,4 @@
+export type CreateGameInput = {character_id: string; scenario?: 'demo' | 'part2'};
 export type Character = { id: string; name: string; tag: string; description: string; persona: string; color: string; profile_id?: string };
 export type Stats = { teamwork: number; fatigue: number; trust: number; awareness: number; fans: number; funds_won: number };
 export type Action = { id: string; label: string; hint: string; used: boolean };

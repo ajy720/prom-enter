@@ -24,7 +24,7 @@
 |---|---|---|
 | `GET /api/health` | 없음 | `{status, provider}` |
 | `GET /api/catalog` | 없음 | `{characters, notice, provider}` |
-| `POST /api/games` | `{character_id}` | `Game`, HTTP 201 |
+| `POST /api/games` | `{character_id, scenario?}` | `Game`, HTTP 201 |
 | `GET /api/games/{game_id}` | 없음 | `Game` |
 | `POST /api/games/{game_id}/turns` | 아래 턴 요청 | `{turn: Turn, game: Game}` |
 
@@ -127,6 +127,14 @@
 - 422이면 요청·허용 대상·행동을 확인하고 서버 안내를 표시합니다. `GameError`는 `{error: string}`이고, 요청 형식 검증의 422는 FastAPI의 `{detail: [...]}`일 수 있습니다. 현재 클라이언트는 후자에 일반 오류 문구를 사용합니다.
 - 404이면 현재 브라우저가 소유한 플레이가 없을 수 있습니다. 쿠키가 유효한 상태에서 저장한 게임 ID로 조회해 복원합니다. 게임 ID는 현재 예시 화면에서 localStorage의 `prom-game`에 보관합니다.
 - 실제 모델 오류를 데모 성공으로 표시하지 않습니다. 도입·대사·상태를 각각 임의 확정하지 않습니다.
+
+## Part 1–2 프로토타입 연결 (2026-11-03)
+
+타이틀의 Part 2 시작 경로는 `{character_id: "a", scenario: "part2"}`로 생성한다. 기존 요청의 `scenario` 생략은 이전 축약 데모를 유지한다. Part 2는 이도·여울·사야 순서로 면담하고 한 명 선발 후 1~6개월차를 진행한다. 기존 후보/신입·백하연 두 화자 역할을 유지하며 새 대화 상대는 추가하지 않는다.
+
+면담·선발로 후보가 바뀐 턴에서는 `turn.conversation`의 이전 인물이 결과 대사의 화자이고, `game.character`·`game.conversation`은 새 인물이다. 과거 대사를 현재 신입 이름으로 다시 표시하지 않는다. 도입 앵커·중복 요청·실패 재시도는 기존 계약과 같다. 완료 장면에서 결과를 확인하면 `ending.id="part2_complete"`로 시연을 종료한다. 24개월차 계약 결말과 구분한다.
+
+웹 담당 대응: 타이틀에서 Part 2 시작 경로와 면담 시작 버튼을 제공한다. 새 백엔드부터 적용하거나 웹과 함께 적용한다. 이전 백엔드는 `scenario` 필드를 거부한다. 상세 행동·판정·호환은 [Part 2 프로토타입](part2-prototype.md)을 따른다. 프런트의 생성 입력은 `CreateGameInput`을 사용한다.
 
 ## 현재 지원 범위와 미구현
 

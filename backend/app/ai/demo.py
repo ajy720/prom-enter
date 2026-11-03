@@ -4,6 +4,24 @@ from app.models import Analysis, Assessment, Dialogue, Message
 from app.ai.routing import offline_intent
 
 PATTERNS = {
+    'finish_interview':r'면담.{0,8}(?:마치|마무리|종료|끝)|다음 후보',
+    'select_a':r'이도.{0,8}(?:선발|뽑|합류|선택)',
+    'select_b':r'여울.{0,8}(?:선발|뽑|합류|선택)',
+    'select_c':r'사야.{0,8}(?:선발|뽑|합류|선택)',
+    'train_vocal':r'보컬.{0,8}(?:훈련|연습)',
+    'train_dance':r'(?:댄스|춤).{0,8}(?:훈련|연습)',
+    'skip_training':r'준비 없이.{0,8}(?:마무리|마치)',
+    'agree_center':r'(?:센터|포지션).{0,12}(?:합의|함께 결정|조율)',
+    'assign_center':r'(?:센터|포지션).{0,12}(?:일방|통보)',
+    'mediate_rehearsal':r'질책.{0,8}(?:중단|멈)|팀 면담',
+    'continue_rehearsal':r'(?:그대로|계속).{0,8}리허설',
+    'respond_press':r'(?:기사|언론).{0,8}대응',
+    'hold_showcase':r'쇼케이스.{0,8}(?:확정|진행|개최)',
+    'promote_standard':r'기본 홍보',
+    'promote_lowcost':r'저예산 홍보',
+    'skip_promotion':r'홍보.{0,8}생략',
+    'finish_prototype':r'프로토타입.{0,8}(?:확인|마무리|종료)',
+
     'train_variety':r'예능.{0,8}(?:훈련|연습)', 'rest':r'(?:휴식|휴가|쉬게)',
     'finish_event':r'(?:활동|이번 달).{0,8}(?:확정|마무리)',
     'accept_offer':r'(?:신입|출연).{0,8}(?:출연|시키|수락)',
@@ -23,7 +41,7 @@ def classify(text):
     if re.search(r'만약|한다면|하면 좋|했으면',text): return 'proposal'
     if re.search(r'[?？]|할까|할까요|맞을까|괜찮을까|어때|나요|까요',text): return 'question'
     if re.search(r'내가.+(?:확인해줄게|확인할게|연락할게|지켜줄게)',text): return 'promise'
-    return 'command' if re.search(r'해줘|하자|시키자|시켜줘|배정해|확인해|추천해|연락해|진행해|확정해|마무리해|보여줘',text) else 'conversation'
+    return 'command' if re.search(r'마칠게|마치자|끝낼게|선발해|뽑아|결정해|진행하자|진행할게|해줘|하자|시키자|시켜줘|배정해|확인해|추천해|연락해|진행해|확정해|마무리해|보여줘',text) else 'conversation'
 
 
 class DemoProvider:
