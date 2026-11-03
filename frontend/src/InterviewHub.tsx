@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { InterviewRoom } from './InterviewRoom';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
-import { newcomers } from './introContent';
+import { debutMembers, newcomers } from './introContent';
 import { beginInterview, canRecruit, candidateIds, isCandidateId, recruitCandidate, statusLabels, type CandidateId, type InterviewState } from './interviewState';
 
 export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, onBack }: {
@@ -36,7 +36,7 @@ export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, 
       const id = character.id as CandidateId;
       return <button key={id} className={`profile-card ${selectedId === id ? 'is-selected' : ''}`} aria-pressed={selectedId === id} onClick={() => onSelect(id)}><span className={`profile-number interview-status status-${state.sessions[id].status}`}>{statusLabels[state.sessions[id].status]}</span><PhotoSlot src={character.profile ?? character.portrait} name={character.name}/><span className="profile-card-label"><strong>{character.name}{state.recruitedId === id ? ' · 영입' : ''}</strong><small>{character.role}</small></span></button>;
     })}</div>
-      <aside className="profile-detail glass-panel" aria-live="polite">{recruited && recruiting ? <><p className="section-kicker">WELCOME TO PROM::ENTER</p><h2>{recruited.name}</h2><p>다현·하람·유나와 함께할 네 번째 멤버로 영입했습니다.</p><p>세 사람과 나눈 대화는 면담 기록에서 다시 볼 수 있습니다.</p><button className="quiet-button" onClick={() => setRecruiting(false)}>면담 기록 살펴보기</button></> : selected && isCandidateId(selected.id) ? <><p className="section-kicker">{selected.role}</p><h2>{selected.name}</h2><p className="character-meta">{selected.fullName} · {selected.age}세</p><div className="character-keywords">{selected.keywords.map(keyword => <span key={keyword}>{keyword}</span>)}</div><p className="character-description">{selected.description}</p>
+      <aside className="profile-detail glass-panel" aria-live="polite">{recruited && recruiting ? <><p className="section-kicker">WELCOME TO PROM::ENTER</p><h2>{recruited.name}</h2><p>{debutMembers.map(member => member.name).join('·')}과 함께할 네 번째 멤버로 영입했습니다.</p><p>세 사람과 나눈 대화는 면담 기록에서 다시 볼 수 있습니다.</p><button className="quiet-button" onClick={() => setRecruiting(false)}>면담 기록 살펴보기</button></> : selected && isCandidateId(selected.id) ? <><p className="section-kicker">{selected.role}</p><h2>{selected.name}</h2><p className="character-meta">{selected.fullName} · {selected.age}세</p><div className="character-keywords">{selected.keywords.map(keyword => <span key={keyword}>{keyword}</span>)}</div><p className="character-description">{selected.description}</p>
         {recruiting ? <button className="primary-button" disabled={!eligible || !!state.recruitedId} onClick={() => setConfirmOpen(true)}>{selected.name} 영입하기</button> : <button className="primary-button" onClick={() => openInterview(selected.id as CandidateId)}>{state.sessions[selected.id].status === 'completed' ? '면담 기록 보기' : state.sessions[selected.id].status === 'in_progress' ? '면담 이어하기' : '면담 시작하기'} →</button>}
       </> : <><p className="section-kicker">대표님의 선택</p><h2>먼저 듣고 싶은<br/>이야기는?</h2><p>사진을 선택해 연습생의 정보를 확인해주세요.</p></>}</aside>
     </div>
