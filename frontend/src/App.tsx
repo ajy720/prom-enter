@@ -2,7 +2,26 @@ import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { GameView } from './GameView';
 import { Prologue, TitleScreen } from './Prologue';
-import type { Game, TurnInput } from './types';
+import type { Character, Game, TurnInput } from './types';
+
+function ServerDemoStart({ onStarted, onBack }: { onStarted: (game: Game) => void; onBack: () => void }) {
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    const controller = new AbortController();
+    api<{ characters: Character[] }>('/catalog', undefined, controller.signal).then(result => setCharacters(result.characters)).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : '목록을 불러오지 못했습니다.'); });
+    return () => controller.abort();
+  }, []);
+  async function start(characterId: string) {
+    if (busy) return;
+    setBusy(true); setError('');
+    try { const game = await api<Game>('/games', { character_id: characterId }); localStorage.setItem('prom-game', game.game_id); onStarted(game); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : '시작하지 못했습니다.'); }
+    finally { setBusy(false); }
+  }
+  return <main className="selection-screen"><p className="section-kicker">서버 연결 데모</p><h1>함께할 연습생 선택</h1><p>서버가 제공하는 대화와 사건 진행을 확인하는 별도 데모입니다.</p><div className="month-options">{characters.map(character => <button disabled={busy} key={character.id} onClick={() => void start(character.id)}><strong>{character.name}</strong><span>{character.description}</span></button>)}</div>{error && <p role="alert">{error}</p>}<button className="quiet-button" disabled={busy} onClick={onBack}>시작 화면으로</button></main>;
+}
 
 export default function App() {
   const [game, setGame] = useState<Game | null>(null);
@@ -47,11 +66,22 @@ export default function App() {
       input_type: actionId ? 'action' : 'chat', text: actionId ? '' : value,
       action_id: actionId ?? null,
     };
+    return submit(input);
+  }
+
+  async function changeConversation(target: string) {
+    if (!game || requestInFlight.current || pending || game.ending) return;
+    await submit({ request_id: crypto.randomUUID(), state_version: game.version, input_type: 'conversation', text: '', action_id: null,
+      conversation_mode: target === 'public' ? 'public' : 'private', target_character_id: target === 'public' ? null : target });
+  }
+
+  async function submit(input: TurnInput): Promise<boolean> {
+    if (!game || requestInFlight.current) return false;
     requestInFlight.current = true;
     setBusy(true); setError(''); setPending(input);
     try {
       const result = await api<{ game: Game }>('/games/' + game.game_id + '/turns', input);
-      setGame(result.game); setPending(null); setText('');
+      setGame(result.game); setPending(null); if (input.input_type !== 'conversation') setText('');
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
@@ -75,7 +105,9 @@ export default function App() {
   }
 
   if (view === 'intro') return <Prologue key={introRun.key} fresh={introRun.fresh} onTitle={() => setView('title')}/>;
-  if (view === 'title' || !game) return <main className="app-shell"><TitleScreen hasGame={!!game} onStart={() => openIntro(true)} onContinue={() => openIntro(false)} onLegacy={() => setView('game')}/></main>;
+  if (view === 'title') return <main className="app-shell"><TitleScreen hasGame={!!game} onStart={() => openIntro(true)} onContinue={() => openIntro(false)} onLegacy={() => setView('game')}/></main>;
+
+  if (!game) return <ServerDemoStart onStarted={setGame} onBack={() => setView('title')}/>;
 
   return <main className="app-shell is-playing">
     <header className="topbar">
@@ -87,6 +119,6 @@ export default function App() {
       {pending && <button disabled={busy} onClick={() => void send(undefined, pending)}>같은 요청 재시도</button>}
       <button onClick={() => window.location.reload()}>다시 불러오기</button>
     </div>}
-    <GameView key={game.game_id} game={game} busy={busy} pending={pending} error={error} text={text} onTextChange={setText} onSend={send} onNewGame={() => openIntro(true)} onRetry={() => pending && void send(undefined, pending)}/>
+    <GameView key={game.game_id} game={game} busy={busy} pending={pending} error={error} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onNewGame={() => openIntro(true)} onRetry={() => pending && void send(undefined, pending)}/>
   </main>;
 }

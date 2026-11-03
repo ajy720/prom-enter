@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from app.content import CONTENT, EVENTS, EVIDENCE
-from app.models import Analysis, Direction, GameError, Memory, State
+from app.models import Analysis, GameError, Memory, State
+from app.ai.director import character_direction
+from app.ai.memory import fulfill_promises, remember
+from app.ai.rules import RULES, criteria_for
 
 
 @dataclass
@@ -37,19 +40,6 @@ def determine_ending(state: State):
             continue
         return ending
     raise ValueError("No fallback ending")
-
-
-def character_direction(state: State, outcome: str) -> Direction:
-    emotion = "tired" if state.stats.fatigue >= 60 else "anxious"
-    if outcome == "success" and state.stats.fatigue < 60:
-        emotion = "relieved"
-    elif state.stats.trust >= 40 and emotion != "tired":
-        emotion = "hopeful"
-    openness = "open" if state.stats.trust >= 40 else "guarded"
-    return Direction(emotion=emotion, openness=openness, instruction=(
-        "존댓말을 유지한다. " + ("구체적인 고민을 먼저 꺼낸다." if openness == "open" else "감사하면서도 조심스럽게 반응한다.")
-        + (" 피로로 문장이 짧다." if emotion == "tired" else " 최근 불안이 한 번의 위로로 모두 사라지지는 않는다.")
-    ))
 
 
 def resolve_turn(original: State, analysis: Analysis, turn_id: str) -> Proposal:
@@ -111,29 +101,43 @@ def resolve_turn(original: State, analysis: Analysis, turn_id: str) -> Proposal:
         outcome = "ending"
         facts.extend([ending["title"], ending["description"]])
 
-    # Semantic dialogue rewards share the explicit support action's event-local key.
-    if action == "talk" and any(a.criterion_id == "support" and a.status == "met" for a in analysis.assessments):
-        support_key = f"{event['id']}:support"
-        if support_key not in state.applied_effects:
-            apply_delta(state, {"trust": 3})
-            state.applied_effects.append(support_key)
-            facts.append("격려의 의미가 확인되어 이 장면의 신뢰 보너스 3을 반영했습니다.")
-    if action == "talk" and any(a.criterion_id == "promise" and a.status == "met" for a in analysis.assessments):
-        key = f"{event['id']}:promise"
-        if key not in state.applied_effects:
-            state.applied_effects.append(key)
-            quote = next(a.quote for a in analysis.assessments if a.criterion_id == "promise" and a.status == "met")
-            state.memories.append(Memory(event_id=event["id"], kind="promise", text=quote, turn_id=turn_id))
-            facts.append("대표의 약속을 기록했습니다. 실행 완료를 뜻하지는 않습니다.")
-    if action != "talk":
+    # Event criteria have server-owned effects. Replayed quotes cannot repeat rewards.
+    criteria = {c.id:c for c in criteria_for(event['id'])}
+    progress = state.criterion_progress.setdefault(event['id'], {})
+    for item in analysis.assessments:
+        spec = criteria.get(item.criterion_id)
+        if spec is None:
+            raise ValueError('Unknown event criterion')
+        if item.status != 'met':
+            continue
+        progress.setdefault(item.criterion_id, item.source_turn_id or turn_id)
+        if action == 'talk' and spec.effect == 'support':
+            key = f"{event['id']}:support"
+            if key not in state.applied_effects:
+                apply_delta(state, {'trust':3})
+                state.applied_effects.append(key)
+                facts.append('고민을 듣고 격려했습니다. 신뢰가 3 올랐습니다.')
+        if action == 'talk' and spec.effect == 'promise':
+            import hashlib
+            identifier = analysis.promised_action_id or hashlib.sha256(item.quote.encode()).hexdigest()[:16]
+            key = f"{event['id']}:promise:{identifier}"
+            if key not in state.applied_effects and not any(m.event_id==event['id'] and m.kind=='promise' and m.text==item.quote for m in state.memories):
+                state.applied_effects.append(key)
+                remember(state, Memory(event_id=event['id'],kind='promise',text=item.quote,turn_id=turn_id,
+                                      character_id=state.character_id,status='promised',action_id=analysis.promised_action_id))
+                facts.append('약속을 기억하겠습니다. 관련 조사는 별도로 진행할 수 있습니다.')
+    if action != 'talk':
         state.applied_effects.append(effect_key)
-        label = next(a["label"] for a in event["actions"] if a["id"] == action)
-        state.memories.append(Memory(event_id=event["id"], kind="action", text=label, turn_id=turn_id))
+        label = next(a['label'] for a in event['actions'] if a['id']==action)
+        remember(state, Memory(event_id=event['id'],kind='action',text=label,turn_id=turn_id,action_id=action))
+        fulfill_promises(state,action)
+        for criterion in RULES['action_criteria'].get(action,[]):
+            if criterion in criteria:
+                progress.setdefault(criterion,turn_id)
     if outcome not in {"pending", "ending"}:
         apply_delta(state, event["outcomes"][outcome])
         state.completed_events[event["id"]] = outcome
         state.memories.append(Memory(event_id=event["id"], kind="outcome", text=f"{event['title']}: {outcome}", turn_id=turn_id))
         state.event_id = event["next"]
         facts.append(f"장면을 마무리했습니다. 다음 장면은 {EVENTS[state.event_id]['month']}개월차입니다. 데모는 중간 달을 생략합니다.")
-    state.memories = state.memories[-24:]
     return Proposal(state, facts or ["현재 장면에서 대화를 이어갑니다. 새로운 활동이나 증거는 확정되지 않았습니다."], outcome, new_evidence)
