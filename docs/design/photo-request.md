@@ -53,6 +53,7 @@ frontend/public/images/
 - `introAssets`: 시작 이미지·비서·배경 경로.
 - `debutMembers`, `newcomers`의 `portrait`: 소개용 반신 사진 경로.
 - 같은 항목의 `profile`: 별도 카드 사진이 있을 때만 지정. 없으면 반신 사진을 재사용한다.
+- 영입 후 확정 창에도 같은 사진을 재사용한다. 신입 한 명은 크게, 기존 세 명은 작은 카드로 표시한다. 이 창만을 위한 별도 합성 사진은 필요하지 않다.
 - 예: `portrait: '/images/characters/yeoul.png'`. `public`은 URL에서 제외한다.
 - 사진을 넣은 뒤 얼굴 잘림, 모바일 구도, 대사창과의 겹침, 밝은 배경에서의 글자 가독성을 다시 확인한다.
 
