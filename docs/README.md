@@ -20,9 +20,21 @@
 | [프런트엔드 연결 명세](development/frontend-integration.md) | HTTP 요청·응답·대화/도입 표시·오류·재시도·기존 저장 호환 |
 | [협업 가이드](development/git-workflow.md) | AI/웹 역할·작업 브랜치·커밋·PR·병합·검증 |
 
+## 프로토타입과 화면 자료
+
+| 문서 | 확인할 내용 |
+|---|---|
+| [Part 1–2 프로토타입](development/part2-prototype.md) | 서버 면담·선발·1~6개월차 판정·scenario 계약 |
+| [면담 브라우저 데모](development/interview-demo.md) | 프런트 면담 진행·영입·브라우저 저장 |
+| [첫 달 브라우저 데모](development/month-one-demo.md) | 팀 결성·첫 달 계획·표시 수치 |
+| [캐릭터 참고](development/character-reference.md) | 화면에 적용한 공개 프로필과 콘텐츠 출처 |
+| [운영 시스템 참고](development/game-systems-reference.md) | 팀·개인 능력치와 자금의 기획 근거 |
+| [UI 방향](design/ui-direction.md) | 화면 구성·디자인 참고 자료 |
+| [사진 요청 목록](design/photo-request.md) | 사진 구도·파일명·연결 위치 |
+
 ## 개발 계획과 기획 자료
 
-[개발 계획](planning/roadmap.md)은 현재 구현과 완성 목표의 차이, 우선순위와 완료 기준을 관리합니다. 미확정 기획을 확정 규칙으로 취급하지 않습니다.
+[데모 계획](planning/demo-plan.md)은 구간별 시연 범위와 기획 근거를 정리합니다. [개발 계획](planning/roadmap.md)은 현재 구현과 완성 목표의 차이, 우선순위와 완료 기준을 관리합니다. 미확정 기획을 확정 규칙으로 취급하지 않습니다.
 
 기획 원문과 현재 콘텐츠 자료는 [캐릭터 자료](../characters/README.md)와 [스토리라인](../storyline/README.md)에 있습니다. 규칙 해석이 필요한 항목은 [기획 확인사항](../storyline/05-open-questions.md)을 참고하세요.
 

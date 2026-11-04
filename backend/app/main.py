@@ -57,7 +57,7 @@ def create_app(database_path=None, provider=None):
     @app.post("/api/games", status_code=201)
     def create(payload: CreateGame, request: Request, response: Response):
         token = request.cookies.get("prom_owner") or secrets.token_urlsafe(32)
-        result = service.create(hashlib.sha256(token.encode()).hexdigest(), payload.character_id)
+        result = service.create(hashlib.sha256(token.encode()).hexdigest(), payload.character_id, payload.scenario)
         response.set_cookie("prom_owner", token, httponly=True, samesite="strict", secure=request.url.scheme == "https", max_age=60*60*24*30)
         return result
 
