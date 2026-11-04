@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up Prom::Enter SQLite with integrity verification
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/prom-enter/current
+ExecStart=/bin/sh /srv/prom-enter/current/scripts/backup-production.sh
+UMask=0077

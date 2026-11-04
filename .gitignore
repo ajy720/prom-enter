@@ -12,3 +12,4 @@ __pycache__/
 !.env.example
 data/
 .DS_Store
+deploy/.private/
