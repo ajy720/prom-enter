@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { GameView } from './GameView';
 import { Prologue, TitleScreen } from './Prologue';
-import type { Character, Game, TurnInput } from './types';
+import type { Character, CreateGameInput, Game, TurnInput } from './types';
 
 function ServerDemoStart({ onStarted, onBack }: { onStarted: (game: Game) => void; onBack: () => void }) {
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -13,14 +13,14 @@ function ServerDemoStart({ onStarted, onBack }: { onStarted: (game: Game) => voi
     api<{ characters: Character[] }>('/catalog', undefined, controller.signal).then(result => setCharacters(result.characters)).catch(cause => { if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : '목록을 불러오지 못했습니다.'); });
     return () => controller.abort();
   }, []);
-  async function start(characterId: string) {
+  async function start(characterId: string, scenario: CreateGameInput['scenario'] = 'demo') {
     if (busy) return;
     setBusy(true); setError('');
-    try { const game = await api<Game>('/games', { character_id: characterId }); localStorage.setItem('prom-game', game.game_id); onStarted(game); }
+    try { const game = await api<Game>('/games', { character_id: characterId, scenario } satisfies CreateGameInput); localStorage.setItem('prom-game', game.game_id); onStarted(game); }
     catch (cause) { setError(cause instanceof Error ? cause.message : '시작하지 못했습니다.'); }
     finally { setBusy(false); }
   }
-  return <main className="selection-screen"><p className="section-kicker">서버 연결 데모</p><h1>함께할 연습생 선택</h1><p>서버가 제공하는 대화와 사건 진행을 확인하는 별도 데모입니다.</p><div className="month-options">{characters.map(character => <button disabled={busy} key={character.id} onClick={() => void start(character.id)}><strong>{character.name}</strong><span>{character.description}</span></button>)}</div>{error && <p role="alert">{error}</p>}<button className="quiet-button" disabled={busy} onClick={onBack}>시작 화면으로</button></main>;
+  return <main className="selection-screen"><p className="section-kicker">서버 연결 데모</p><h1>서버 플레이 시작</h1><button className="quiet-button" disabled={busy} onClick={() => void start('a', 'part2')}>후보 면담 시작</button><h2>축약 데모 연습생 선택</h2><p>서버가 제공하는 대화와 사건 진행을 확인하는 별도 데모입니다.</p><div className="month-options">{characters.map(character => <button disabled={busy} key={character.id} onClick={() => void start(character.id)}><strong>{character.name}</strong><span>{character.description}</span></button>)}</div>{error && <p role="alert">{error}</p>}<button className="quiet-button" disabled={busy} onClick={onBack}>시작 화면으로</button></main>;
 }
 
 export default function App() {
@@ -30,7 +30,7 @@ export default function App() {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState<TurnInput | null>(null);
-  const [view, setView] = useState<'title' | 'intro' | 'game'>('title');
+  const [view, setView] = useState<'title' | 'intro' | 'game' | 'server-start'>('title');
   const [introRun, setIntroRun] = useState({ fresh: false, key: 0 });
   const requestInFlight = useRef(false);
 
@@ -105,9 +105,9 @@ export default function App() {
   }
 
   if (view === 'intro') return <Prologue key={introRun.key} fresh={introRun.fresh} onTitle={() => setView('title')}/>;
-  if (view === 'title') return <main className="app-shell"><TitleScreen hasGame={!!game} onStart={() => openIntro(true)} onContinue={() => openIntro(false)} onLegacy={() => setView('game')}/></main>;
+  if (view === 'title') return <main className="app-shell"><TitleScreen hasGame={!!game} onStart={() => openIntro(true)} onContinue={() => openIntro(false)} onLegacy={() => setView('game')} onPart2={() => setView('server-start')}/></main>;
 
-  if (!game) return <ServerDemoStart onStarted={setGame} onBack={() => setView('title')}/>;
+  if (!game || view === 'server-start') return <ServerDemoStart onStarted={next => { setGame(next); setPending(null); setText(''); setError(''); setView('game'); }} onBack={() => setView('title')}/>;
 
   return <main className="app-shell is-playing">
     <header className="topbar">

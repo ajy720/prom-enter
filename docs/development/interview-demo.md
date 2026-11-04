@@ -49,4 +49,4 @@
 - 브라우저에서 혜린 → 서연 → 지우 순서, 중간 복귀·이어하기, 한글 질문과 추천 질문, 수동 종료, 8회 뒤 비서 종료, 세 명 완료 후 영입 확인, 새로고침 후 결과 복원을 확인했다.
 - 데스크톱 1440px, 모바일 390px에서 배치를 확인했다. 실제 한글 IME 조합과 강제 응답 실패·재시도는 이번 브라우저 검증에서 재현하지 않았다.
 - 실행: `node --experimental-strip-types --test frontend/tests/interview-state.test.mjs`
-- 미리보기: [면담](design/preview-interview-room.jpg), [완료 상태](design/preview-interview-progress.jpg).
+- 미리보기: [면담](../design/preview-interview-room.jpg), [완료 상태](../design/preview-interview-progress.jpg).

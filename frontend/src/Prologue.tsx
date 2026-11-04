@@ -22,7 +22,7 @@ export function readIntroProgress(): IntroProgress | null {
   } catch { return null; }
 }
 
-export function TitleScreen({ hasGame, onStart, onContinue, onLegacy }: { hasGame: boolean; onStart: () => void; onContinue: () => void; onLegacy: () => void }) {
+export function TitleScreen({ hasGame, onStart, onContinue, onLegacy, onPart2 }: { hasGame: boolean; onStart: () => void; onContinue: () => void; onLegacy: () => void; onPart2: () => void }) {
   const saved = readIntroProgress();
   return <section className="title-screen">
     <div className="title-art"><PhotoSlot src={introAssets.cover} name="Prom::Enter의 새로운 얼굴들" caption="시작 화면 단체 사진 자리"/>
@@ -33,7 +33,8 @@ export function TitleScreen({ hasGame, onStart, onContinue, onLegacy }: { hasGam
       <div className="title-actions"><button className="primary-button" onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
         {saved && <button className="quiet-button" onClick={onContinue}>이야기 이어하기</button>}
       </div>
-      <button className="text-button legacy-link" onClick={onLegacy}>{hasGame ? '이전 축약 데모 이어하기' : '서버 연결 데모 시작'}</button>
+      <button className="text-button legacy-link" onClick={onPart2}>Part 2 프로토타입 시작</button>
+      <button className="text-button legacy-link" onClick={onLegacy}>{hasGame ? '서버 플레이 이어하기' : '서버 연결 데모 시작'}</button>
       <p className="title-footnote">PROM::ENTER · STORY DEMO</p>
     </div>
   </section>;

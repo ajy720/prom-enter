@@ -7,7 +7,7 @@ from app.ai.demo import DemoProvider
 from app.ai.validation import validate_analysis, validate_dialogue
 from app.models import Analysis, Dialogue, Direction
 
-PROMPT_VERSION = 'ai-stages-5-event-openings'
+PROMPT_VERSION = 'part2-prototype-1'
 PROMPTS = Path(__file__).parent / 'prompts'
 ANALYSIS_PROMPT = (PROMPTS / 'analysis.txt').read_text()
 DIALOGUE_PROMPT = (PROMPTS / 'dialogue.txt').read_text()

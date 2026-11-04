@@ -1,0 +1,53 @@
+# Prom::Enter 문서 안내
+
+[프로젝트 소개와 빠른 시작](../README.md)
+
+## 사용 안내
+
+| 문서 | 확인할 내용 |
+|---|---|
+| [설치 및 실행](guides/setup.md) | 로컬 설치·환경 변수·실제 AI 연결·Docker·저장·문제 해결 |
+| [캐릭터 대화 콘솔](guides/character-console.md) | 7명 개별 대화·상대 전환·명령·개발용 기록 저장 |
+| [테스트와 AI 평가](guides/testing.md) | 변경별 검증·자동 테스트·오프라인/실제 모델 평가·수동 플레이 점검 |
+
+## 개발 문서
+
+| 문서 | 확인할 내용 |
+|---|---|
+| [아키텍처](development/architecture.md) | 구성·책임·턴 처리·코드 위치·저장 원칙 |
+| [AI 모듈](development/ai-module.md) | 분석/생성 문맥·사건 평가·프롬프트·검증·기억·모델 호출 계약 |
+| [인물별 지식](development/character-knowledge.md) | 정보의 소유·습득·출처·청중별 공개 권한 |
+| [프런트엔드 연결 명세](development/frontend-integration.md) | HTTP 요청·응답·대화/도입 표시·오류·재시도·기존 저장 호환 |
+| [협업 가이드](development/git-workflow.md) | AI/웹 역할·작업 브랜치·커밋·PR·병합·검증 |
+
+## 프로토타입과 화면 자료
+
+| 문서 | 확인할 내용 |
+|---|---|
+| [Part 1–2 프로토타입](development/part2-prototype.md) | 서버 면담·선발·1~6개월차 판정·scenario 계약 |
+| [면담 브라우저 데모](development/interview-demo.md) | 프런트 면담 진행·영입·브라우저 저장 |
+| [첫 달 브라우저 데모](development/month-one-demo.md) | 팀 결성·첫 달 계획·표시 수치 |
+| [캐릭터 참고](development/character-reference.md) | 화면에 적용한 공개 프로필과 콘텐츠 출처 |
+| [운영 시스템 참고](development/game-systems-reference.md) | 팀·개인 능력치와 자금의 기획 근거 |
+| [UI 방향](design/ui-direction.md) | 화면 구성·디자인 참고 자료 |
+| [사진 요청 목록](design/photo-request.md) | 사진 구도·파일명·연결 위치 |
+
+## 개발 계획과 기획 자료
+
+[데모 계획](planning/demo-plan.md)은 구간별 시연 범위와 기획 근거를 정리합니다. [개발 계획](planning/roadmap.md)은 현재 구현과 완성 목표의 차이, 우선순위와 완료 기준을 관리합니다. 미확정 기획을 확정 규칙으로 취급하지 않습니다.
+
+기획 원문과 현재 콘텐츠 자료는 [캐릭터 자료](../characters/README.md)와 [스토리라인](../storyline/README.md)에 있습니다. 규칙 해석이 필요한 항목은 [기획 확인사항](../storyline/05-open-questions.md)을 참고하세요.
+
+## 담당별 읽는 순서
+
+| 목적 | 권장 순서 |
+|---|---|
+| 처음 실행 | 설치 및 실행 → 테스트와 AI 평가의 수동 플레이 점검 |
+| AI 개발 | 아키텍처 → AI 모듈 → 인물별 지식 → 연결 명세 → 개발 계획 |
+| 웹 개발 | 아키텍처 → 연결 명세 → 테스트와 AI 평가 → 개발 계획 |
+| 캐릭터 검토 | 캐릭터 자료 → 콘솔 → 인물별 지식 → 실제 모델 평가 |
+| 팀 작업 시작 | 협업 가이드와 [AGENTS.md](../AGENTS.md) → 담당 문서 |
+
+## 문서를 갱신할 때
+
+실행·명령은 사용 안내, 구현·계약은 개발 문서, 남은 작업은 개발 계획에서 관리합니다. 같은 설명은 담당 문서 한 곳에 두고 다른 문서는 링크합니다. 경로·제목을 바꾸면 README·문서 간 링크·AGENTS.md도 함께 확인합니다. 과거 작업 보고와 검증 스크린샷은 현재 명세에 쌓지 않습니다.
