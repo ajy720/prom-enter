@@ -6,7 +6,7 @@
 
 ## 원안과 구현 범위
 
-근거는 [월별 사건 1개월차](../storyline/02-monthly-events.md)와 [Figma 원문 S014](../storyline/sources/figma-text.md#s014)다. 사용자 요청은 1개월차 프론트이며, 기존 화면과 연결하고 화이트·연핑크 디자인을 유지한다.
+근거는 [월별 사건 1개월차](../../storyline/02-monthly-events.md)와 [Figma 원문 S014](../../storyline/sources/figma-text.md#s014)다. 사용자 요청은 1개월차 프론트이며, 기존 화면과 연결하고 화이트·연핑크 디자인을 유지한다.
 
 - 세 명 면담 → 한 명 영입 → 사진이 있는 영입 확정 창 → 비서의 프로뮤 결성·계약과 목표·월 단위 활동 안내 → 첫 합숙 시작 → 첫 합동 연습 → 신입의 걱정 → 첫 달 과제 순서다.
 - 영입한 여울/이도/사야의 이름·사진 자리·상황 대사를 사용한다. 기존 멤버는 리안·도하·세인이다.
@@ -38,13 +38,13 @@
 
 ### 영입 확정 및 Part 1 마무리 추가
 
-- [Figma Part 1 마지막 문구](https://www.figma.com/design/zvPBVmlcjPJzgtgfB6QXFg/prom--enter?node-id=7-4)를 브라우저 검색으로 확인했고 [원문 S042](../storyline/sources/figma-text.md#s042)와 일치했다. Figma MCP는 편집 권한이 없어 읽지 못했으며 시각 디자인을 추출·복제한 것은 아니다.
+- [Figma Part 1 마지막 문구](https://www.figma.com/design/zvPBVmlcjPJzgtgfB6QXFg/prom--enter?node-id=7-4)를 브라우저 검색으로 확인했고 [원문 S042](../../storyline/sources/figma-text.md#s042)와 일치했다. Figma MCP는 편집 권한이 없어 읽지 못했으며 시각 디자인을 추출·복제한 것은 아니다.
 - `RecruitmentResult.tsx`가 선택한 신입의 큰 사진과 기존 세 명의 작은 사진을 표시한다. 현재는 이름과 실루엣 자리 표시이며 임의의 인물 사진은 생성하지 않았다. 실제 사진은 `introContent.ts`의 `portrait`/`profile`, 비서는 `introAssets.secretary`에 넣는다.
 - 영입 전 확인과 영입 후 확정 창은 별개다. 확정 창을 닫아도 영입은 유지되며 다시 열 수 있다.
 - `interviews.recruitmentStep`은 사진 확정(0) → 비서 안내(1~3) → 안내 완료(4)로 저장한다. 완료 전에는 첫 합숙 진입 동작이 열리지 않는다. 기존에 첫 달에 진입한 저장은 완료 상태로 호환하며 첫 달 기록을 초기화하지 않는다.
 - 비서가 네 명의 그룹·프로뮤의 2년 계약·3개월 후 쇼케이스·한 달 단위 활동과 신입 훈련/적응 목표를 설명한다. 계약은 대표 개인이 아닌 프로뮤에 적용되며, 사용자는 이 기간 동안 프로뮤를 성공으로 이끌어야 한다(사용자 정정). 왼쪽 팀 상태는 첫 달 초기 안내값 40/20이다. 실제 게임 결과 계산은 계속 서버 연결 후의 작업이다.
 - 새 플레이에서 영입 후 창 열림·닫기/다시 열기·중간 안내 저장 복원·모바일 안내 후 합숙 진입을 확인했다. 상태 테스트 6개와 빌드가 통과했다.
-- 미리보기: [영입 확정](design/preview-recruitment-announcement.jpg), [비서의 다음 목표](design/preview-recruitment-goals.jpg).
+- 미리보기: [영입 확정](../design/preview-recruitment-announcement.jpg), [비서의 다음 목표](../design/preview-recruitment-goals.jpg).
 
 ## 백엔드·AI 연결 시 남은 작업
 
@@ -59,4 +59,4 @@
 - 훈련·규칙 선택, 기존 세 명 대화, 비서의 훈련 안내, 과제 잠금 해제, 계획 확인·확정, 완료 후 기록 열람 확인.
 - 중간 새로고침·영입 결과 왕복·확정 후 새로고침에서 복원 확인. 모바일 390px에서 가로 넘침 없음과 계획 확정 동작 확인.
 - 실제 한글 IME 조합 입력, 저장 공간 부족, 실제 AI/서버 연동은 검증하지 않았다. 백엔드 코드는 변경하지 않았다.
-- 미리보기: [첫 합숙](design/preview-month-one.jpg), [계획 완료](design/preview-month-one-complete.jpg).
+- 미리보기: [첫 합숙](../design/preview-month-one.jpg), [계획 완료](../design/preview-month-one-complete.jpg).

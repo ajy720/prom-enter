@@ -12,7 +12,7 @@
 
 ## 이번 프로토타입의 판정표
 
-[최소 기획 결정](../storyline/06-minimal-decisions.md)을 우선한다. 아래 누락 수치의 보완은 프로토타입용 구현 결정이며 프로듀서의 새 확정 기획을 뜻하지 않는다. 이후 조정 위치는 `backend/app/content/part2.json`과 `backend/app/game/part2.py`다. 복잡한 능력치 상태를 새로 만들지 않고, 훈련 분야는 기존 `training_history`로 기록한다.
+[최소 기획 결정](../../storyline/06-minimal-decisions.md)을 우선한다. 아래 누락 수치의 보완은 프로토타입용 구현 결정이며 프로듀서의 새 확정 기획을 뜻하지 않는다. 이후 조정 위치는 `backend/app/content/part2.json`과 `backend/app/game/part2.py`다. 복잡한 능력치 상태를 새로 만들지 않고, 훈련 분야는 기존 `training_history`로 기록한다.
 
 | 구간 | 행동·판정 |
 |---|---|
