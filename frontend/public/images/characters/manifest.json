@@ -1,0 +1,259 @@
+{
+  "source": "https://cloud.ajy720.me/s/AETsqjRA7QQp9xF",
+  "downloadedOn": "2026-11-04",
+  "policy": "프로듀서 공유 폴더를 이미지 기준으로 사용한다. 파일 내용을 변경하지 않고 복사한다.",
+  "characters": [
+    {
+      "slug": "hayeon",
+      "name": "백하연",
+      "legacyId": "baek_hayeon",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/hayeon/profile.png",
+          "sourceFile": "백하연_비서/1.백하연_프로필.png",
+          "width": 1089,
+          "height": 1445,
+          "sha256": "a256024a99e655fdf07c8ab6b0fb233740bba1a433feb4d08b8f97b03052d0c7"
+        },
+        "profile-2": {
+          "path": "/images/characters/hayeon/profile-2.png",
+          "sourceFile": "백하연_비서/1.백하연_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "6b6fce9186393ca41a98267583a42c897805be03cf4df57b8d4bf80047dcb7ae"
+        },
+        "half-body": {
+          "path": "/images/characters/hayeon/half-body.png",
+          "sourceFile": "백하연_비서/1.백하연_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "0c6da52d7a095bd08dfcd69c0d130278fd077b71296a14090516abccb3f7a058"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/hayeon/half-body-transparent.png",
+          "sourceFile": "백하연_비서/1.백하연_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "5f752c0e67fb8c51459d0ebeaf62b48a167cacbfaea952df2f3304aa1cdcc4e7",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    },
+    {
+      "slug": "rian",
+      "name": "리안",
+      "legacyId": "dahyun",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/rian/profile.png",
+          "sourceFile": "리안_리더/리안_프로필.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "4b7ba3eee54fd179c50e020ad2e82b12d9e2905af77503c4edf640d6abc20d5b"
+        },
+        "profile-2": {
+          "path": "/images/characters/rian/profile-2.png",
+          "sourceFile": "리안_리더/리안_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "f2e2b473be0d715376cfd8b4721d24acf73d3937fc426e5164783281cb948737"
+        },
+        "half-body": {
+          "path": "/images/characters/rian/half-body.png",
+          "sourceFile": "리안_리더/리안_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "1e5ce25a0e419568343e8f3cd8ba356c764e72a10ea2183da09a5557b771a03a"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/rian/half-body-transparent.png",
+          "sourceFile": "리안_리더/2.리안_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "565f462d61ddc22259f16d16103af0269b28c0215dd7e789301f83f89b0fecb4",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    },
+    {
+      "slug": "doha",
+      "name": "도하",
+      "legacyId": "haram",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/doha/profile.png",
+          "sourceFile": "도하_매댄/도하_프로필.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "89060ff6aaec5f386bc07829da4b6e4c57ed5bd68c8a8d6bebc509132f8851bc"
+        },
+        "profile-2": {
+          "path": "/images/characters/doha/profile-2.png",
+          "sourceFile": "도하_매댄/도하_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "2f4457a18ba85e939c8763a880bad26440b23597dfd8fa3a654ec7022761ed83"
+        },
+        "half-body": {
+          "path": "/images/characters/doha/half-body.png",
+          "sourceFile": "도하_매댄/도하_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "dee413c33c999b5e7b2261f256de208707bdb3875f2b4b97ab189f24f1a94d0f"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/doha/half-body-transparent.png",
+          "sourceFile": "도하_매댄/도하_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "8c6cdc3630fe2e9278311b192baadde86a62cf6dd4fb601d841d3f5279a8a66d",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    },
+    {
+      "slug": "sein",
+      "name": "세인",
+      "legacyId": "yuna",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/sein/profile.png",
+          "sourceFile": "세인_예능/세인_프로필.png",
+          "width": 1089,
+          "height": 1445,
+          "sha256": "11ba76cb0aa5ef28cbae72137b83bbbf329afe34788a4a3b7152c62bc3eeca18"
+        },
+        "profile-2": {
+          "path": "/images/characters/sein/profile-2.png",
+          "sourceFile": "세인_예능/세인_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "c670f533afa077561f034190e96a3eb446b95e7b6ff32854e4acb41db15f63d2"
+        },
+        "half-body": {
+          "path": "/images/characters/sein/half-body.png",
+          "sourceFile": "세인_예능/세인_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "5626ac11ec224aaabb5dfbdf7919115e0a367af44cbacf22e8eef163c7974e0a"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/sein/half-body-transparent.png",
+          "sourceFile": "세인_예능/세인_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "49194871b34643a7ae834b30bc4afebe478bbfbffe9e7acb512929aa20f5111e",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    },
+    {
+      "slug": "yeoul",
+      "name": "여울",
+      "legacyId": "seoyeon",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/yeoul/profile.png",
+          "sourceFile": "여울_신입/여울_프로필.png",
+          "width": 1089,
+          "height": 1445,
+          "sha256": "516057755740740b917aa95c16a87648a02061d56b221a96d5d3c5808c2d998b"
+        },
+        "profile-2": {
+          "path": "/images/characters/yeoul/profile-2.png",
+          "sourceFile": "여울_신입/여울_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "f03f90dda05f27c883d7b83152dbe201121073e1d6df8755ba4fc2574d0f0af2"
+        },
+        "half-body": {
+          "path": "/images/characters/yeoul/half-body.png",
+          "sourceFile": "여울_신입/여울_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "7f191eb4002d54325a9346f46ea82abbda3e54a32b3057167973478953ac4b9d"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/yeoul/half-body-transparent.png",
+          "sourceFile": "여울_신입/여울_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "0bc24cf0951015ea6912f1ba701cdc6f8e3f52531275bc346185edc46b2d3415",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    },
+    {
+      "slug": "ido",
+      "name": "이도",
+      "legacyId": "hyerin",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/ido/profile.png",
+          "sourceFile": "이도_신입/이도_프로필.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "a1e525b30d0c59f7948e179930c709f300fb8f87a6bf2d549cc7efdfa7bde3a0"
+        },
+        "profile-2": {
+          "path": "/images/characters/ido/profile-2.png",
+          "sourceFile": "이도_신입/이도_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "9cae3e8d700e934443d13a564199ece84f43597f4e4b163767e21e85db46fe05"
+        },
+        "half-body": {
+          "path": "/images/characters/ido/half-body.png",
+          "sourceFile": "이도_신입/이도_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "3e2e14771ec83d7304078ac4780f3190ee262bd1c7a19a90479ebe9d90e3bdfd"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/ido/half-body-transparent.png",
+          "sourceFile": "이도_신입/이도_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "ab1ed0008dc90df4b4d9df4ef37ac4054fa394c83133a3c9e727d43ab5fc9727",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    },
+    {
+      "slug": "saya",
+      "name": "사야",
+      "legacyId": "jiwoo",
+      "assets": {
+        "profile": {
+          "path": "/images/characters/saya/profile.png",
+          "sourceFile": "사야_신입/사야_프로필.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "adfb81e7b145740f5b78e46d39162d213db1d440934fe0b3007f158cbfa86ce1"
+        },
+        "profile-2": {
+          "path": "/images/characters/saya/profile-2.png",
+          "sourceFile": "사야_신입/사야_프로필2.png",
+          "width": 1312,
+          "height": 1199,
+          "sha256": "e03ea3c6c492b8c178e91552191d7ba4c7d4d6a6961f081d5e35e9aa9e43685d"
+        },
+        "half-body": {
+          "path": "/images/characters/saya/half-body.png",
+          "sourceFile": "사야_신입/사야_상반신.png",
+          "width": 1086,
+          "height": 1448,
+          "sha256": "3e3e7f86f9fa3e72bbd3218af8f44034786ab57424ac6ea18659b4889cbbf99e"
+        },
+        "half-body-transparent": {
+          "path": "/images/characters/saya/half-body-transparent.png",
+          "sourceFile": "사야_신입/사야_상반신_배경제거.png",
+          "width": 1080,
+          "height": 1440,
+          "sha256": "c6a14283e2fb6b0fc4618111e23347fc6a80fb037cfd001ce73dee2fcf8ce9e8",
+          "backgroundRemovedBy": "producer"
+        }
+      }
+    }
+  ]
+}

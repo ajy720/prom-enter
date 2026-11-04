@@ -1,5 +1,9 @@
 # 프로듀서에게 요청할 사진 — 시작부터 면담 상대 선택까지
 
+## 현재 수령 경로
+
+2026-11-04부터 사진 기준은 [프로듀서 공유 폴더](https://cloud.ajy720.me/s/AETsqjRA7QQp9xF)다. 후속 이미지 작업 전 이 폴더에서 최신 파일을 확인한다. 캐릭터 7명의 프로필 두 장·상반신 원본·제공된 배경 제거본은 [캐릭터 이미지 안내](../../frontend/public/images/characters/README.md)에 따라 저장했다. 이전 AI 배경 제거본은 삭제했다. 아래 요청 목록은 필요한 사진의 참고 기준이며, 현재 화면 코드에는 사진 경로를 아직 연결하지 않았다.
+
 ## 우선 요청 목록
 
 | 종류 | 대상 | 수량 | 사용하는 화면 |
@@ -36,13 +40,11 @@
 frontend/public/images/
   title-cover.jpg
   characters/
-    secretary.png
-    rian.png
-    doha.png
-    sein.png
-    yeoul.png
-    ido.png
-    saya.png
+    hayeon/  # 나머지: rian, doha, sein, yeoul, ido, saya
+      profile.png
+      profile-2.png
+      half-body.png
+      half-body-transparent.png
   backgrounds/
     office.jpg
     corridor.jpg
@@ -54,7 +56,7 @@ frontend/public/images/
 - `debutMembers`, `newcomers`의 `portrait`: 소개용 반신 사진 경로.
 - 같은 항목의 `profile`: 별도 카드 사진이 있을 때만 지정. 없으면 반신 사진을 재사용한다.
 - 영입 후 확정 창에도 같은 사진을 재사용한다. 신입 한 명은 크게, 기존 세 명은 작은 카드로 표시한다. 이 창만을 위한 별도 합성 사진은 필요하지 않다.
-- 예: `portrait: '/images/characters/yeoul.png'`. `public`은 URL에서 제외한다.
+- 예: `portrait: '/images/characters/yeoul/half-body-transparent.png'`. `public`은 URL에서 제외한다.
 - 사진을 넣은 뒤 얼굴 잘림, 모바일 구도, 대사창과의 겹침, 밝은 배경에서의 글자 가독성을 다시 확인한다.
 
 ## 전달용 짧은 요청문
