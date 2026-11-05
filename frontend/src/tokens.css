@@ -19,6 +19,8 @@
   --border: color-mix(in srgb, var(--mauve) 32%, var(--white));
   --scrim: color-mix(in srgb, var(--ink) 38%, transparent);
   --shadow: 0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent);
+  --scene-dim: rgb(0 0 0 / 50%);
+  --portrait-shadow: drop-shadow(0 8px 16px rgb(0 0 0 / 25%));
   --font-body: 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
   --text-small: 0.8125rem;
   --text-body: 1rem;

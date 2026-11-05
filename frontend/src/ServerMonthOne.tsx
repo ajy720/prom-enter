@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
+import { ResourceStatus } from './ResourceStatus';
+import { PendingResponse } from './PendingResponse';
+import { pendingFeedback } from './pendingFeedback';
 import { debutMembers, characterPortraits, sceneBackgrounds, newcomers } from './introContent';
 import { dormRules, monthQuestions, trainingOptions } from './monthOneContent';
 import { recruitedCandidateId, serverInterviewFrames } from './serverInterviewState';
@@ -27,9 +30,11 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onQues
   const frames = serverInterviewFrames({ ...game, history: visibleHistory, event_openings: [] }).filter(frame => frame.id !== 'briefing');
   const displayed = privateRoom && !visibleHistory.some(turn => turn.event_id === game.event.id && turn.messages.length)
     ? { speakerId: target?.id ?? '', name: target?.name ?? '대화 상대', text: '연습 소감과 필요한 도움에 대해 이야기를 나눠보세요.' } : frames.at(-1) ?? { speakerId: candidate.id, name: candidate.name, text: '' };
-  const secretarySpeaking = ['secretary', 'baek_hayeon'].includes(displayed.speakerId);
+  const feedback = busy && pending ? pendingFeedback(game, pending) : null;
+  const visibleSpeakerId = feedback?.speakerId ?? displayed.speakerId;
+  const secretarySpeaking = ['secretary', 'baek_hayeon'].includes(visibleSpeakerId);
   const locked = busy || !!pending || complete;
-  const portraitPerson = debutMembers.find(person => person.id === displayed.speakerId) ?? candidate;
+  const portraitPerson = debutMembers.find(person => person.id === visibleSpeakerId) ?? candidate;
   const discussed = debutMembers.filter(person => hasMemberDiscussion(game, person.id)).length;
   const conversationTargets = game.conversation.available_targets.filter(person => person.role === 'newcomer' || debutMembers.some(member => member.id === person.id));
   const confirmAction = game.event.actions.find(action => action.id === 'confirm_month_plan' && !action.used);
@@ -45,7 +50,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onQues
   const summary = <dl className="month-summary"><div><dt>합류 멤버</dt><dd>{candidate.name}</dd></div><div><dt>집중 훈련</dt><dd>{training?.label ?? '미지정'}</dd></div><div><dt>기존 멤버 면담</dt><dd>{discussed} / 3명</dd></div><div><dt>합숙 규칙</dt><dd>{rule?.label ?? '미지정'}</dd></div></dl>;
 
   return <section className="interview-room month-one month-photo-stage" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
-    <div className="scene-resource-status"><section className="resource-status resource-status-compact" aria-label="자금과 진행"><p>자금: <strong>{(game.stats.funds_won / 100_000_000).toFixed(2)}억원</strong></p><p><strong>{game.event.month}개월차</strong> · 첫 합숙</p></section></div>
+    <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div>
     <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
       <section className="team-status-summary" aria-label="팀 능력치"><div className="team-status-values">{([
         ['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', '-'], ['팬 수', '-'],
@@ -57,8 +62,8 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onQues
     <div className="interview-portrait"><PhotoSlot src={characterPortraits[secretarySpeaking ? 'baek_hayeon' : portraitPerson.id]} name={secretarySpeaking ? '백하연' : portraitPerson.name}/></div>
     <div className="interview-context"><span>연습실 · 합숙 첫 달</span><p>처음부터 완벽한 팀은 없으니까.<br/>서로의 속도를 알아가는 시간.</p></div>
     <div className="interview-dock">
-      {(displayed.text || busy) && <section className="dialogue-box"><header className="dialogue-header"><h2>{displayed.name}</h2><div className="dialogue-tools"><span className="mode-label">{complete ? '1개월차 완료' : game.provider === 'demo' ? '1개월차 데모' : '1개월차 AI'}</span><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>
-        <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}><p>{busy ? '응답을 준비하고 있어요…' : displayed.text}</p></div>
+      {(displayed.text || busy) && <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.speakerId ? feedback.name : displayed.name}</h2><div className="dialogue-tools"><span className="mode-label">{complete ? '1개월차 완료' : game.provider === 'demo' ? '1개월차 데모' : '1개월차 AI'}</span><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>
+        <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{!feedback?.speakerId && <p>{displayed.text}</p>}{feedback && <PendingResponse feedback={feedback}/>}</div>
       </section>}
       {!complete && <><div className="month-people" aria-label="첫 달 대화 상대">{conversationTargets.map(person => <button key={person.id} aria-pressed={target?.id === person.id} disabled={locked} onClick={() => void onConversationChange(person.id)}>{person.name}<small>{person.role === 'newcomer' ? '신입' : hasMemberDiscussion(game, person.id) ? '면담 완료' : '면담 전'}</small></button>)}</div>
       <div className="interview-suggestions">{monthQuestions.map(question => <button key={question} disabled={locked} onClick={() => void onQuestion(question)}>{question}</button>)}</div>
