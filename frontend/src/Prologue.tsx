@@ -132,8 +132,8 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
     <Modal open={resourceNoticeOpen} title="회사 자금과 남은 시간 안내" className="resource-notice-modal" onClose={closeResourceNotice}>
       <p className="section-kicker">백하연의 운영 브리핑</p><h2>우리에게 남은 자금과 시간</h2><ResourceStatus/>
       <p>현재 회사의 운영 자금은 20억 원입니다. 프로뮤의 계약 기간은 2년이며, 데뷔 쇼케이스까지는 3개월이 남았습니다.</p>
-      <p>지금부터 대화 화면 오른쪽 위에 남은 자금과 시간이 계속 표시됩니다. 활동과 지출을 결정할 때 함께 확인해주세요.</p>
-      <small>현재 수치는 데모 초기값입니다. 실제 지출과 월 진행에 따른 변화는 추후 연결됩니다.</small>
+      <p>지금부터 대화 화면 상단에 자금과 계약 기간이 계속 표시됩니다. 활동과 지출을 결정할 때 함께 확인해주세요.</p>
+      <small>도입에서는 초기 자금을 표시합니다. 서버 면담과 첫 달 활동에서는 저장된 잔액과 현재 진행 시점을 표시합니다.</small>
       <button className="primary-button" onClick={closeResourceNotice}>확인 · 안내 계속하기 →</button>
     </Modal>
     <Modal open={profilesOpen} title="기존 데뷔조 프로필" className="profiles-modal" onClose={() => setProfilesOpen(false)}>
