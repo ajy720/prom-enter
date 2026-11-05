@@ -7,7 +7,7 @@ import { MonthOne } from './MonthOne';
 import { storyGameKey } from './serverInterviewState';
 import { createMonthOneState, readMonthOneState, type MonthOneState } from './monthOneState';
 import { createInterviewState, readInterviewState, type InterviewState } from './interviewState';
-import { debutMembers, newcomers, introAssets, introScenes, type IntroCharacter } from './introContent';
+import { debutMembers, newcomers, introAssets, introScenes, characterPortraits, characterProfiles, sceneBackgrounds, type IntroCharacter } from './introContent';
 
 const progressKey = 'prom-intro-v1';
 type IntroProgress = { step: number; nickname: string; selectedId: string | null; interviews: InterviewState; monthOne: MonthOneState | null; resourcesIntroduced: boolean };
@@ -51,7 +51,7 @@ function CharacterDetails({ character, showAbilities = false }: { character: Int
 
 function CharacterGallery({ characters, selectedId, onSelect }: { characters: IntroCharacter[]; selectedId: string; onSelect: (id: string) => void }) {
   return <div className="profile-cards">{characters.map((character, index) => <button key={character.id} className={`profile-card ${character.id === selectedId ? 'is-selected' : ''}`} aria-pressed={character.id === selectedId} onClick={() => onSelect(character.id)}>
-    <span className="profile-number">0{index + 1}</span><PhotoSlot src={character.profile ?? character.portrait} name={character.name}/>
+    <span className="profile-number">0{index + 1}</span><PhotoSlot src={characterProfiles[character.id]} name={character.name}/>
     <span className="profile-card-label"><strong>{character.name}</strong><small>{character.role}</small></span>
   </button>)}</div>;
 }
@@ -109,7 +109,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
     {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
     {serverError && <p className="error-banner" role="alert">{serverError}</p>}
     {scene.kind === 'introduction' && character ? <section className="character-introduction" aria-label={`${character.name} 소개`}>
-      <div className="introduction-photo"><PhotoSlot src={character.portrait} name={character.name} caption="반신 사진 자리"/></div>
+      <div className="introduction-photo" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}><PhotoSlot src={characterPortraits[character.id]} name={character.name} caption="반신 사진 자리"/></div>
       <div className="introduction-copy"><p className="section-kicker">MEET OUR TRAINEE · 0{newcomers.indexOf(character) + 1}</p><blockquote>{scene.text}</blockquote><CharacterDetails character={character}/>{navigation}</div>
     </section> : scene.kind === 'selection' ? <InterviewHub state={progress.interviews} selectedId={progress.selectedId} nickname={nickname}
       onInterview={onServerInterview} busy={busy}
@@ -117,10 +117,10 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
       onUpdate={update => setProgress(current => ({ ...current, interviews: update(current.interviews) }))}
       onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}
       onProceed={() => setProgress(current => current.interviews.recruitedId && current.interviews.recruitmentStep >= 4 ? ({ ...current, step: introScenes.length, monthOne: current.monthOne ?? createMonthOneState() }) : current)}/>
-    : <section className={`intro-scene intro-${scene.location}`} aria-label={scene.title} style={introAssets[scene.location] ? { backgroundImage: `url("${introAssets[scene.location]}")` } : undefined}>
+    : <section className={`intro-scene prologue-scene intro-${scene.location}`} aria-label={scene.title} style={{ backgroundImage: `url("${sceneBackgrounds[scene.location]}")` }}>
       <div className="intro-location"><span>Prom::Enter</span><strong>{{ office: '대표실', corridor: '복도', practice: '연습실' }[scene.location]}</strong></div>
       {progress.resourcesIntroduced && <div className="scene-resource-status"><ResourceStatus compact/></div>}
-      <div className="secretary-photo"><PhotoSlot src={introAssets.secretary} name={scene.speaker === '이야기' ? 'Prom::Enter' : '백하연'} caption={scene.speaker === '이야기' ? '대표실 배경 사진 자리' : '대표 비서실장 · 반신 사진 자리'}/></div>
+      <div className="secretary-photo">{scene.speaker !== '이야기' && <PhotoSlot src={characterPortraits.baek_hayeon} name="백하연" caption="대표 비서실장 · 반신 사진 자리"/>}</div>
       <div className="intro-dialogue-dock"><section className="dialogue-box"><header className="dialogue-header"><h2>{scene.speaker}</h2><span className="mode-label">{scene.title}</span></header>
         <div className="dialogue-content" role="log" aria-live="polite"><p>{briefingText.replace('{name}', nickname ? nickname + ' ' : '')}</p></div>
         {scene.kind === 'nickname' && <form className="nickname-form" onSubmit={event => { event.preventDefault(); advance(); }}><label htmlFor="nickname">이름을 입력해주세요</label><div><input autoComplete="off" id="nickname" value={progress.nickname} maxLength={12} placeholder="예: 민지" onChange={event => setProgress(current => ({ ...current, nickname: event.target.value }))} onKeyDown={event => { if (event.key === 'Enter' && (event.nativeEvent.isComposing || event.keyCode === 229)) event.preventDefault(); }}/><span>대표님</span></div><small>최대 12자 · 이후 안내에 이 호칭을 사용합니다.</small></form>}

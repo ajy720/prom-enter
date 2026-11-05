@@ -4,7 +4,7 @@ import { InterviewRecords } from './InterviewRecords';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { RecruitmentResult } from './RecruitmentResult';
-import { newcomers } from './introContent';
+import { newcomers, characterProfiles } from './introContent';
 import { advanceRecruitment, beginInterview, canRecruit, candidateIds, isCandidateId, recruitCandidate, statusLabels, type CandidateId, type InterviewState } from './interviewState';
 
 export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, onBack, onProceed, onInterview, busy = false }: {
@@ -43,7 +43,7 @@ export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, 
     <div className="interview-progress glass-panel"><span>면담 완료 <strong>{completedCount} / 3</strong></span><div>{candidateIds.map(id => <span className={`interview-status status-${state.sessions[id].status}`} key={id}>{newcomers.find(character => character.id === id)!.name} · {statusLabels[state.sessions[id].status]}</span>)}</div></div>
     <div className="gallery-layout"><div className="profile-cards">{newcomers.map(character => {
       const id = character.id as CandidateId;
-      return <button key={id} className={`profile-card ${selectedId === id ? 'is-selected' : ''}`} aria-pressed={selectedId === id} onClick={() => onSelect(id)}><span className={`profile-number interview-status status-${state.sessions[id].status}`}>{statusLabels[state.sessions[id].status]}</span><PhotoSlot src={character.profile ?? character.portrait} name={character.name}/><span className="profile-card-label"><strong>{character.name}{state.recruitedId === id ? ' · 영입' : ''}</strong><small>{character.role}</small></span></button>;
+      return <button key={id} className={`profile-card ${selectedId === id ? 'is-selected' : ''}`} aria-pressed={selectedId === id} onClick={() => onSelect(id)}><span className={`profile-number interview-status status-${state.sessions[id].status}`}>{statusLabels[state.sessions[id].status]}</span><PhotoSlot src={characterProfiles[character.id]} name={character.name}/><span className="profile-card-label"><strong>{character.name}{state.recruitedId === id ? ' · 영입' : ''}</strong><small>{character.role}</small></span></button>;
     })}</div>
       <aside className="profile-detail glass-panel" aria-live="polite">{selected && isCandidateId(selected.id) ? <><p className="section-kicker">{selected.role}</p><h2>{selected.name}</h2><p className="character-meta">{selected.fullName} · {selected.age}세</p><div className="character-keywords">{selected.keywords.map(keyword => <span key={keyword}>{keyword}</span>)}</div><p className="character-description">{selected.description}</p>
         {recruiting ? <button className="primary-button" disabled={!eligible || !!state.recruitedId} onClick={() => setConfirmOpen(true)}>{selected.name} 영입하기</button> : <>

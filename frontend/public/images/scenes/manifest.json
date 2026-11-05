@@ -1,6 +1,6 @@
 {
   "source": "https://cloud.ajy720.me/s/AETsqjRA7QQp9xF",
-  "downloadedOn": "2026-11-04",
+  "downloadedOn": "2026-11-05",
   "assets": [
     {
       "id": "cover",
@@ -9,6 +9,38 @@
       "width": 1536,
       "height": 1024,
       "sha256": "bcf07ecae1ce23d16d9725727033277127f058601a3d5d7332bb1587488ee495"
+    },
+    {
+      "id": "title",
+      "path": "/images/scenes/title.png",
+      "sourceFile": "단체사진/시작화면.png",
+      "width": 2688,
+      "height": 1520,
+      "sha256": "b422310baf0fd3b21d231afb903f50f826edffe64b89ae1c681305a26db72971"
+    },
+    {
+      "id": "office",
+      "path": "/images/scenes/office.png",
+      "sourceFile": "배경/대표실_정방향1.png",
+      "width": 1440,
+      "height": 1440,
+      "sha256": "71cbe4a6bc99319c6ca8bbec45d382e5fc997185ad52d613a611e00d2d6b54cf"
+    },
+    {
+      "id": "corridor",
+      "path": "/images/scenes/corridor.png",
+      "sourceFile": "배경/복도_정방향.png",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "3ddcf1ded66adbb1bf06ff22912b4150c993acf3360ee8d21fc17f1b768d6dd7"
+    },
+    {
+      "id": "practice",
+      "path": "/images/scenes/practice.png",
+      "sourceFile": "배경/연습실_정방향1.png",
+      "width": 1440,
+      "height": 1440,
+      "sha256": "d979c096cbbca3e1e7f2f5528579c7454231e19938d54eef5785c9ecf22f0989"
     }
   ]
 }

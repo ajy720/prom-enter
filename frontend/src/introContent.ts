@@ -1,6 +1,6 @@
 // Public introductions only. Hidden character settings stay out of this UI data.
 // Profiles checked against the current Notion on 2026-11-03. Legacy IDs preserve saves and match the AI profiles.
-// After receiving photos, set the image URLs here, e.g. '/images/characters/yeoul.png'.
+// Producer photo mappings below preserve these legacy character IDs.
 export type IntroCharacter = {
   id: string; name: string; fullName: string; age?: number;
   role: string; description: string; greeting: string; keywords: string[];
@@ -36,7 +36,35 @@ export const debutMembers: IntroCharacter[] = [
 ];
 
 export const introAssets: { cover?: string; secretary?: string; office?: string; corridor?: string; practice?: string } = {
-  cover: '/images/scenes/cover.png',
+  cover: '/images/scenes/title.png',
+};
+
+// Producer-provided cutouts, keyed by the existing save/AI character IDs.
+export const characterPortraits: Record<string, string> = {
+  baek_hayeon: '/images/characters/hayeon/half-body-transparent.png',
+  dahyun: '/images/characters/rian/half-body-transparent.png',
+  haram: '/images/characters/doha/half-body-transparent.png',
+  yuna: '/images/characters/sein/half-body-transparent.png',
+  seoyeon: '/images/characters/yeoul/half-body-transparent.png',
+  hyerin: '/images/characters/ido/half-body-transparent.png',
+  jiwoo: '/images/characters/saya/half-body-transparent.png',
+};
+
+// The producer calls these profile 1 (the files have no "2" suffix).
+export const characterProfiles: Record<string, string> = {
+  baek_hayeon: '/images/characters/hayeon/profile.png',
+  dahyun: '/images/characters/rian/profile.png',
+  haram: '/images/characters/doha/profile.png',
+  yuna: '/images/characters/sein/profile.png',
+  seoyeon: '/images/characters/yeoul/profile.png',
+  hyerin: '/images/characters/ido/profile.png',
+  jiwoo: '/images/characters/saya/profile.png',
+};
+
+export const sceneBackgrounds = {
+  office: '/images/scenes/office.png',
+  corridor: '/images/scenes/corridor.png',
+  practice: '/images/scenes/practice.png',
 };
 
 export type IntroScene = {
