@@ -4,7 +4,7 @@ import { PhotoSlot } from './PhotoSlot';
 import { useDialogueHistory } from './DialogueNavigation';
 import { TeamStatus } from './TeamStatus';
 import { ResourceStatus } from './ResourceStatus';
-import { debutMembers, introAssets, type IntroCharacter } from './introContent';
+import { debutMembers, characterPortraits, sceneBackgrounds, type IntroCharacter } from './introContent';
 import type { CandidateId } from './interviewState';
 import { dormRules, monthQuestions, monthReply, trainingOptions } from './monthOneContent';
 import { canFinishMonth, finishMonth, hasDiscussion, memberIds, recordMonthTurn, type MonthOneState, type MonthSpeaker } from './monthOneState';
@@ -24,9 +24,9 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   const rule = dormRules.find(option => option.id === state.rule);
   const talked = memberIds.filter(id => hasDiscussion(state, id)).length;
   const scenes = [
-    { speaker: '이야기', portrait: candidate.portrait, text: `프로뮤의 첫 합숙이 시작됐습니다.\n${candidate.name}, 리안, 도하, 세인. 서로 다른 시간을 지나온 네 사람이 같은 숙소에서 하루를 시작합니다. 익숙해지기까지는 조금 시간이 필요할 것 같습니다.` },
-    { speaker: '이야기', portrait: candidate.portrait, text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 신입은 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
-    { speaker: candidate.name, portrait: candidate.portrait, text: candidate.id === 'jiwoo' ? '혼자 연습할 때는 문제없었습니다. 그런데 같이 하니 자꾸 어긋납니다. 제가 이 자리에 맞는 사람인지……실력으로 보여드리고 싶습니다.' : candidate.id === 'hyerin' ? '저……다른 친구가 왔다면 더 잘했을까요? 제가 다른 사람의 자리를 가져간 것 같아서……자꾸 긴장이 돼요.' : '제가 자꾸 늦어서 언니들 연습까지 멈추는 것 같아요. 다른 친구가 왔으면 더 잘했을까요……아니에요, 저도 꼭 따라갈 거예요.' },
+    { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `프로뮤의 첫 합숙이 시작됐습니다.\n${candidate.name}, 리안, 도하, 세인. 서로 다른 시간을 지나온 네 사람이 같은 숙소에서 하루를 시작합니다. 익숙해지기까지는 조금 시간이 필요할 것 같습니다.` },
+    { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 신입은 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
+    { speaker: candidate.name, portrait: characterPortraits[candidate.id], text: candidate.id === 'jiwoo' ? '혼자 연습할 때는 문제없었습니다. 그런데 같이 하니 자꾸 어긋납니다. 제가 이 자리에 맞는 사람인지……실력으로 보여드리고 싶습니다.' : candidate.id === 'hyerin' ? '저……다른 친구가 왔다면 더 잘했을까요? 제가 다른 사람의 자리를 가져간 것 같아서……자꾸 긴장이 돼요.' : '제가 자꾸 늦어서 언니들 연습까지 멈추는 것 같아요. 다른 친구가 왔으면 더 잘했을까요……아니에요, 저도 꼭 따라갈 거예요.' },
   ];
   const introductory = state.scene < scenes.length;
   const storyFrames = scenes.slice(0, introductory ? state.scene + 1 : scenes.length).map(scene => ({ ...scene, photoName: scene.speaker === '이야기' ? candidate.name : scene.speaker }));
@@ -34,10 +34,10 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   const lastMessage = messages[messages.length - 1];
   const secretaryReply = lastMessage?.reply.startsWith('백하연: ');
   const displayed = introductory ? storyFrames[history.index] : state.completed
-    ? { speaker: '백하연', text: '대표님, 이번 달 훈련 분야와 합숙 규칙, 멤버들의 의견을 기록했습니다. 서로의 이야기를 바탕으로 첫 합숙을 준비하겠습니다.', portrait: introAssets.secretary, photoName: '백하연' }
+    ? { speaker: '백하연', text: '대표님, 이번 달 훈련 분야와 합숙 규칙, 멤버들의 의견을 기록했습니다. 서로의 이야기를 바탕으로 첫 합숙을 준비하겠습니다.', portrait: characterPortraits.baek_hayeon, photoName: '백하연' }
     : { speaker: secretaryReply ? '백하연' : person.name,
       text: lastMessage?.reply.replace(/^백하연: /, '') ?? '연습 소감과 필요한 도움에 대해 이야기를 나눠보세요. 대화 상대는 아래에서 바꿀 수 있어요.',
-      portrait: secretaryReply ? introAssets.secretary : person.portrait, photoName: secretaryReply ? '백하연' : person.name };
+      portrait: secretaryReply ? characterPortraits.baek_hayeon : characterPortraits[person.id === 'newcomer' ? candidate.id : person.id], photoName: secretaryReply ? '백하연' : person.name };
   const recordPerson = people.find(target => target.id === recordsSpeaker)!;
   function openRecords() { setRecordsSpeaker(speaker); setMenu('records'); }
 
@@ -52,7 +52,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
 
   return <div className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
-    <section className="interview-room month-one" aria-label="1개월차 어색한 첫 합숙" style={introAssets.practice ? { backgroundImage: `url("${introAssets.practice}")`, backgroundSize: 'cover' } : undefined}>
+    <section className="interview-room month-one month-photo-stage" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
       <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
 

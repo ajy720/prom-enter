@@ -132,6 +132,10 @@
 
 `portrait_url`은 현재 예시 SVG입니다. 과거 턴은 당시 방의 캡션과 함께 같은 타임라인에 표시합니다.
 
+사진이 연결된 도입·후보 면담·영입 결과·1개월차 화면은 `introContent.ts`의 `characterPortraits`(제공 상반신 배경 제거본), `characterProfiles`(프로필1), `sceneBackgrounds`(정방향 배경)를 사용합니다. 기존 인물 ID와 화자 판정은 유지하며 서버의 `portrait_url`·HTTP 필드·저장 형식을 바꾸지 않습니다. 1개월차는 기존 `portraitPerson`·비서 화자 판정으로 사진을 고르고, 훈련·규칙 선택 시 현재 대화와 사진을 유지합니다. 2026-11-05 적용: 프런트 코드와 `public/images`를 함께 적용하며 웹 담당의 별도 API 수정이나 서버 적용 순서는 필요하지 않습니다.
+
+최종 영입 확정 창은 `RecruitmentResult.tsx`의 `recruitmentPhotos`를 사용해 선발 신입을 배경 있는 상반신 원본(`half-body.png`), 기존 멤버를 프로필2(`profile-2.png`)로 표시합니다. 다른 화면의 사진·화자 대응은 그대로입니다.
+
 #### 상대 전환 처리
 
 - 명시적 전환은 모델 호출 없이 새 방과 상태 버전을 저장하고 `kind=conversation_change` 알림을 기록합니다. 알림은 사용자·NPC 발언으로 AI 문맥이나 지식에 넣지 않습니다.

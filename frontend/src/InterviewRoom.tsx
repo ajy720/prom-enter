@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { InterviewRecords } from './InterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { introAssets, type IntroCharacter } from './introContent';
+import { characterPortraits, sceneBackgrounds, type IntroCharacter } from './introContent';
 import { AUTO_FINISH_TURNS, appendInterviewTurn, finishInterview, statusLabels, type CandidateId, type InterviewSession } from './interviewState';
 import { demoInterviewProvider, farewell, recommendedQuestions, type InterviewProvider, type InterviewRequest } from './interviewProvider';
 
@@ -47,14 +47,14 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
     }
   }
 
-  return <section className="interview-room" aria-label={`${character.name} 면담`}>
+  return <section className="interview-room candidate-interview" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
     <aside className="interview-info glass-panel"><p className="section-kicker">일대일 면담 · 대표실</p><h1>{character.name}</h1><p>{character.fullName} · {character.age}세</p><p className="interview-role">{character.role}</p>
       <span className={`interview-status status-${session.status}`}>{statusLabels[session.status]}</span>
       <p className="interview-count">나눈 이야기 <strong>{session.turnCount}</strong> / {AUTO_FINISH_TURNS}</p>
       <p className="interview-help">이야기를 한 번 나눈 뒤 마무리할 수 있어요.</p>
     </aside>
-    <div className="interview-portrait"><PhotoSlot src={secretarySpeaking ? introAssets.secretary : character.portrait} name={secretarySpeaking ? '백하연' : character.name} caption="반신 사진 자리"/></div>
+    <div className="interview-portrait"><PhotoSlot src={characterPortraits[secretarySpeaking ? 'baek_hayeon' : character.id]} name={secretarySpeaking ? '백하연' : character.name} caption="반신 사진 자리"/></div>
     <div className="interview-context"><span>우리의 첫 면담</span><p>잘하는 것부터, 아직 서툰 마음까지.<br/>한 사람의 이야기를 들어보세요.</p></div>
     <div className="interview-dock">
       <section className="dialogue-box"><header className="dialogue-header"><h2>{speaker}</h2><div className="dialogue-tools"><span className="mode-label">데모 면담</span><button className="text-button" onClick={() => setRecordsOpen(true)}>면담 내용 다시보기</button></div></header>

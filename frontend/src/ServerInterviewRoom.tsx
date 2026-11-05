@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { introAssets, newcomers } from './introContent';
+import { characterPortraits, sceneBackgrounds, newcomers } from './introContent';
 import { candidateInterviewFrames, candidateInterviewRecordFrames, interviewCandidateId } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
@@ -23,13 +23,13 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
   const limit = game.interview?.turn_limit ?? 8;
   const finish = game.event.actions.find(action => action.id === 'close_interview');
 
-  return <section className="interview-room" aria-label={`${character.name} 면담`}>
+  return <section className="interview-room candidate-interview" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
     <aside className="interview-info glass-panel"><p className="section-kicker">일대일 면담 · 대표실</p><h1>{character.name}</h1><p>{character.fullName} · {character.age}세</p><p className="interview-role">{character.role}</p>
       <span className={`interview-status status-${complete ? 'completed' : 'in_progress'}`}>{complete ? '면담 완료' : '면담 중'}</span><p className="interview-count">나눈 이야기 <strong>{count}</strong> / {limit}</p>
       <p className="interview-help">면담은 최대 {limit}회까지 진행됩니다.</p>
     </aside>
-    <div className="interview-portrait"><PhotoSlot src={secretarySpeaking ? introAssets.secretary : character.portrait} name={secretarySpeaking ? '백하연' : character.name}/></div>
+    <div className="interview-portrait"><PhotoSlot src={characterPortraits[secretarySpeaking ? 'baek_hayeon' : character.id]} name={secretarySpeaking ? '백하연' : character.name}/></div>
     <div className="interview-context"><span>우리의 첫 면담</span><p>잘하는 것부터, 아직 서툰 마음까지.<br/>한 사람의 이야기를 들어보세요.</p></div>
     <div className="interview-dock">
       <section className="dialogue-box"><header className="dialogue-header"><h2>{displayed.name}</h2><div className="dialogue-tools"><span className="mode-label">{game.provider === 'demo' ? '데모 면담' : 'AI 면담'}</span><button className="text-button" onClick={() => setRecordsOpen(true)}>면담 내용 다시보기</button></div></header>
