@@ -7,6 +7,7 @@
 | 문서 | 확인할 내용 |
 |---|---|
 | [설치 및 실행](guides/setup.md) | 로컬 설치·환경 변수·실제 AI 연결·Docker·저장·문제 해결 |
+| [개인 서버 테스트 배포](guides/personal-server.md) | 접속 주소·Docker 실행·저장 위치 |
 | [캐릭터 대화 콘솔](guides/character-console.md) | 7명 개별 대화·상대 전환·명령·개발용 기록 저장 |
 | [테스트와 AI 평가](guides/testing.md) | 변경별 검증·자동 테스트·오프라인/실제 모델 평가·수동 플레이 점검 |
 
