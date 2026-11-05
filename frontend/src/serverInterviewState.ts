@@ -34,6 +34,11 @@ export function candidateInterviewFrames(game: Game): InterviewFrame[] {
   return frames;
 }
 
+export function candidateInterviewRecordFrames(game: Game): InterviewFrame[] {
+  return candidateInterviewFrames({ ...game, history: game.history.filter(turn =>
+    !['close_interview', 'finish_interview'].includes(turn.analysis?.action_id)) });
+}
+
 // Display only server-confirmed turns for this interview, using each turn's own room.
 export function serverInterviewFrames(game: Pick<Game, 'event' | 'history' | 'event_openings' | 'conversation' | 'character'>): InterviewFrame[] {
   const opening = game.event_openings.find(item => item.event_id === game.event.id);
