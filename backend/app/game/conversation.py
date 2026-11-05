@@ -2,12 +2,16 @@
 import uuid
 from app.ai.profiles import DATA, character_profile, profile_id
 from app.models import Conversation, GameError, State
+from app.game.interviews import is_interview
 
 
 def people(state: State) -> dict[str, str]:
-    # The condensed scenario currently stages the selected trainee and secretary.
-    # Add future event-specific availability here, never in browser validation.
-    return {'newcomer':profile_id(state.character_id), 'secretary':DATA['secretary_id']}
+    available = {'newcomer':profile_id(state.character_id), 'secretary':DATA['secretary_id']}
+    if is_interview(state.event_id):
+        return {'newcomer':available['newcomer']}
+    if state.event_id == 'p2_m01_training':
+        available.update({person:person for person in ('dahyun','haram','yuna')})
+    return available
 
 
 def make_conversation(state: State, mode: str = 'public', target: str | None = None) -> Conversation:
@@ -15,10 +19,11 @@ def make_conversation(state: State, mode: str = 'public', target: str | None = N
     if mode == 'private':
         target = available.get(target, profile_id(target)) if target else None
         if target not in available.values():
-            raise GameError('현재 장면에서는 선택한 신입 또는 백하연과 대화할 수 있습니다.',422)
+            raise GameError('현재 장면에서 대화할 수 있는 상대를 선택해주세요.',422)
         participants = ['player',target]
     elif mode == 'public' and target is None:
-        participants = ['player',*available.values()]
+        # Keep existing public rooms compatible. Established members join only 1:1.
+        participants = ['player',available['newcomer']] + ([available['secretary']] if 'secretary' in available else [])
     else:
         raise GameError('함께 대화에는 대상을 지정하지 않고, 1:1 대화에는 대상을 지정해주세요.',422)
     # Stable room IDs permit deterministic restoration of pre-conversation saves
@@ -28,6 +33,9 @@ def make_conversation(state: State, mode: str = 'public', target: str | None = N
 
 
 def current_conversation(state: State) -> Conversation:
+    if is_interview(state.event_id):
+        # Old saves may contain the secretary or an old private room.
+        return make_conversation(state)
     if state.conversation is None:
         return make_conversation(state)
     room = state.conversation

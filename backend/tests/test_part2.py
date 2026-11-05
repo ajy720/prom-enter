@@ -25,11 +25,12 @@ def session(tmp_path):
         yield client,provider,game
 
 
-def send(client, game, text, *, action=False, status=200, key=None):
+def send(client, game, text, *, action=False, status=200, key=None, stop=False):
     response=client.post(f"/api/games/{game['game_id']}/turns",json={
         'request_id':key or f"part2-turn-{game['version']}",'state_version':game['version'],
         'input_type':'action' if action else 'chat', 'action_id':text if action else None,
         'text':'' if action else text,
+        **({'stop_after_month_one': True} if stop else {}),
     })
     assert response.status_code==status,response.text
     return response.json() if status!=200 else response.json()['game']
@@ -76,7 +77,84 @@ def test_interview_identity_and_privacy(session):
     b_view=next(view for view in provider.views if view.character.id==character_profile('b').id)
     assert '초록구름' not in b_view.model_dump_json()
     # The secretary attended both interviews and may retain the earlier report.
-    assert set(game['conversation']['available_targets'][i]['role'] for i in range(2))=={'newcomer','secretary'}
+    assert [person['role'] for person in game['conversation']['available_targets']] == ['newcomer']
+
+
+@pytest.mark.parametrize('slot', ['a','b','c'])
+def test_interview_eight_exchanges_candidate_only_and_secretary_closes(session, slot):
+    client, provider, game = session
+    if slot != 'a':
+        game = send(client, game, f'interview_{slot}', action=True)
+    event_id = game['event']['id']
+    assert [m['name'] for m in game['event_openings'][-1]['messages']] == [game['character']['name']]
+    assert {p['role'] for p in game['conversation']['participants']} == {'player','newcomer'}
+    response = client.post(f"/api/games/{game['game_id']}/turns",json={'request_id':'not-secretary-room','state_version':game['version'],'input_type':'conversation','conversation_mode':'private','target_character_id':'baek_hayeon'})
+    assert response.status_code == 422
+    for count in range(1,8):
+        game = send(client, game, f'연습 이야기 {count}번 들려줘')
+        assert game['interview']['turn_count'] == count
+        assert game['interview']['completed'] is False
+        assert [m['speaker_id'] for m in game['history'][-1]['messages']] == ['newcomer']
+    provider.fail = True
+    send(client,game,'마지막 연습 이야기 들려줘',status=502,key='eighth-interview')
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    provider.fail = False
+    finished = send(client,game,'마지막 연습 이야기 들려줘',key='eighth-interview')
+    assert finished['event']['id'] == event_id
+    assert finished['interview']['turn_count'] == 8 and finished['interview']['completed']
+    assert [m['speaker_id'] for m in finished['history'][-1]['messages']] == ['newcomer','secretary']
+    assert finished['history'][-1]['ai_trace']['generation_calls'] == 1
+    assert finished['history'][-1]['interview_closed'] is True
+    assert send(client,game,'마지막 연습 이야기 들려줘',key='eighth-interview') == finished
+    send(client,finished,'아홉 번째 질문',status=409)
+    assert client.get(f"/api/games/{game['game_id']}").json() == finished
+    provider.views = []
+    following = send(client,finished,'finish_interview',action=True)
+    assert following['event']['id'] != event_id
+    assert following['interview']['turn_count'] == 0
+    assert provider.views == []
+
+
+@pytest.mark.parametrize('slot', ['a','b','c'])
+def test_manual_close_keeps_room_until_return_to_list(session, slot):
+    client, provider, game = session
+    if slot != 'a':
+        game = send(client,game,f'interview_{slot}',action=True)
+    send(client,game,'close_interview',action=True,status=422,key='close-before-chat')
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    assert provider.views == []
+    game = send(client,game,'연습 이야기를 들려줘')
+    event_id = game['event']['id']
+    provider.fail = True
+    send(client,game,'close_interview',action=True,status=502,key='manual-interview-close')
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    provider.fail = False
+    closed = send(client,game,'close_interview',action=True,key='manual-interview-close')
+    assert closed['event']['id'] == event_id
+    assert closed['interview']['completed'] and closed['interview']['completed_by'] == 'player'
+    assert closed['interview']['turn_count'] == 1
+    assert [m['speaker_id'] for m in closed['history'][-1]['messages']] == ['newcomer']
+    assert client.get(f"/api/games/{game['game_id']}").json() == closed
+    assert send(client,game,'close_interview',action=True,key='manual-interview-close') == closed
+    send(client,closed,'새 질문',status=409)
+    send(client,closed,'close_interview',action=True,status=409)
+    provider.views = []
+    following = send(client,closed,'finish_interview',action=True)
+    assert following['event']['id'] != event_id
+    assert provider.views == []
+
+
+def test_interview_previous_public_or_secretary_room_restores_candidate_only(session):
+    import hashlib
+    from app.game.conversation import make_conversation
+    client, _, game = session
+    service = client.app.state.service
+    owner = hashlib.sha256(client.cookies['prom_owner'].encode()).hexdigest()
+    state = service.repository.get(game['game_id'],owner)
+    # Model a room stored by the earlier two-speaker implementation.
+    state.conversation = make_conversation(state)
+    state.conversation.participant_ids.append('baek_hayeon')
+    assert [person['role'] for person in service.view(state)['conversation']['participants']] == ['player','newcomer']
 
 
 def test_selection_gate_and_noncommands(session):
@@ -124,8 +202,238 @@ def test_training_reward_cap_and_out_of_scope_target(session):
     before=game['stats'].copy()
     game=send(client,game,'보컬 훈련해줘')
     assert game['stats']==before and game['training_history']==['vocal']
-    send(client,game,'train_dance',action=True,status=422)
-    send(client,game,'리안이랑 대화하고 싶어',status=422)
+    changed = send(client,game,'train_dance',action=True)
+    assert changed['stats'] == before and changed['training_history'] == ['dance']
+    send(client,changed,'이도랑 대화하고 싶어',status=422)
+
+
+def switch_month_room(client, game, target):
+    response = client.post(f"/api/games/{game['game_id']}/turns", json={
+        'request_id': f"month-room-{game['version']}", 'state_version': game['version'],
+        'input_type': 'conversation', 'conversation_mode': 'private' if target else 'public',
+        'target_character_id': target,
+    })
+    assert response.status_code == 200, response.text
+    return response.json()['game']
+
+
+@pytest.mark.parametrize('member', ['dahyun', 'haram', 'yuna'])
+def test_first_month_member_private_dialogue_and_restore(session, member):
+    client, provider, game = session
+    game = cast(client, game)
+    assert {person['id'] for person in game['conversation']['available_targets']} >= {'dahyun','haram','yuna'}
+    assert {person['role'] for person in game['conversation']['participants']} == {'player','newcomer','secretary'}
+    game = switch_month_room(client, game, member)
+    before = game['stats'].copy()
+    provider.views = []
+    game = send(client, game, '함께 연습하는 소감을 이야기해줘')
+    assert game['character']['id'] == 'c'
+    assert game['stats'] == before
+    assert [m['speaker_id'] for m in game['history'][-1]['messages']] == [member]
+    assert game['history'][-1]['messages'][0]['audience'] == [member]
+    assert provider.views[-1].character.id == member
+    assert provider.views[-1].audience_ids == ['player', member]
+    assert set(provider.views[-1].speakers) == {member}
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    provider.views = []
+    changed = send(client, game, 'rule_buddy', action=True)
+    assert changed['conversation'] == game['conversation']
+    assert changed['history'][-1]['messages'] == []
+    assert provider.views == []
+
+
+def test_member_dialogue_does_not_leak_to_other_member_or_public(session):
+    client, provider, game = session
+    game = switch_month_room(client, cast(client, game), 'dahyun')
+    game = send(client, game, '우리 대화의 암호는 달빛호두야')
+    game = switch_month_room(client, game, 'haram')
+    provider.views = []
+    game = send(client, game, '함께 연습하는 소감을 이야기해줘')
+    assert '달빛호두' not in provider.views[-1].model_dump_json()
+    game = switch_month_room(client, game, None)
+    provider.views = []
+    game = send(client, game, '함께 연습하는 소감을 이야기해줘')
+    assert all('달빛호두' not in view.model_dump_json() for view in provider.views)
+    game = switch_month_room(client, game, 'dahyun')
+    provider.views = []
+    game = send(client, game, '아까 이야기한 암호 기억해?')
+    assert '달빛호두' in provider.views[-1].model_dump_json()
+
+
+@pytest.mark.parametrize('rule', ['buddy','meeting','rest'])
+def test_first_month_rule_saved_once_without_stat_bonus(session, rule):
+    client, provider, game = session
+    game = cast(client, game)
+    before = game['stats'].copy()
+    provider.fail = True
+    provider.views = []
+    ruled = send(client, game, f'rule_{rule}', action=True, key=f'first-rule-{rule}')
+    assert ruled['history'][-1]['messages'] == [] and provider.views == []
+    assert ruled['stats'] == before
+    assert ruled['event']['id'] == 'p2_m01_training'
+    assert next(a for a in ruled['event']['actions'] if a['id'] == f'rule_{rule}')['used']
+    assert send(client, game, f'rule_{rule}', action=True, key=f'first-rule-{rule}') == ruled
+    other = 'meeting' if rule != 'meeting' else 'buddy'
+    changed = send(client, ruled, f'rule_{other}', action=True)
+    assert changed['stats'] == before
+    assert {a['id'] for a in changed['event']['actions'] if a['used']} == {f'rule_{other}'}
+    assert client.get(f"/api/games/{game['game_id']}").json() == changed
+
+
+@pytest.mark.parametrize('skill', ['vocal', 'dance', 'variety'])
+def test_first_month_training_saved_once_and_restored(session, skill):
+    client, _, game = session
+    game = cast(client, game)
+    before = game['stats'].copy()
+    assert before['funds_won'] == 2_000_000_000
+    trained = send(client, game, f'train_{skill}', action=True, key=f'first-month-{skill}')
+    assert trained['event']['id'] == 'p2_m01_training'
+    assert trained['stats']['funds_won'] == before['funds_won'] - 40_000_000
+    assert trained['stats']['funds_won'] == 1_960_000_000
+    assert trained['stats']['fatigue'] == before['fatigue'] + 10
+    assert trained['training_history'] == [skill]
+    assert next(a for a in trained['event']['actions'] if a['id'] == f'train_{skill}')['used']
+    replay = send(client, game, f'train_{skill}', action=True, key=f'first-month-{skill}')
+    assert replay == trained
+    assert client.get(f"/api/games/{game['game_id']}").json() == trained
+    other = 'dance' if skill != 'dance' else 'vocal'
+    changed = send(client, trained, f'train_{other}', action=True)
+    assert changed['stats'] == trained['stats']
+    assert changed['training_history'] == [other]
+    assert {a['id'] for a in changed['event']['actions'] if a['used']} == {f'train_{other}'}
+
+
+def test_old_part2_funds_restore_twenty_oku_baseline_without_repeating_credit(session):
+    import json
+    client, _, game = session
+    game = send(client, cast(client, game), 'train_vocal', action=True)
+    repository = client.app.state.service.repository
+    with repository.connect() as db:
+        saved = json.loads(db.execute('SELECT state FROM games WHERE id=?', (game['game_id'],)).fetchone()['state'])
+        saved.pop('starting_funds_won')
+        saved['stats']['funds_won'] = 260_000_000
+        db.execute('UPDATE games SET state=? WHERE id=?', (json.dumps(saved), game['game_id']))
+    restored = client.get(f"/api/games/{game['game_id']}").json()
+    assert restored['stats']['funds_won'] == 1_960_000_000
+    assert client.get(f"/api/games/{game['game_id']}").json() == restored
+    changed = send(client, restored, 'train_dance', action=True)
+    assert changed['stats'] == restored['stats']
+    assert client.get(f"/api/games/{game['game_id']}").json() == changed
+
+
+def test_month_plan_choices_can_change_back_and_lock_only_after_confirmation(session):
+    client, provider, game = session
+    game = cast(client, game)
+    game = send(client, game, 'train_vocal', action=True)
+    game = send(client, game, 'rule_buddy', action=True)
+    charged = game['stats'].copy()
+    provider.fail = True
+    provider.views = []
+    game = send(client, game, 'train_dance', action=True, key='change-training-fail')
+    game = send(client, game, 'rule_rest', action=True, key='change-rule-fail')
+    for action in ['train_variety', 'train_vocal', 'rule_meeting', 'rule_buddy']:
+        game = send(client, game, action, action=True)
+        assert game['stats'] == charged
+    assert game['training_history'] == ['vocal']
+    assert {a['id'] for a in game['event']['actions'] if a['used']} == {'train_vocal', 'rule_buddy'}
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    assert provider.views == []
+    provider.fail = False
+    completed = send(client, game, 'confirm_month_plan', action=True, stop=True, key='confirm-changed-plan')
+    assert completed['stats'] == charged
+    assert send(client, game, 'confirm_month_plan', action=True, stop=True, key='confirm-changed-plan') == completed
+    for action in ['train_dance', 'rule_rest']:
+        send(client, completed, action, action=True, status=409)
+    assert client.get(f"/api/games/{game['game_id']}").json() == completed
+
+
+@pytest.mark.parametrize('target', [None, 'dahyun', 'haram', 'yuna', 'saya'])
+def test_plan_choice_is_silent_and_preserves_current_room(session, target):
+    client, provider, game = session
+    game = cast(client, game, 'c')
+    if target:
+        game = switch_month_room(client, game, target)
+    room = game['conversation']
+    before = game['stats'].copy()
+    provider.views = []
+    provider.fail = True
+    for action in ['train_vocal', 'train_dance', 'rule_buddy', 'rule_rest']:
+        original = game
+        game = send(client, game, action, action=True, key=f'silent-{action}')
+        assert game['conversation'] == room
+        assert game['history'][-1]['kind'] == 'activity'
+        assert game['history'][-1]['messages'] == []
+        assert game['history'][-1]['ai_trace']['generation_calls'] == 0
+        assert send(client, original, action, action=True, key=f'silent-{action}') == game
+        assert client.get(f"/api/games/{game['game_id']}").json() == game
+    assert game['stats']['funds_won'] == before['funds_won'] - 40_000_000
+    assert game['stats']['fatigue'] == before['fatigue'] + 10
+    assert provider.views == []
+
+
+@pytest.mark.parametrize('command,action', [('confirm_month_plan', True), ('finish_event', True), ('이번 달 마무리해줘', False), ('skip_training', True)])
+def test_month_one_completion_stops_without_second_month(session, command, action):
+    client, provider, game = session
+    game = cast(client, game)
+    before = game['stats'].copy()
+    provider.fail = True
+    send(client, game, command, action=action, status=502, key='month-one-final', stop=True)
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    provider.fail = False
+    completed = send(client, game, command, action=action, key='month-one-final', stop=True)
+    assert completed['event']['id'] == 'p2_m01_training'
+    assert completed['completed_events']['p2_m01_training'] == 'success'
+    assert completed['stats'] == before
+    assert completed['ending'] is None
+    assert not any(o['event_id'] == 'p2_m02_center' for o in completed['event_openings'])
+    assert next(a for a in completed['event']['actions'] if a['id'] == 'confirm_month_plan')['used']
+    closing = next(message['text'] for message in completed['history'][-1]['messages'] if message['speaker_id'] == 'secretary')
+    assert closing.startswith('대표님, 첫 달 계획을 정리했습니다.')
+    assert 'success' not in closing and '처리를 확정' not in closing and '2개월차' not in closing
+    assert send(client, game, command, action=action, key='month-one-final', stop=True) == completed
+    assert client.get(f"/api/games/{game['game_id']}").json() == completed
+    send(client, completed, '안녕', status=409, stop=True)
+    send(client, completed, 'finish_event', action=True, status=409)
+
+
+def test_month_one_completion_preserves_training_rule_and_private_records(session):
+    client, _, game = session
+    game = cast(client, game)
+    game = send(client, game, 'train_vocal', action=True)
+    game = send(client, game, 'rule_buddy', action=True)
+    game = switch_month_room(client, game, 'dahyun')
+    game = send(client, game, '각자의 속도를 존중하며 연습하자')
+    game = switch_month_room(client, game, None)
+    before = game['stats'].copy()
+    history = game['history'][:]
+    completed = send(client, game, 'confirm_month_plan', action=True, stop=True)
+    assert completed['stats'] == before
+    assert completed['history'][:-1] == history
+    assert completed['training_history'] == ['vocal']
+    assert all(next(a for a in completed['event']['actions'] if a['id'] == action)['used'] for action in ['train_vocal','rule_buddy','confirm_month_plan'])
+
+
+def test_candidate_gallery_allows_free_order_without_extra_dialogue(session):
+    client, provider, game = session
+    before = game['stats'].copy()
+    provider.views = []
+    changed = send(client, game, 'interview_c', action=True, key='pick-saya-first')
+    assert changed['event']['id'] == 'p2_interview_c'
+    assert changed['stats'] == before
+    assert not changed['history'][-1]['messages']
+    assert changed['history'][-1]['kind'] == 'conversation_change'
+    assert provider.views == []
+    assert send(client, game, 'interview_c', action=True, key='pick-saya-first') == changed
+    game = send(client, changed, 'finish_interview', action=True)
+    assert game['event']['id'] == 'p2_interview_a'
+    send(client, game, 'interview_c', action=True, status=422)
+    game = send(client, game, 'interview_b', action=True)
+    game = send(client, game, 'finish_interview', action=True)
+    assert game['event']['id'] == 'p2_interview_a'
+    game = send(client, game, 'finish_interview', action=True)
+    assert game['event']['id'] == 'p2_casting'
+    assert all(game['completed_events'][f'p2_interview_{slot}'] == 'success' for slot in 'abc')
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
 
 
 def test_low_funds_can_finish_fixed_event(session):
@@ -136,6 +444,8 @@ def test_low_funds_can_finish_fixed_event(session):
     owner=sha256(client.cookies['prom_owner'].encode()).hexdigest()
     state=service.repository.get(game['game_id'],owner)
     state.event_id='p2_m04_showcase'; state.stats.funds_won=0
+    from app.game.conversation import make_conversation
+    state.conversation = make_conversation(state)
     service.repository.commit(state,owner,0,'seed-low-funds','seed',{'id':'seed-low-funds','kind':'conversation_change','input':'setup','event_id':state.event_id,'messages':[]})
     game=client.get(f"/api/games/{game['game_id']}").json()
     game=send(client,game,'hold_showcase',action=True)

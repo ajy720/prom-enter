@@ -15,7 +15,7 @@ export function createMonthOneState(): MonthOneState {
 export function canFinishMonth(state: MonthOneState): boolean {
   return !!state.training && !!state.rule && memberIds.every(id => hasDiscussion(state, id));
 }
-export function hasDiscussion(state: MonthOneState, speaker: MonthSpeaker): boolean { return state.conversations[speaker].some(message => message.kind === 'dialogue'); }
+export function hasDiscussion(state: MonthOneState, speaker: MonthSpeaker): boolean { return new Set(state.conversations[speaker].filter(message => message.kind === 'dialogue').map(message => message.id)).size >= 3; }
 export function recordMonthTurn(state: MonthOneState, speaker: MonthSpeaker, message: MonthMessage): MonthOneState {
   if (state.completed || state.conversations[speaker].some(item => item.id === message.id)) return state;
   return { ...state, conversations: { ...state.conversations, [speaker]: [...state.conversations[speaker], message].slice(-40) } };

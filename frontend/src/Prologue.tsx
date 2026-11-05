@@ -4,6 +4,7 @@ import { PhotoSlot } from './PhotoSlot';
 import { InterviewHub } from './InterviewHub';
 import { ResourceStatus } from './ResourceStatus';
 import { MonthOne } from './MonthOne';
+import { storyGameKey } from './serverInterviewState';
 import { createMonthOneState, readMonthOneState, type MonthOneState } from './monthOneState';
 import { createInterviewState, readInterviewState, type InterviewState } from './interviewState';
 import { debutMembers, newcomers, introAssets, introScenes, type IntroCharacter } from './introContent';
@@ -22,7 +23,7 @@ export function readIntroProgress(): IntroProgress | null {
   } catch { return null; }
 }
 
-export function TitleScreen({ hasGame, onStart, onContinue, onLegacy, onPart2 }: { hasGame: boolean; onStart: () => void; onContinue: () => void; onLegacy: () => void; onPart2: () => void }) {
+export function TitleScreen({ onStart, onContinue, busy = false }: { onStart: () => void; onContinue: () => void; busy?: boolean }) {
   const saved = readIntroProgress();
   return <section className="title-screen">
     <div className="title-art"><PhotoSlot src={introAssets.cover} name="Prom::Enter의 새로운 얼굴들" caption="시작 화면 단체 사진 자리"/>
@@ -30,11 +31,9 @@ export function TitleScreen({ hasGame, onStart, onContinue, onLegacy, onPart2 }:
     </div>
     <div className="title-copy"><p className="section-kicker">INTERACTIVE STORY · ARTIST MANAGEMENT</p><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
       <p className="title-subtitle">다시 빛날 무대의 시작.</p><p className="title-description">당신의 선택으로 만나고,<br/>대화로 함께 만들어가는 이야기.</p>
-      <div className="title-actions"><button className="primary-button" onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
-        {saved && <button className="quiet-button" onClick={onContinue}>이야기 이어하기</button>}
+      <div className="title-actions"><button className="primary-button" disabled={busy} onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
+        {(saved || localStorage.getItem(storyGameKey)) && <button className="quiet-button" disabled={busy} onClick={onContinue}>{busy ? '불러오는 중…' : '이야기 이어하기'}</button>}
       </div>
-      <button className="text-button legacy-link" onClick={onPart2}>Part 2 프로토타입 시작</button>
-      <button className="text-button legacy-link" onClick={onLegacy}>{hasGame ? '서버 플레이 이어하기' : '서버 연결 데모 시작'}</button>
       <p className="title-footnote">PROM::ENTER · STORY DEMO</p>
     </div>
   </section>;
@@ -57,7 +56,7 @@ function CharacterGallery({ characters, selectedId, onSelect }: { characters: In
   </button>)}</div>;
 }
 
-export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => void }) {
+export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serverError = '' }: { fresh: boolean; onTitle: () => void; onServerInterview: (id: string) => void; busy?: boolean; serverError?: string }) {
   const [progress, setProgress] = useState<IntroProgress>(() => fresh ? { ...initialProgress } : readIntroProgress() ?? { ...initialProgress });
   const [profilesOpen, setProfilesOpen] = useState(false);
   const [profileId, setProfileId] = useState(debutMembers[0].id);
@@ -106,12 +105,14 @@ export function Prologue({ fresh, onTitle }: { fresh: boolean; onTitle: () => vo
   </>;
 
   return <div className="prologue-shell">
-    <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
+    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy} onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span><button className="quiet-button" disabled={busy} onClick={onTitle}>시작 화면</button></header>
     {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
+    {serverError && <p className="error-banner" role="alert">{serverError}</p>}
     {scene.kind === 'introduction' && character ? <section className="character-introduction" aria-label={`${character.name} 소개`}>
       <div className="introduction-photo"><PhotoSlot src={character.portrait} name={character.name} caption="반신 사진 자리"/></div>
       <div className="introduction-copy"><p className="section-kicker">MEET OUR TRAINEE · 0{newcomers.indexOf(character) + 1}</p><blockquote>{scene.text}</blockquote><CharacterDetails character={character}/>{navigation}</div>
     </section> : scene.kind === 'selection' ? <InterviewHub state={progress.interviews} selectedId={progress.selectedId} nickname={nickname}
+      onInterview={onServerInterview} busy={busy}
       onSelect={id => setProgress(current => ({ ...current, selectedId: id }))}
       onUpdate={update => setProgress(current => ({ ...current, interviews: update(current.interviews) }))}
       onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}

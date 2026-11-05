@@ -2,7 +2,7 @@
 from collections.abc import Iterator, Mapping
 from typing import Any, Literal, Protocol
 from pydantic import Field
-from app.models import Analysis, Dialogue, Direction, EventOpening, KnowledgeRecord, Model, Stats
+from app.models import Analysis, Dialogue, Direction, EventOpening, KnowledgeRecord, Model, Stats, SpeakerRole
 
 
 class ContextModel(Model, Mapping[str, Any]):
@@ -125,7 +125,7 @@ class DialogueContext(ContextModel):
     input_kind: str = "conversation"
     clarification_question: str | None = None
     audience_ids: list[str] = Field(default_factory=lambda: ['player'])
-    output_audience: list[Literal['newcomer', 'secretary']] | None = None
+    output_audience: list[SpeakerRole] | None = None
     disclosure_guidance: list[str] = Field(default_factory=list)
     conversation: RoutingContext | None = None
     event_opening: EventOpening | None = None

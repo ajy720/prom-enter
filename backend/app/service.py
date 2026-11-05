@@ -3,6 +3,7 @@ import uuid
 from app.ai.context import build_context, build_dialogue_context, scope_actor
 from app.ai.providers import PROMPT_VERSION, validate_analysis, validate_dialogue
 from app.ai.director import advance_mood
+from app.ai.demo import MONTH_ONE_COMPLETION_MESSAGE
 from app.ai.rules import action_target
 from app.ai.knowledge import canonical, learn_cited_records, record_report, record_resolution
 from app.content import CHARACTERS, CONTENT, EVENTS, EVIDENCE, public_event
@@ -10,6 +11,7 @@ from app.game.engine import character_direction, resolve_turn
 from app.game.conversation import conversation_view, current_conversation, make_conversation, roles_for
 from app.game.openings import ensure_opening, openings_for_view
 from app.models import Analysis, Dialogue, GameError, Message, State, TurnRequest
+from app.game.interviews import LIMIT, CLOSING, is_interview, progress, turn_count
 
 
 class TurnService:
@@ -19,10 +21,8 @@ class TurnService:
     def create(self, owner, character_id, scenario='demo'):
         if character_id not in CHARACTERS:
             raise GameError("캐릭터를 선택해주세요.", 422)
-        state = State(game_id=str(uuid.uuid4()), character_id=character_id)
-        if scenario == 'part2':
-            state.event_id = 'p2_interview_a'
-            state.character_id = 'a'
+        state = State(game_id=str(uuid.uuid4()), character_id='a' if scenario == 'part2' else character_id,
+                      event_id='p2_interview_a' if scenario == 'part2' else 'm01_training')
         state.conversation = make_conversation(state)
         ensure_opening(state,[])
         self.repository.create(state, owner)
@@ -35,10 +35,18 @@ class TurnService:
         # Copy before annotating actions: the content registry is shared by all players.
         event = {**event, "actions": [{**a, "used": f"{state.event_id}:{a['id']}" in state.applied_effects} for a in event["actions"]]}
         history=self.repository.history(state.game_id)
+        # Refresh the old offline fixture's awkward wording without rewriting
+        # saved turns or replacing responses produced by a real provider.
+        for turn in history:
+            if turn.get('event_id') == 'p2_m01_training' and turn.get('analysis',{}).get('action_id') == 'confirm_month_plan' and turn.get('ai_trace',{}).get('provider') == 'demo':
+                for message in turn.get('messages',[]):
+                    if message.get('speaker_id') == 'secretary':
+                        message['text'] = MONTH_ONE_COMPLETION_MESSAGE
         return {
             "game_id": state.game_id, "version": state.version, "provider": self.provider.name,
             "character": CHARACTERS[state.character_id], "event": event,
             'conversation':conversation_view(state),
+            'interview':progress(state,history),
             "stats": state.stats.model_dump(), "training_history": state.training_history,
             "evidence": [EVIDENCE[e] for e in state.evidence_ids],
             "memories": [m.model_dump() for m in state.memories if m.visibility == "shared"],
@@ -53,7 +61,7 @@ class TurnService:
         # Preserve fingerprints of requests saved before optional conversation fields.
         fingerprint = hashlib.sha256(request.model_dump_json(
             exclude={key for key in ('recipient_id','conversation_mode','target_character_id')
-                     if getattr(request,key) is None}).encode()).hexdigest()
+                     if getattr(request,key) is None} | ({'stop_after_month_one'} if not request.stop_after_month_one else set())).encode()).hexdigest()
         cached = self.repository.cached(game_id, request.request_id, fingerprint)
         if cached is not None:
             return {"turn": cached, "game": self.view(state)}
@@ -63,7 +71,15 @@ class TurnService:
             raise GameError("콘텐츠 버전이 변경됐습니다.", 409)
         if state.ending_id:
             raise GameError('종료된 플레이입니다. 새 플레이를 시작해주세요.',409)
+        if 'p2_m01_training:confirm_month_plan' in state.applied_effects:
+            raise GameError('1개월차 계획이 확정되었습니다. 저장한 결과와 기록을 확인해주세요.',409)
         history = self.repository.history(game_id)
+        interview_count = turn_count(history,state.event_id) if is_interview(state.event_id) else 0
+        interview_done = progress(state,history) if is_interview(state.event_id) else None
+        if interview_done and interview_done['completed'] and not (request.input_type == 'action' and request.action_id in {'finish_interview','interview_a','interview_b','interview_c'}):
+            raise GameError('면담을 마쳤습니다. 면담 상대 목록으로 돌아가주세요.',409)
+        if interview_done and interview_count < 1 and request.input_type == 'action' and request.action_id == 'close_interview':
+            raise GameError('이야기를 한 번 나눈 뒤 면담을 마무리할 수 있습니다.',422)
         ensure_opening(state,history)
         if request.input_type == 'conversation':
             return self._change_conversation(owner,state,request,fingerprint)
@@ -77,8 +93,16 @@ class TurnService:
             if request.input_type != 'chat':
                 raise GameError('1:1 대화 대상은 자유 대화에서만 지정할 수 있습니다.',422)
             room = make_conversation(state,'private',request.recipient_id)
+        if state.event_id == 'p2_m01_training' and request.input_type == 'action' and request.action_id in {'train_vocal','train_dance','train_variety','rule_buddy','rule_meeting','rule_rest'}:
+            return self._save_month_plan_choice(owner,state,request,fingerprint)
         if request.input_type == 'action' and room.mode != 'public':
             raise GameError('활동을 진행하려면 먼저 함께 대화로 돌아가주세요.',422)
+        if interview_done and interview_done['completed'] and request.action_id == 'finish_interview' and request.input_type == 'action':
+            return self._change_interview(owner,state,request,fingerprint)
+        if request.input_type == 'action' and request.action_id in {'interview_a','interview_b','interview_c'}:
+            if request.action_id not in {action['id'] for action in event['actions']}:
+                raise GameError('현재 장면에서 면담 후보를 선택할 수 없습니다.',422)
+            return self._change_interview(owner,state,request,fingerprint)
         roles = roles_for(state,room)
         listeners = room.participant_ids
         analysis_context, _ = build_context(state, history, request.text,conversation=room)
@@ -93,6 +117,10 @@ class TurnService:
             if not text:
                 raise GameError("메시지를 입력해주세요.", 422)
             analysis = validate_analysis(self.provider.analyze(text, analysis_context), text, analysis_context)
+            if is_interview(state.event_id) and analysis.conversation_change is not None:
+                analysis = analysis.model_copy(update={'action_id':'talk','conversation_change':None,'needs_clarification':False})
+            if is_interview(state.event_id) and (analysis.action_id in {'interview_a','interview_b','interview_c'} or interview_count + 1 >= LIMIT):
+                analysis = analysis.model_copy(update={'action_id':'talk','target_id':None})
             if analysis.conversation_change is not None:
                 if analysis.needs_clarification:
                     return self._clarify_conversation(owner,state,request,fingerprint,analysis,room)
@@ -106,9 +134,14 @@ class TurnService:
                 # the shared gameplay path and must not execute by side effect.
                 analysis = analysis.model_copy(update={'action_id':'talk','target_id':None,
                                                        'assessments':[],'promised_action_id':None})
+        if request.stop_after_month_one and state.event_id == 'p2_m01_training' and analysis.action_id in {'finish_event','skip_training'}:
+            analysis = analysis.model_copy(update={'action_id':'confirm_month_plan','target_id':None})
         proposal = resolve_turn(state, analysis, request.request_id)
+        auto_closed = is_interview(state.event_id) and request.input_type == 'chat' and interview_count + 1 >= LIMIT and proposal.state.event_id == state.event_id
+        if auto_closed:
+            proposal.state.completed_events[state.event_id] = 'success'
         changed_character = proposal.state.character_id != state.character_id
-        if not changed_character:
+        if not changed_character and proposal.state.event_id == state.event_id:
             proposal.state.conversation = current_conversation(state)
         if proposal.state.event_id != state.event_id:
             ensure_opening(proposal.state,history,after_turn_id=request.request_id)
@@ -141,11 +174,14 @@ class TurnService:
             part = validate_dialogue(self.provider.generate(text,view,direction,proposal.facts,analysis.needs_clarification),view)
             messages.extend(part.messages)
             learn_cited_records(proposal.state,part,view,request.request_id)
+        if auto_closed:
+            messages.append(Message(speaker_id='secretary',text=CLOSING,emotion='neutral',audience=['secretary']))
         dialogue=Dialogue(messages=messages)
         proposal.state.version += 1
         turn = {
             "id": request.request_id, "input": text, "event_id": event["id"], "event_title": event["title"],
             'kind':'dialogue', 'conversation':conversation_view(state,room),
+            'input_type':request.input_type, 'interview_closed':auto_closed,
             'input_audience':roles,
             "messages": [m.model_dump() for m in dialogue.messages],
             "analysis": analysis.model_dump(), "direction": direction.model_dump(),
@@ -161,8 +197,46 @@ class TurnService:
         committed = self.repository.commit(proposal.state, owner, state.version, request.request_id, fingerprint, turn)
         return {"turn": committed, "game": self.view(self.repository.get(game_id, owner))}
 
+    def _save_month_plan_choice(self, owner, state, request, fingerprint):
+        analysis = Analysis(action_id=request.action_id,needs_clarification=False,reference_turn_id=None,assessments=[])
+        proposal = resolve_turn(state,analysis,request.request_id)
+        updated = proposal.state
+        updated.conversation = current_conversation(state)
+        updated.version += 1
+        direction = character_direction(updated,proposal.outcome)
+        turn = {'id':request.request_id,'kind':'activity','input':next(a['label'] for a in EVENTS[state.event_id]['actions'] if a['id']==request.action_id),
+                'event_id':state.event_id,'event_title':EVENTS[state.event_id]['title'],
+                'conversation':conversation_view(state),'input_type':'action','input_audience':[],
+                'messages':[],'analysis':analysis.model_dump(),'direction':direction.model_dump(),
+                'facts':proposal.facts,'outcome':proposal.outcome,'new_evidence':[],
+                'stat_delta':{k:v-state.stats.model_dump()[k] for k,v in updated.stats.model_dump().items() if v!=state.stats.model_dump()[k]},
+                'image':f'/portraits/{direction.emotion}.svg',
+                'ai_trace':{'prompt_version':PROMPT_VERSION,'provider':'system','analysis_calls':0,'generation_calls':0,'phase':'month_plan_choice','profile_id':canonical(state.character_id)}}
+        committed = self.repository.commit(updated,owner,state.version,request.request_id,fingerprint,turn)
+        return {'turn':committed,'game':self.view(self.repository.get(state.game_id,owner))}
+
+    def _change_interview(self, owner, state, request, fingerprint):
+        analysis = Analysis(action_id=request.action_id,needs_clarification=False,reference_turn_id=None,assessments=[])
+        proposal = resolve_turn(state,analysis,request.request_id)
+        updated = proposal.state
+        ensure_opening(updated,self.repository.history(state.game_id),after_turn_id=request.request_id)
+        updated.version += 1
+        turn = {'id':request.request_id,'kind':'conversation_change','input':'면담 후보 선택',
+                'event_id':state.event_id,'event_title':EVENTS[state.event_id]['title'],
+                'conversation':conversation_view(updated),'previous_conversation':conversation_view(state),
+                'input_audience':[],'messages':[],'analysis':analysis.model_dump(),
+                'direction':character_direction(updated,'pending').model_dump(),
+                'facts':proposal.facts,'outcome':proposal.outcome,'new_evidence':[],'stat_delta':{},
+                'image':'/portraits/anxious.svg',
+                'ai_trace':{'prompt_version':PROMPT_VERSION,'provider':'system','analysis_calls':0,'generation_calls':0,
+                            'phase':'conversation_change','profile_id':canonical(updated.character_id)}}
+        committed = self.repository.commit(updated,owner,state.version,request.request_id,fingerprint,turn)
+        return {'turn':committed,'game':self.view(self.repository.get(state.game_id,owner))}
+
     def _change_conversation(self, owner, state, request, fingerprint, *,
                              source_text=None, source_analysis=None, source_room=None):
+        if is_interview(state.event_id):
+            raise GameError('후보 면담에서는 현재 연습생과만 대화할 수 있습니다.',422)
         if state.ending_id:
             raise GameError('종료된 플레이입니다. 새 플레이를 시작해주세요.',409)
         if request.text.strip() or request.action_id is not None or request.recipient_id is not None:

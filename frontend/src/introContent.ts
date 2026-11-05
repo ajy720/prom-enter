@@ -35,7 +35,9 @@ export const debutMembers: IntroCharacter[] = [
     greeting: '', keywords: ['예능', '비주얼', '분위기 메이커'], abilities: { dance: 8, vocal: 7, visual: 9, variety: 10 } },
 ];
 
-export const introAssets: { cover?: string; secretary?: string; office?: string; corridor?: string; practice?: string } = {};
+export const introAssets: { cover?: string; secretary?: string; office?: string; corridor?: string; practice?: string } = {
+  cover: '/images/scenes/cover.png',
+};
 
 export type IntroScene = {
   id: string; kind: 'story' | 'nickname' | 'profiles' | 'introduction' | 'selection';

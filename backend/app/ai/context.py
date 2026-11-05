@@ -14,9 +14,10 @@ from app.game.openings import openings_for_view
 def participant_history(state: State, history: list[dict], roles: list[str]) -> list[dict]:
     """Role slots can represent different candidates; compare actual identities."""
     required = {people(state)[role] for role in roles}
-    return [turn for turn in history if not turn.get('conversation') or required <= {
-        person['id'] for person in turn['conversation']['participants']
-    }]
+    legacy_people = {character_profile(state.character_id).id, DATA['secretary_id']}
+    return [turn for turn in history if required <= (
+        {person['id'] for person in turn['conversation']['participants']}
+        if turn.get('conversation') else legacy_people)]
 
 
 def build_context(state: State, history: list[dict], query: str = '', *, conversation=None) -> tuple[AnalysisContext, DialogueContext]:
@@ -65,11 +66,12 @@ def build_dialogue_context(state: State, history: list[dict], query: str = '', *
     # The shared scaffold contains no union of personal knowledge. Generation
     # always scopes it to exactly one speaker below.
     knowledge = company_roster()
-    roles = speaker_roles or ['newcomer','secretary']
-    people = {'newcomer':character.id, 'secretary':secretary.id}
+    identities = people(state)
+    roles = speaker_roles or [role for role in ('newcomer','secretary') if role in identities]
+    speakers = {role:character_profile(person) for role,person in identities.items()}
     following = EVENTS[state.event_id] if result_event_id and state.event_id != result_event_id else None
     return DialogueContext(
-        character=character, speakers={'newcomer':character,'secretary':secretary},
+        character=character, speakers=speakers,
         scene={k:event[k] for k in ('id','title','scene','briefing','goal')}, stats=state.stats,
         known_evidence=[EVIDENCE[e] for e in state.evidence_ids], knowledge=knowledge,
         recent_turns=recent_turns(history), memories=shared,
@@ -78,8 +80,8 @@ def build_dialogue_context(state: State, history: list[dict], query: str = '', *
         result_event_id=event['id'], next_event={'id':following['id'],'title':following['title']} if following else None,
         resolved_facts={f'fact_{i}':fact for i,fact in enumerate(facts)},
         allowed_speakers=roles, output_audience=roles,
-        audience_ids=['player'] + [people[role] for role in roles],
-        conversation=routing_context(people[roles[0]] if len(roles)==1 else None,list(people.values())),
+        audience_ids=['player'] + [identities[role] for role in roles],
+        conversation=routing_context(identities[roles[0]] if len(roles)==1 else None,list(identities.values())),
         event_opening=(next(o for o in openings_for_view(state,history) if o.event_id==event['id'])
                        if outcome=='pending' and (not result_event_id or result_event_id==state.event_id) else None),
     )
