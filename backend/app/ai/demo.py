@@ -3,6 +3,8 @@ import re
 from app.models import Analysis, Assessment, Dialogue, Message
 from app.ai.routing import offline_intent
 
+MONTH_ONE_COMPLETION_MESSAGE = '대표님, 첫 달 계획을 정리했습니다. 정해주신 방향에 맞춰 멤버들의 훈련과 합숙 생활을 챙기겠습니다. 모두가 조금씩 호흡을 맞춰갈 수 있도록 저도 곁에서 돕겠습니다.'
+
 PATTERNS = {
     'finish_interview':r'면담.{0,8}(?:마치|마무리|종료|끝)|다음 후보',
     'select_a':r'이도.{0,8}(?:선발|뽑|합류|선택)',
@@ -105,6 +107,12 @@ class DemoProvider:
             body='알겠습니다. 지금 할 수 있는 일부터 정확히 확인하겠습니다.'
         elif profile['id'] == 'baek_hayeon':
             body='대표님, 보고드립니다. 확인된 사실을 기준으로 다음 결정을 준비하겠습니다.'
+        elif profile['id'] == 'dahyun':
+            body='각자의 속도를 알아가는 게 먼저라고 생각해요. 제가 중간에서 이야기를 듣고 함께 연습할 방법을 찾아볼게요.'
+        elif profile['id'] == 'haram':
+            body='어디서 박자를 놓치는지 나눠서 연습하면 돼요. 기초 연습과 합동 연습 시간을 구분해주시면 좋겠어요.'
+        elif profile['id'] == 'yuna':
+            body='아직 서로 어색해서 그래요. 제가 먼저 말을 걸어볼게요. 힘든 건 혼자 참지 않았으면 좋겠어요!'
         else:
             body='저…… 아직 조금 걱정되지만, 말씀은 기억할게요.' if direction.openness == 'guarded' else '대표님, 이번에는 제 생각도 말씀드리고 싶어요.'
         if direction.emotion == 'tired' and not clarification:
@@ -116,5 +124,11 @@ class DemoProvider:
         if 'newcomer' in actor.get('allowed_speakers',['newcomer','secretary']):
             messages.append(Message(speaker_id='newcomer',text=body,emotion=direction.emotion))
         if 'secretary' in actor.get('allowed_speakers',['newcomer','secretary']):
-            messages.append(Message(speaker_id='secretary',text=('대표님, 보고드립니다. '+' '.join(facts)) if facts else body, emotion='neutral', fact_ids=list(actor.get('resolved_facts',{}))))
+            secretary_text = ('대표님, 보고드립니다. '+' '.join(facts)) if facts else body
+            if actor.get('result_event_id') == 'p2_m01_training' and any(fact.startswith('첫 달 계획을 확정했습니다.') for fact in facts):
+                secretary_text = MONTH_ONE_COMPLETION_MESSAGE
+            messages.append(Message(speaker_id='secretary',text=secretary_text, emotion='neutral', fact_ids=list(actor.get('resolved_facts',{}))))
+        for role in ('dahyun','haram','yuna'):
+            if role in actor.get('allowed_speakers',[]):
+                messages.append(Message(speaker_id=role,text=body,emotion=direction.emotion))
         return Dialogue(messages=messages)

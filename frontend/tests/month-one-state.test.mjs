@@ -11,7 +11,10 @@ test('첫 달 계획은 훈련·기존 세 명 면담·합숙 규칙을 모두 �
   state = recordMonthTurn(state, 'dahyun', { id: 'guide', question: '미지원', reply: '안내', kind: 'guide' });
   assert.equal(canFinishMonth(state), false);
   for (const [index, id] of memberIds.entries()) {
-    state = recordMonthTurn(state, id, { id, question: '도움', reply: '함께 연습', kind: 'dialogue' });
+    for (let count = 1; count <= 3; count++) {
+      state = recordMonthTurn(state, id, { id: `${id}-${count}`, question: '도움', reply: '함께 연습', kind: 'dialogue' });
+      assert.equal(canFinishMonth(state), index === 2 && count === 3);
+    }
     assert.equal(canFinishMonth(state), index === 2);
   }
   state = finishMonth(state);

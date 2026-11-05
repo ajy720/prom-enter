@@ -1,6 +1,8 @@
 from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+SpeakerRole = Literal['newcomer', 'secretary', 'dahyun', 'haram', 'yuna']
+
 
 class Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -121,6 +123,7 @@ class State(Model):
     event_id: str = "m01_training"
     version: int = 0
     stats: Stats = Field(default_factory=Stats)
+    starting_funds_won: int = Field(default=300_000_000, ge=0)
     training_history: list[str] = Field(default_factory=list)
     evidence_ids: list[str] = Field(default_factory=list)
     applied_effects: list[str] = Field(default_factory=list)
@@ -135,6 +138,15 @@ class State(Model):
     disclosure_grants: list[DisclosureGrant] = Field(default_factory=list)
     conversation: Conversation | None = None
     event_openings: list[EventOpening] = Field(default_factory=list)
+
+    @model_validator(mode='after')
+    def part2_starting_funds(self):
+        # Old saves started with 3억. Preserve all spending and income while
+        # moving that baseline to 20억, then persist the marker on the next turn.
+        if self.event_id.startswith('p2_') and self.starting_funds_won == 300_000_000:
+            self.stats.funds_won += 1_700_000_000
+            self.starting_funds_won = 2_000_000_000
+        return self
 
 
 class CreateGame(Model):
@@ -151,6 +163,7 @@ class TurnRequest(Model):
     recipient_id: str | None = Field(default=None, max_length=40)
     conversation_mode: Literal['public', 'private'] | None = None
     target_character_id: str | None = Field(default=None, max_length=40)
+    stop_after_month_one: bool = False
 
 
 class Assessment(Model):
@@ -188,12 +201,12 @@ class Direction(Model):
 
 
 class Message(Model):
-    speaker_id: Literal["secretary", "newcomer"]
+    speaker_id: SpeakerRole
     text: str = Field(min_length=1, max_length=1200)
     emotion: Literal["anxious", "hopeful", "tired", "relieved", "neutral"]
     fact_ids: list[str] = Field(default_factory=list)
     knowledge_ids: list[str] = Field(default_factory=list)
-    audience: list[Literal["newcomer", "secretary"]] = Field(default_factory=lambda: ["newcomer", "secretary"])
+    audience: list[SpeakerRole] = Field(default_factory=lambda: ["newcomer", "secretary"])
 
 
 class Dialogue(Model):

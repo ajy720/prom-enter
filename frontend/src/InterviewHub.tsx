@@ -7,9 +7,10 @@ import { RecruitmentResult } from './RecruitmentResult';
 import { newcomers } from './introContent';
 import { advanceRecruitment, beginInterview, canRecruit, candidateIds, isCandidateId, recruitCandidate, statusLabels, type CandidateId, type InterviewState } from './interviewState';
 
-export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, onBack, onProceed }: {
+export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, onBack, onProceed, onInterview, busy = false }: {
   state: InterviewState; selectedId: string | null; onSelect: (id: string) => void;
   onUpdate: (update: (current: InterviewState) => InterviewState) => void; nickname: string; onBack: () => void; onProceed: () => void;
+  onInterview?: (id: CandidateId) => void; busy?: boolean;
 }) {
   const [recruiting, setRecruiting] = useState(!!state.recruitedId);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -29,6 +30,7 @@ export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, 
   }
 
   function openInterview(id: CandidateId) {
+    if (onInterview) { onInterview(id); return; }
     const character = newcomers.find(character => character.id === id)!;
     onUpdate(current => ({ ...current, activeId: id, sessions: { ...current.sessions, [id]: beginInterview(current.sessions[id], id, character.greeting) } }));
   }
@@ -45,8 +47,8 @@ export function InterviewHub({ state, selectedId, onSelect, onUpdate, nickname, 
     })}</div>
       <aside className="profile-detail glass-panel" aria-live="polite">{selected && isCandidateId(selected.id) ? <><p className="section-kicker">{selected.role}</p><h2>{selected.name}</h2><p className="character-meta">{selected.fullName} · {selected.age}세</p><div className="character-keywords">{selected.keywords.map(keyword => <span key={keyword}>{keyword}</span>)}</div><p className="character-description">{selected.description}</p>
         {recruiting ? <button className="primary-button" disabled={!eligible || !!state.recruitedId} onClick={() => setConfirmOpen(true)}>{selected.name} 영입하기</button> : <>
-          {state.sessions[selected.id].status !== 'completed' && <button className="primary-button" onClick={() => openInterview(selected.id as CandidateId)}>{state.sessions[selected.id].status === 'in_progress' ? '면담 이어하기' : '면담 시작하기'} →</button>}
-          {state.sessions[selected.id].messages.length > 0 && <button className="quiet-button" onClick={() => setRecordsId(selected.id as CandidateId)}>면담 내용 다시보기</button>}
+          {state.sessions[selected.id].status !== 'completed' && <button className="primary-button" disabled={busy} onClick={() => openInterview(selected.id as CandidateId)}>{busy ? '불러오는 중…' : state.sessions[selected.id].status === 'in_progress' ? '면담 이어하기' : '면담 시작하기'} →</button>}
+          {state.sessions[selected.id].status === 'completed' && <button className="quiet-button" onClick={() => setRecordsId(selected.id as CandidateId)}>면담 내용 다시보기</button>}
         </>}
       </> : <><p className="section-kicker">대표님의 선택</p><h2>먼저 듣고 싶은<br/>이야기는?</h2><p>사진을 선택해 연습생의 정보를 확인해주세요.</p></>}</aside>
     </div>

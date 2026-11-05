@@ -5,6 +5,7 @@ import uuid
 from app.ai.profiles import DATA, character_profile
 from app.content import EVENTS
 from app.models import EventOpening, OpeningChoice, OpeningMessage, State
+from app.game.interviews import is_interview
 
 OPENINGS=json.loads((Path(__file__).resolve().parents[1]/'content/event_openings.json').read_text())
 
@@ -23,8 +24,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
         after_turn_id=history[index-1]['id'] if index else None
     return EventOpening(id=str(uuid.uuid5(uuid.NAMESPACE_URL,f'prom-enter:{state.game_id}:opening:{state.event_id}')),
         event_id=state.event_id,after_turn_id=after_turn_id,month=event['month'],title=event['title'],scene=event['scene'],
-        narration=template['narration'].format(**values),
-        messages=[OpeningMessage(character_id=secretary.id,name=secretary.name,text=template['secretary'].format(**values))],
+        narration=(f'{character.name} 후보와 대표님의 면담을 시작합니다.' if is_interview(state.event_id) else template['narration'].format(**values)),
+        messages=([OpeningMessage(character_id=character.id,name=character.name,text=f'안녕하세요. {character.name}입니다. 잘 부탁드립니다.')]
+                  if is_interview(state.event_id) else [OpeningMessage(character_id=secretary.id,name=secretary.name,text=template['secretary'].format(**values))]),
         goal=event['goal'],choices=[OpeningChoice(id=a['id'],label=a['label']) for a in event['actions']])
 
 
