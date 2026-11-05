@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { RecruitmentResult } from './RecruitmentResult';
 import { newcomers } from './introContent';
-import { candidateInterviewFrames, latestCompletedCandidateId, recruitedCandidateId, serverCandidates } from './serverInterviewState';
+import { candidateInterviewRecordFrames, latestCompletedCandidateId, recruitedCandidateId, serverCandidates } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
 export function ServerCasting({ game, busy, pending, nickname, onInterview, onSend, onBack, onProceed }: {
@@ -27,7 +27,7 @@ export function ServerCasting({ game, busy, pending, nickname, onInterview, onSe
   const listing = interviewing || (!recruited && !recruiting);
   const recordCandidate = serverCandidates.find(person => person.id === recordsId);
   const recordCharacter = newcomers.find(person => person.id === recordsId);
-  const recordFrames = recordCandidate ? candidateInterviewFrames({ ...game, interview: null, event: { ...game.event, id: recordCandidate.eventId, briefing: '' }, character: { ...game.character, id:recordCandidate.slot, profile_id:recordCandidate.id, name: recordCharacter!.name } }) : [];
+  const recordFrames = recordCandidate ? candidateInterviewRecordFrames({ ...game, interview: null, event: { ...game.event, id: recordCandidate.eventId, briefing: '' }, character: { ...game.character, id:recordCandidate.slot, profile_id:recordCandidate.id, name: recordCharacter!.name } }) : [];
 
   const records = <Modal open={!!recordCandidate} title={`${recordCharacter?.name ?? ''} 면담 기록`} className="records-modal" onClose={() => setRecordsId(null)}><h2>{recordCharacter?.name} 면담 기록</h2><div className="interview-history">{recordFrames.filter(frame => frame.text).map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>)}</div></Modal>;
 

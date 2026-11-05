@@ -3,7 +3,7 @@ import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
 import { introAssets, newcomers } from './introContent';
-import { candidateInterviewFrames, interviewCandidateId } from './serverInterviewState';
+import { candidateInterviewFrames, candidateInterviewRecordFrames, interviewCandidateId } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
 export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, onSend, onQuestion, onBack }: {
@@ -14,6 +14,7 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
   const [recordsOpen, setRecordsOpen] = useState(false);
   const character = newcomers.find(person => person.id === interviewCandidateId(game.event.id))!;
   const frames = candidateInterviewFrames(game);
+  const recordFrames = candidateInterviewRecordFrames(game);
   const displayed = frames.at(-1)!;
   const secretarySpeaking = ['secretary', 'baek_hayeon'].includes(displayed.speakerId);
   const complete = !!game.interview?.completed;
@@ -39,6 +40,6 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
       <form className="chat-composer glass-panel" onSubmit={event => { event.preventDefault(); void onSend(); }}><label htmlFor="server-interview-message" className="sr-only">면담 질문</label><textarea id="server-interview-message" rows={2} maxLength={2000} value={text} placeholder="어떤 이야기가 궁금하신가요?" disabled={locked} onChange={event => onTextChange(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); void onSend(); } }}/><button className="primary-button" aria-label="면담 질문 전송" disabled={locked || !text.trim()}>전송 ↑</button></form>
       <div className="dock-caption"><span>Enter로 전송 · Shift + Enter로 줄바꿈</span><span>{game.provider === 'demo' ? '규칙 기반 데모 응답' : 'AI 응답'}</span></div></>}
     </div>
-    <Modal open={recordsOpen} title={`${character.name} 면담 기록`} className="records-modal" onClose={() => setRecordsOpen(false)}><h2>{character.name} 면담 기록</h2><div className="interview-history">{frames.map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : ['secretary', 'baek_hayeon'].includes(frame.speakerId) ? 'secretary' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>)}</div></Modal>
+    <Modal open={recordsOpen} title={`${character.name} 면담 기록`} className="records-modal" onClose={() => setRecordsOpen(false)}><h2>{character.name} 면담 기록</h2><div className="interview-history">{recordFrames.map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : ['secretary', 'baek_hayeon'].includes(frame.speakerId) ? 'secretary' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>)}</div></Modal>
   </section>;
 }
