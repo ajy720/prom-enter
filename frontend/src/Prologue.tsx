@@ -1,3 +1,4 @@
+import { useSceneViewport } from './useSceneViewport';
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
@@ -101,6 +102,7 @@ function CharacterGallery({ characters, selectedId, onSelect }: { characters: In
 }
 
 export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serverError = '' }: { fresh: boolean; onTitle: () => void; onServerInterview: (id: string) => void; busy?: boolean; serverError?: string }) {
+  const viewportRef = useSceneViewport();
   const [progress, setProgress] = useState<IntroProgress>(() => fresh ? { ...initialProgress } : readIntroProgress() ?? { ...initialProgress });
   const [profilesOpen, setProfilesOpen] = useState(false);
   const [profileId, setProfileId] = useState(debutMembers[0].id);
@@ -148,7 +150,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
       onTitle={onTitle} onCasting={() => setProgress(current => ({ ...current, step: introScenes.length - 1 }))}/>
   </>;
 
-  return <div className="prologue-shell">
+  return <div ref={viewportRef} className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy} onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span><button className="quiet-button" disabled={busy} onClick={onTitle}>시작 화면</button></header>
     {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
     {serverError && <p className="error-banner" role="alert">{serverError}</p>}

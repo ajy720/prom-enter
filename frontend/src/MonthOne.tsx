@@ -1,3 +1,4 @@
+import { useSceneViewport } from './useSceneViewport';
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { ChatComposer } from './ChatComposer';
@@ -14,6 +15,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   candidate: IntroCharacter; nickname: string; state: MonthOneState;
   onUpdate: (update: (current: MonthOneState) => MonthOneState) => void; onTitle: () => void; onCasting: () => void;
 }) {
+  const viewportRef = useSceneViewport();
   const [speaker, setSpeaker] = useState<MonthSpeaker>('newcomer');
   const [text, setText] = useState('');
   const [recordsSpeaker, setRecordsSpeaker] = useState<MonthSpeaker>('newcomer');
@@ -51,7 +53,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   }
   const summary = <dl className="month-summary"><div><dt>합류 멤버</dt><dd>{candidate.name}</dd></div><div><dt>집중 훈련</dt><dd>{training?.label ?? '미지정'}</dd></div><div><dt>기존 멤버 면담</dt><dd>{talked} / 3명</dd></div><div><dt>합숙 규칙</dt><dd>{rule?.label ?? '미지정'}</dd></div></dl>;
 
-  return <div className="prologue-shell">
+  return <div ref={viewportRef} className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
     <section className="interview-room month-one month-photo-stage" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
