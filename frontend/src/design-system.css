@@ -73,15 +73,6 @@ form.story-composer textarea:focus-visible { outline: none; }
 .formation-status .team-status-value { border-bottom-color: rgb(255 255 255 / 30%); }
 .formation-status .team-status-source { font-size: 10px; }
 
-/* The title keeps the supplied artwork and its reserved title space. */
-.title-screen .title-copy h1 { font-size: clamp(52px, 6vw, 96px); letter-spacing: -4px; font-weight: 700; }
-.title-screen .title-copy .section-kicker { font-size: 11px; letter-spacing: .08em; }
-.title-screen .title-subtitle { font-size: 21px; }
-.title-screen .title-description { font-size: 14px; }
-.title-actions .primary-button { font-size: 15px; }
-.title-actions .quiet-button { border: 0; text-align: left; padding-left: 0; }
-.title-art .photo-placeholder { background: var(--surface-tint); }
-
 /* Monthly operations: one dialogue surface, useful controls and readable status. */
 .month-photo-stage > .interview-dock { padding: var(--space-5); background: var(--white); border: 0; border-radius: var(--radius-dialogue); }
 .month-photo-stage::before, .recruitment-briefing::before { background: rgb(0 0 0 / 58%); }
@@ -114,7 +105,6 @@ form.story-composer textarea:focus-visible { outline: none; }
 
 /* Shape follows the action, rather than giving every control the same box. */
 button.primary-button { min-height: 44px; border-radius: 6px; border: 1px solid var(--accent); font-weight: 600; }
-.title-actions .primary-button { border-radius: 999px; padding-inline: var(--space-5); }
 button.quiet-button { min-height: 44px; border: 0; border-radius: 0; background: none; padding: var(--space-2) var(--space-1); }
 button.quiet-button:hover:not(:disabled) { background: none; color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
 .intro-navigation .quiet-button, .interview-hub-footer .quiet-button { padding-inline: 0; }
@@ -144,7 +134,6 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
   .profile-detail.glass-panel { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--border); }
 }
 @media (max-width: 600px) {
-  .title-screen .title-copy h1 { font-size: clamp(42px, 14vw, 60px); letter-spacing: -3px; }
   .selection-screen { padding: var(--space-5) var(--space-4); }
   .profile-card .profile-card-label { padding: var(--space-3) 0; }
   .dialogue-box, :is(.intro-dialogue-dock, .dialogue-dock, .interview-dock) .dialogue-box { padding: 0 var(--space-4); }

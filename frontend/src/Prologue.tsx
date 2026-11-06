@@ -7,7 +7,7 @@ import { MonthOne } from './MonthOne';
 import { storyGameKey } from './serverInterviewState';
 import { createMonthOneState, readMonthOneState, type MonthOneState } from './monthOneState';
 import { createInterviewState, readInterviewState, type InterviewState } from './interviewState';
-import { debutMembers, newcomers, introAssets, introScenes, characterPortraits, characterProfiles, sceneBackgrounds, type IntroCharacter } from './introContent';
+import { debutMembers, newcomers, titlePhotos, introScenes, characterPortraits, characterProfiles, sceneBackgrounds, type IntroCharacter } from './introContent';
 
 const progressKey = 'prom-intro-v1';
 type IntroProgress = { step: number; nickname: string; selectedId: string | null; interviews: InterviewState; monthOne: MonthOneState | null; resourcesIntroduced: boolean };
@@ -25,17 +25,62 @@ export function readIntroProgress(): IntroProgress | null {
 
 export function TitleScreen({ onStart, onContinue, busy = false }: { onStart: () => void; onContinue: () => void; busy?: boolean }) {
   const saved = readIntroProgress();
-  return <section className="title-screen">
-    <div className="title-art"><PhotoSlot src={introAssets.cover} name="Prom::Enter의 새로운 얼굴들" caption="시작 화면 단체 사진 자리"/>
-    </div>
-    <div className="title-copy"><p className="section-kicker">PROM::ENTER</p><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
-      <p className="title-subtitle">다시 빛날 무대의 시작.</p><p className="title-description">당신의 선택으로 만나고,<br/>대화로 함께 만들어가는 이야기.</p>
+  return <section className="title-screen" aria-label="Prom::Enter 시작 화면">
+    <TitleArtwork/>
+    <div className="title-copy">
+    <header className="title-heading"><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
+      <p className="title-subtitle">다시 빛날 무대의 시작</p>
+    </header>
+    <div className="title-menu">
+      <p className="title-description">당신의 선택으로 만나고, <br/>대화로 함께 만들어가는 이야기.</p>
       <div className="title-actions"><button className="primary-button" disabled={busy} onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
         {(saved || localStorage.getItem(storyGameKey)) && <button className="quiet-button" disabled={busy} onClick={onContinue}>{busy ? '불러오는 중…' : '이야기 이어하기'}</button>}
       </div>
-      <p className="title-footnote">PROM::ENTER · STORY DEMO</p>
+      <p className="title-footnote">STORY DEMO</p>
+    </div>
     </div>
   </section>;
+}
+
+function TitleArtwork() {
+  const [frame, setFrame] = useState<{ active: number; previous: number | null }>({ active: 0, previous: null });
+  const [ready, setReady] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Decode every full-resolution image before starting the loop.
+    void Promise.all(titlePhotos.map(async src => {
+      const image = new Image();
+      image.src = src;
+      await image.decode();
+    })).then(() => { if (!cancelled) setReady(true); }).catch(() => {
+      // Retain the first photo if another outfit cannot be loaded.
+    });
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updatePreference = () => setReducedMotion(preference.matches);
+    updatePreference();
+    preference.addEventListener('change', updatePreference);
+    return () => { cancelled = true; preference.removeEventListener('change', updatePreference); };
+  }, []);
+
+  useEffect(() => {
+    if (!ready || paused || reducedMotion) return;
+    const timer = window.setInterval(() => setFrame(current => ({ active: (current.active + 1) % titlePhotos.length, previous: current.active })), 4500);
+    return () => window.clearInterval(timer);
+  }, [ready, paused, reducedMotion]);
+
+  return <div className="title-art">
+    <div className="title-photo-stack" role="img" aria-label="Prom::Enter의 여섯 연습생 단체 사진">
+      {titlePhotos.map((src, index) => <img key={src} src={src} alt="" aria-hidden="true" width={1536} height={1024}
+        loading="eager" decoding="async" className={index === frame.active ? `is-active${frame.previous !== null ? ' is-wiping' : ''}` : index === frame.previous ? 'is-previous' : ''}
+        onAnimationEnd={event => {
+          if (event.animationName === 'title-outfit-wipe') setFrame(current => current.active === index ? { ...current, previous: null } : current);
+        }}/>) }
+    </div>
+    {ready && !reducedMotion && <button className="title-motion-toggle quiet-button" aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? '사진 전환 재생' : '사진 전환 멈추기'}</button>}
+  </div>;
 }
 
 function CharacterDetails({ character, showAbilities = false }: { character: IntroCharacter; showAbilities?: boolean }) {
