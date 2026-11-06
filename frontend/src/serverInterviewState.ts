@@ -39,6 +39,17 @@ export function candidateInterviewRecordFrames(game: Game): InterviewFrame[] {
     !['close_interview', 'finish_interview'].includes(turn.analysis?.action_id)) });
 }
 
+export function candidateInterviewDisplay(game: Game, acknowledgedClosingId: string | null) {
+  const frames = candidateInterviewFrames(game);
+  const closing = frames.at(-1)!;
+  const answer = frames.slice(0, -1).reverse().find(frame =>
+    !['player', 'secretary', 'baek_hayeon'].includes(frame.speakerId));
+  const awaitingClosing = !!(game.interview?.completed && game.interview.completed_by === 'secretary'
+    && ['secretary', 'baek_hayeon'].includes(closing.speakerId) && answer
+    && acknowledgedClosingId !== closing.id);
+  return { displayed: awaitingClosing ? answer! : closing, awaitingClosing, closingId: closing.id };
+}
+
 // Display only server-confirmed turns for this interview, using each turn's own room.
 export function serverInterviewFrames(game: Pick<Game, 'event' | 'history' | 'event_openings' | 'conversation' | 'character'>): InterviewFrame[] {
   const opening = game.event_openings.find(item => item.event_id === game.event.id);

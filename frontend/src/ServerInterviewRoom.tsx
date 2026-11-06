@@ -5,7 +5,7 @@ import { PendingResponse } from './PendingResponse';
 import { pendingFeedback } from './pendingFeedback';
 import { ResourceStatus } from './ResourceStatus';
 import { characterPortraits, sceneBackgrounds, newcomers } from './introContent';
-import { candidateInterviewFrames, candidateInterviewRecordFrames, interviewCandidateId } from './serverInterviewState';
+import { candidateInterviewDisplay, candidateInterviewRecordFrames, interviewCandidateId } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
 export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, onSend, onQuestion, onBack }: {
@@ -14,10 +14,11 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
   onQuestion: (value: string) => Promise<boolean>; onBack: () => void;
 }) {
   const [recordsOpen, setRecordsOpen] = useState(false);
+  const readingKey = `prom-interview-closing:${game.game_id}:${game.event.id}`;
+  const [acknowledgedClosingId, setAcknowledgedClosingId] = useState<string | null>(() => localStorage.getItem(readingKey));
   const character = newcomers.find(person => person.id === interviewCandidateId(game.event.id))!;
-  const frames = candidateInterviewFrames(game);
   const recordFrames = candidateInterviewRecordFrames(game);
-  const displayed = frames.at(-1)!;
+  const { displayed, awaitingClosing, closingId } = candidateInterviewDisplay(game, acknowledgedClosingId);
   const feedback = busy && pending ? pendingFeedback(game, pending, character.id) : null;
   const visibleSpeakerId = feedback?.speakerId ?? displayed.speakerId;
   const secretarySpeaking = ['secretary', 'baek_hayeon'].includes(visibleSpeakerId);
@@ -38,9 +39,9 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
     <div className="interview-dock">
       <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.speakerId ? feedback.name : displayed.name}</h2><div className="dialogue-tools"><span className="mode-label">{game.provider === 'demo' ? '데모 면담' : 'AI 면담'}</span><button className="text-button" onClick={() => setRecordsOpen(true)}>면담 내용 다시보기</button></div></header>
         <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{!feedback?.speakerId && <p>{displayed.text}</p>}{feedback && <PendingResponse feedback={feedback}/>}</div>
-        <div className="interview-dialogue-footer"><span>{complete ? game.interview?.completed_by === 'secretary' ? '백하연이 면담을 마무리했습니다.' : '면담을 마무리했습니다.' : ''}</span>{!complete && <button className="quiet-button" disabled={locked || count < 1 || !finish || finish.used} onClick={() => void onSend('close_interview')}>면담 마무리</button>}</div>
+        <div className="interview-dialogue-footer"><span>{complete && !awaitingClosing ? game.interview?.completed_by === 'secretary' ? '백하연이 면담을 마무리했습니다.' : '면담을 마무리했습니다.' : ''}</span>{!complete && <button className="quiet-button" disabled={locked || count < 1 || !finish || finish.used} onClick={() => void onSend('close_interview')}>면담 마무리</button>}</div>
       </section>
-      {complete ? <div className="interview-complete glass-panel"><span>오늘의 이야기는 기록에 남았습니다.</span><button className="primary-button" disabled={busy || !!pending} onClick={onBack}>면담 상대 목록으로 →</button></div> : <><div className="interview-suggestions" aria-label="추천 질문">{['아이돌이 되고 싶은 이유가 뭐야?', '가장 자신 있는 분야는 뭐야?', '요즘 어떤 점이 가장 걱정돼?'].map(question => <button key={question} disabled={locked} onClick={() => void onQuestion(question)}>{question}</button>)}</div>
+      {complete ? <div className="interview-complete glass-panel"><span>{awaitingClosing ? '마지막 답변을 읽고 다음으로 진행해주세요.' : '오늘의 이야기는 기록에 남았습니다.'}</span>{awaitingClosing ? <button className="primary-button" disabled={busy || !!pending} onClick={() => { localStorage.setItem(readingKey, closingId); setAcknowledgedClosingId(closingId); }}>다음 →</button> : <button className="primary-button" disabled={busy || !!pending} onClick={onBack}>면담 상대 목록으로 →</button>}</div> : <><div className="interview-suggestions" aria-label="추천 질문">{['아이돌이 되고 싶은 이유가 뭐야?', '가장 자신 있는 분야는 뭐야?', '요즘 어떤 점이 가장 걱정돼?'].map(question => <button key={question} disabled={locked} onClick={() => void onQuestion(question)}>{question}</button>)}</div>
       <form className="chat-composer glass-panel" onSubmit={event => { event.preventDefault(); void onSend(); }}><label htmlFor="server-interview-message" className="sr-only">면담 질문</label><textarea id="server-interview-message" rows={2} maxLength={2000} value={text} placeholder="어떤 이야기가 궁금하신가요?" disabled={locked} onChange={event => onTextChange(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); void onSend(); } }}/><button className="primary-button" aria-label="면담 질문 전송" disabled={locked || !text.trim()}>전송 ↑</button></form>
       <div className="dock-caption"><span>Enter로 전송 · Shift + Enter로 줄바꿈</span><span>{game.provider === 'demo' ? '규칙 기반 데모 응답' : 'AI 응답'}</span></div></>}
     </div>
