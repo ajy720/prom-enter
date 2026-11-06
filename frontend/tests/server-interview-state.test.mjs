@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { candidateInterviewFrames, interviewCandidateId, latestCompletedCandidateId, recruitedCandidateId, serverCandidates, serverInterviewFrames } from '../src/serverInterviewState.ts';
+import { candidateInterviewDisplay, candidateInterviewFrames, interviewCandidateId, latestCompletedCandidateId, recruitedCandidateId, serverCandidates, serverInterviewFrames } from '../src/serverInterviewState.ts';
 
 test('면담 목록 복귀 시 자유로운 면담 순서대로 마지막 완료 후보를 선택한다', () => {
   const game = { history: [], completed_events: {} };
@@ -39,6 +39,40 @@ test('선발 후에도 세 후보의 기록은 각각의 이름과 사건으로 
 const room = { participants: [{ id: 'hyerin', role: 'newcomer', name: '이도' }, { id: 'baek_hayeon', role: 'secretary', name: '백하연' }] };
 const game = { event: { id: 'p2_interview_a', briefing: '지원 동기를 물어보세요.' }, character: { name: '이도' }, conversation: room,
   event_openings: [{ id: 'opening-a', event_id: 'p2_interview_a', messages: [{ character_id: 'baek_hayeon', name: '백하연', text: '이도 후보입니다.' }] }], history: [] };
+
+test('세 후보 모두 8번째 답변을 먼저 읽은 뒤 종료 안내를 표시하고 읽는 단계를 복원한다', () => {
+  for (const candidate of serverCandidates) {
+    const completed = { ...game, event: { ...game.event, id: candidate.eventId },
+      conversation: { participants: [{ id: candidate.id, role: 'newcomer', name: candidate.id }] },
+      history: [{ id: `q8-${candidate.slot}`, event_id: candidate.eventId, input: '마지막 질문', interview_closed: true,
+        messages: [{ speaker_id: 'newcomer', text: '마지막 답변이에요.' }, { speaker_id: 'secretary', text: '면담을 마무리하겠습니다.' }] }],
+      interview: { completed: true, completed_by: 'secretary', closing_message: '면담을 마무리하겠습니다.' } };
+    const before = candidateInterviewDisplay(completed, null);
+    assert.equal(before.displayed.speakerId, candidate.id);
+    assert.equal(before.displayed.text, '마지막 답변이에요.');
+    assert.equal(before.awaitingClosing, true);
+    assert.deepEqual(candidateInterviewDisplay(JSON.parse(JSON.stringify(completed)), null), before);
+    const after = candidateInterviewDisplay(completed, before.closingId);
+    assert.equal(after.displayed.speakerId, 'secretary');
+    assert.equal(after.displayed.text, '면담을 마무리하겠습니다.');
+    assert.equal(after.awaitingClosing, false);
+    assert.deepEqual(candidateInterviewDisplay(JSON.parse(JSON.stringify(completed)), before.closingId), after);
+    assert.equal(candidateInterviewDisplay(completed, '다른-면담-종료').awaitingClosing, true);
+  }
+});
+
+test('일반 답변과 직접 마무리는 다음 단계 없이 표시하고 이전 저장의 종료 안내도 지원한다', () => {
+  const current = { ...game, history: [{ id: 'q1', event_id: game.event.id, input: '질문',
+    messages: [{ speaker_id: 'newcomer', text: '제 답변이에요.' }] }] };
+  assert.equal(candidateInterviewDisplay(current, null).displayed.text, '제 답변이에요.');
+  assert.equal(candidateInterviewDisplay(current, null).awaitingClosing, false);
+  assert.equal(candidateInterviewDisplay({ ...current, interview: { completed: true, completed_by: 'player' } }, null).awaitingClosing, false);
+  const legacy = { ...current, interview: { completed: true, completed_by: 'secretary', closing_message: '종료 안내' } };
+  const before = candidateInterviewDisplay(legacy, null);
+  assert.equal(before.displayed.text, '제 답변이에요.');
+  assert.equal(before.awaitingClosing, true);
+  assert.equal(candidateInterviewDisplay(legacy, before.closingId).displayed.text, '종료 안내');
+});
 
 test('서버의 도입과 질문·모든 화자의 답변을 원래 순서대로 복원한다', () => {
   const history = [{ id: 'turn1', event_id: game.event.id, input: '꿈이 뭐야?', conversation: room,
