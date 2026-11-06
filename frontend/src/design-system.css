@@ -163,6 +163,9 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
 :is(.intro-dialogue-dock, .interview-dock) .dialogue-content {
   max-height: none; overflow-y: visible;
 }
+.profile-open-button { width: fit-content; align-self: flex-start; }
+.profiles-modal .profile-card .photo-slot > img { object-fit: contain; object-position: center; }
+button.modal-footer-close { display: block; width: fit-content; min-width: 120px; margin: 24px 0 0 auto; background: var(--pink); }
 
 @media (min-width: 1001px) {
   .prologue-scene > .secretary-photo {

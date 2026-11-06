@@ -182,8 +182,8 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
       <small>도입에서는 초기 자금을, 첫 달 활동에서는 저장된 잔액과 현재 진행 시점을 표시합니다. 후보 면담에는 자금과 기간을 표시하지 않습니다.</small>
       <button className="primary-button" onClick={closeResourceNotice}>확인 · 안내 계속하기 →</button>
     </Modal>
-    <Modal open={profilesOpen} title="기존 데뷔조 프로필" className="profiles-modal" onClose={() => setProfilesOpen(false)}>
-      <div className="selection-heading"><p className="section-kicker">PROM::ENTER · ARTIST FILE</p><h2>무대를 기다려온 세 사람.</h2><p>프로필을 선택해 기존 멤버들을 알아보세요.</p></div>
+    <Modal open={profilesOpen} title="기존 데뷔조 프로필" className="profiles-modal" closeAtBottom onClose={() => setProfilesOpen(false)}>
+      <div className="selection-heading"><p className="section-kicker">PROM::ENTER · ARTIST FILE</p><h2>무대를 기다려온 세 사람</h2><p>프로필을 선택해 기존 멤버들을 알아보세요.</p></div>
       <div className="gallery-layout"><CharacterGallery characters={debutMembers} selectedId={profileId} onSelect={setProfileId}/><aside className="profile-detail glass-panel"><CharacterDetails character={profile} showAbilities/></aside></div>
     </Modal>
   </div>;
