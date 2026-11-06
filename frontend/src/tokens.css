@@ -13,12 +13,13 @@
   --surface: var(--white);
   --surface-tint: color-mix(in srgb, var(--pink) 12%, var(--white));
   --pink-soft: color-mix(in srgb, var(--pink) 45%, var(--white));
-  --glass: color-mix(in srgb, var(--surface) 92%, transparent);
-  --dialogue-surface: color-mix(in srgb, var(--pink) 9%, var(--white));
-  --choice-surface: color-mix(in srgb, var(--pink) 32%, var(--white));
+  --glass: var(--white);
+  --dialogue-surface: var(--white);
+  --choice-surface: var(--white);
+  --resource-surface: color-mix(in srgb, var(--pink) 80%, transparent);
   --border: color-mix(in srgb, var(--mauve) 32%, var(--white));
   --scrim: color-mix(in srgb, var(--ink) 38%, transparent);
-  --shadow: 0 12px 40px color-mix(in srgb, var(--ink) 12%, transparent);
+  --shadow: none;
   --scene-dim: rgb(0 0 0 / 50%);
   --portrait-shadow: drop-shadow(0 8px 16px rgb(0 0 0 / 25%));
   --font-body: 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
@@ -33,8 +34,8 @@
   --space-6: 32px;
   --space-7: 48px;
   --radius-small: 10px;
-  --radius-panel: 18px;
-  --radius-dialogue: 24px;
+  --radius-panel: 10px;
+  --radius-dialogue: 10px;
   --speed-fast: 160ms;
   --stats-width: 232px;
   --dialogue-width: 1000px;

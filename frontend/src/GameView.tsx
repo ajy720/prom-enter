@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import EventOpeningCard from './EventOpeningCard';
 import { Modal } from './Modal';
+import { ChatComposer } from './ChatComposer';
 import { DialogueNavigation, useDialogueHistory } from './DialogueNavigation';
 import type { Game, Stats, TurnInput } from './types';
 
@@ -92,13 +93,7 @@ export function GameView({ game, busy, pending, error, text, onTextChange, onSen
           </div>}
         </section>
         {!history.reviewing && !game.ending && currentOpening?.after_turn_id && <EventOpeningCard opening={currentOpening}/>}
-        {game.ending ? <button className="primary-button ending-button" onClick={onNewGame}>새로운 이야기 시작하기 →</button> : <form className="chat-composer glass-panel" onSubmit={event => { event.preventDefault(); void onSend(); }}>
-          <label className="sr-only" htmlFor="message">캐릭터에게 할 말</label>
-          <textarea id="message" value={text} maxLength={2000} rows={2} placeholder={pending && !busy ? '전송 결과를 확인한 뒤 다시 이야기할 수 있어요.' : '대표님의 이야기를 들려주세요…'} disabled={locked || choicesOpen} onChange={event => onTextChange(event.target.value)} onKeyDown={event => {
-            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); void onSend(); }
-          }}/>
-          <div className="composer-buttons"><button type="button" className="choice-trigger" disabled={locked || game.conversation.mode === 'private'} onClick={() => setChoicesOpen(true)}>활동 선택</button><button className="primary-button" aria-label="메시지 전송" disabled={locked || !text.trim()}>전송 ↑</button></div>
-        </form>}
+        {game.ending ? <button className="primary-button ending-button" onClick={onNewGame}>새로운 이야기 시작하기 →</button> : <><button type="button" className="choice-trigger activity-trigger" disabled={locked || game.conversation.mode === 'private'} onClick={() => setChoicesOpen(true)}>활동 선택</button><ChatComposer id="message" label="메시지" text={text} placeholder="대표님의 이야기를 들려주세요." disabled={locked || choicesOpen} onTextChange={onTextChange} onSend={() => onSend()}/></>}
         <div className="dock-caption"><span>Enter로 전송 · Shift + Enter로 줄바꿈</span><span>현재는 기존 축약 시나리오 · 새 스토리는 준비 중</span></div>
       </div>
     </section>
