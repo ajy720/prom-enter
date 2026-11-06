@@ -73,15 +73,6 @@ form.story-composer textarea:focus-visible { outline: none; }
 .formation-status .team-status-value { border-bottom-color: rgb(255 255 255 / 30%); }
 .formation-status .team-status-source { font-size: 10px; }
 
-/* The title keeps the supplied artwork and its reserved title space. */
-.title-screen .title-copy h1 { font-size: clamp(52px, 6vw, 96px); letter-spacing: -4px; font-weight: 700; }
-.title-screen .title-copy .section-kicker { font-size: 11px; letter-spacing: .08em; }
-.title-screen .title-subtitle { font-size: 21px; }
-.title-screen .title-description { font-size: 14px; }
-.title-actions .primary-button { font-size: 15px; }
-.title-actions .quiet-button { border: 0; text-align: left; padding-left: 0; }
-.title-art .photo-placeholder { background: var(--surface-tint); }
-
 /* Monthly operations: one dialogue surface, useful controls and readable status. */
 .month-photo-stage > .interview-dock { padding: var(--space-5); background: var(--white); border: 0; border-radius: var(--radius-dialogue); }
 .month-photo-stage::before, .recruitment-briefing::before { background: rgb(0 0 0 / 58%); }
@@ -114,7 +105,6 @@ form.story-composer textarea:focus-visible { outline: none; }
 
 /* Shape follows the action, rather than giving every control the same box. */
 button.primary-button { min-height: 44px; border-radius: 6px; border: 1px solid var(--accent); font-weight: 600; }
-.title-actions .primary-button { border-radius: 999px; padding-inline: var(--space-5); }
 button.quiet-button { min-height: 44px; border: 0; border-radius: 0; background: none; padding: var(--space-2) var(--space-1); }
 button.quiet-button:hover:not(:disabled) { background: none; color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
 .intro-navigation .quiet-button, .interview-hub-footer .quiet-button { padding-inline: 0; }
@@ -144,7 +134,6 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
   .profile-detail.glass-panel { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--border); }
 }
 @media (max-width: 600px) {
-  .title-screen .title-copy h1 { font-size: clamp(42px, 14vw, 60px); letter-spacing: -3px; }
   .selection-screen { padding: var(--space-5) var(--space-4); }
   .profile-card .profile-card-label { padding: var(--space-3) 0; }
   .dialogue-box, :is(.intro-dialogue-dock, .dialogue-dock, .interview-dock) .dialogue-box { padding: 0 var(--space-4); }
@@ -167,4 +156,101 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
   .resource-icon { width: 20px; height: 20px; }
   form.chat-composer.story-composer { padding-left: var(--space-4); gap: var(--space-2); }
   .story-send { width: 44px; height: 44px; flex-basis: 44px; }
+}
+
+/* Let scenes grow with their dialogue instead of squeezing portraits or
+   introducing a second scrollbar inside the main play area. */
+:is(.intro-dialogue-dock, .interview-dock) .dialogue-content {
+  max-height: none; overflow-y: visible;
+}
+.profile-open-button { width: fit-content; align-self: flex-start; }
+.profiles-modal .profile-card .photo-slot > img { object-fit: contain; object-position: center; }
+button.modal-footer-close { display: block; width: fit-content; min-width: 120px; margin: 24px 0 0 auto; background: var(--pink); }
+
+@media (min-width: 1001px) {
+  .prologue-scene > .secretary-photo {
+    width: min(480px, 48vw); height: auto; min-height: 0; aspect-ratio: 3 / 4; margin-bottom: 0;
+  }
+  .prologue-scene.intro-scene:has(> .scene-resource-status) > .secretary-photo { margin-bottom: 0; }
+  .prologue-scene > .secretary-photo .photo-slot > img { object-fit: contain; }
+}
+
+/* Opt in only after measuring: inputs and content that would need an inner
+   scrollbar keep the ordinary page layout. No clipping is used as a fallback. */
+@media (min-width: 1001px) {
+  .scene-fit { display: flex; flex-direction: column; height: 100dvh; min-height: 0; }
+  .scene-fit > .intro-topbar { flex: 0 0 auto; }
+  .scene-fit > .error-banner { flex: 0 0 auto; margin: 0; }
+  .scene-fit > section { flex: 1 1 0; min-height: 0; min-width: 0; height: auto; }
+  .scene-fit > :is(.intro-scene, .character-introduction, .interview-room) { overflow: hidden; }
+  .scene-fit .prologue-scene.intro-scene { grid-template-rows: minmax(0, 1fr) auto; }
+  .scene-fit .prologue-scene > .secretary-photo {
+    width: min(560px, 60vw); height: 100%; min-height: 0; max-height: 100%; aspect-ratio: auto; margin: 0 auto -32px;
+  }
+  .scene-fit .prologue-scene.intro-scene:has(> .scene-resource-status) > .secretary-photo { margin-bottom: -32px; }
+  .scene-fit .prologue-scene > .secretary-photo .photo-slot { min-height: 0; }
+  .scene-fit .prologue-scene > .secretary-photo .photo-slot > img { object-fit: cover; }
+  .scene-fit .intro-dialogue-dock { margin: 16px auto; }
+  .scene-fit .intro-dialogue-dock .dialogue-content { min-height: 0; padding-block: 16px; }
+  .scene-fit .intro-navigation { padding-block: 12px; }
+  .scene-fit .character-introduction { grid-template-rows: minmax(0, 1fr); }
+  .scene-fit .character-introduction .introduction-photo { min-height: 0; padding-top: 0; }
+  .scene-fit .character-introduction .introduction-photo .photo-slot { height: 100%; min-height: 0; }
+  .scene-fit .introduction-copy { padding: 24px 32px; }
+  .scene-fit .introduction-copy blockquote { margin-block: 16px 24px; }
+  .scene-fit .introduction-copy h2 { font-size: clamp(32px, 4vw, 52px); }
+  .scene-fit .introduction-copy .character-description { padding-top: 16px; }
+  .scene-fit .selection-screen.interview-hub {
+    display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; width: 100%; margin: 0 auto; padding: 16px 32px;
+  }
+  .scene-fit .interview-hub .selection-heading { margin-bottom: 12px; }
+  .scene-fit .interview-hub .selection-heading :is(p, h1) { margin-block: 4px; }
+  .scene-fit .interview-hub .selection-heading h1 { font-size: clamp(24px, 2.6vw, 32px); }
+  .scene-fit .interview-hub .selection-heading > p:last-child { font-size: 13px; }
+  .scene-fit .interview-hub .interview-progress { margin-bottom: 12px; padding-bottom: 12px; }
+  .scene-fit .interview-hub :is(.gallery-layout, .profile-cards) { min-height: 0; }
+  .scene-fit .interview-hub .profile-card { height: 100%; max-height: 440px; min-height: 0; }
+  .scene-fit .interview-hub .profile-card .photo-slot { min-height: 0; }
+  .scene-fit .interview-hub .profile-detail { display: flex; flex-direction: column; min-height: 0; }
+  .scene-fit .interview-hub .profile-detail > * { flex-shrink: 0; }
+  .scene-fit .interview-hub .profile-detail :is(h2, p) { margin-block: 8px; }
+  .scene-fit .interview-hub .profile-detail .character-keywords { margin-block: 12px; }
+  .scene-fit .interview-hub .profile-detail .character-description { flex: 1 0 auto; padding-top: 12px; }
+  .scene-fit .interview-hub-footer { margin-top: 12px; }
+  .scene-fit .interview-hub-footer p { margin-block: 0 4px; }
+  .scene-fit .recruitment-briefing.intro-scene { grid-template-rows: minmax(0, 1fr) auto; padding-top: 16px; gap: 12px; }
+  .scene-fit .recruitment-briefing.intro-scene:has(> .scene-resource-status) > .secretary-photo { height: 100%; min-height: 0; margin: 0 auto -32px; }
+  .scene-fit .recruitment-briefing .secretary-photo .photo-slot { min-height: 0; }
+  .scene-fit .recruitment-briefing .intro-dialogue-dock { margin-block: 0 16px; }
+  .scene-fit .recruitment-result-screen { width: 100%; padding-block: 24px; }
+  .scene-fit .interview-room.candidate-interview.interview-refined { grid-template-rows: minmax(0, 1fr); padding: 16px 24px; }
+  .scene-fit .interview-room.candidate-interview.interview-refined > .interview-portrait { height: 100%; min-height: 0; max-height: none; margin: 0; }
+  .scene-fit .interview-room.month-photo-stage { grid-template-rows: auto minmax(0, 1fr); gap: 12px 16px; padding: 16px 24px; }
+  .scene-fit .month-photo-stage > .interview-portrait { grid-row: 1 / 3; height: 100%; min-height: 0; margin: 0; }
+  .scene-fit .month-photo-stage > .interview-dock { grid-row: 2; min-height: 0; max-height: none; margin: 0; padding: 16px; }
+  .scene-fit .month-photo-stage .month-tasks :is(h1, p) { margin-block: 8px; }
+  .scene-fit .month-photo-stage .month-checklist { margin-block: 12px; }
+  .scene-fit .month-photo-stage .month-summary { margin-block: 12px; }
+  .scene-fit .month-photo-stage .month-summary > div { padding-block: 8px; }
+}
+/* Hide the portrait below the shoulders behind the name-entry dialogue. */
+.prologue-scene:has(.nickname-form) > .secretary-photo {
+  height: auto; min-height: 0; aspect-ratio: 3 / 2; margin-bottom: -48px;
+}
+.prologue-scene:has(.nickname-form) > .secretary-photo .photo-slot > img {
+  object-fit: cover; object-position: center top;
+}
+
+.prologue-scene:has(.nickname-form) > .intro-dialogue-dock { margin-top: 0; }
+@media (min-width: 1001px) {
+  .prologue-scene:has(.nickname-form) > .secretary-photo {
+    width: min(560px, 60vw); margin-top: 0;
+  }
+}
+/* The completed interview has no composer to cover the portrait's lower edge.
+   Align that edge with the clipped stage boundary instead of leaving padding. */
+@media (min-width: 1001px) {
+  .scene-fit .candidate-interview.interview-refined:has(.interview-complete) > .interview-portrait {
+    margin-bottom: -16px;
+  }
 }

@@ -41,6 +41,36 @@
       "width": 1440,
       "height": 1440,
       "sha256": "d979c096cbbca3e1e7f2f5528579c7454231e19938d54eef5785c9ecf22f0989"
+    },
+    {
+      "id": "title-white",
+      "path": "/images/scenes/title-white.png",
+      "sourceFile": "단체사진.png",
+      "source": "사용자 직접 제공 첨부 파일",
+      "downloadedOn": "2026-11-06",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "bcf07ecae1ce23d16d9725727033277127f058601a3d5d7332bb1587488ee495"
+    },
+    {
+      "id": "title-uniform",
+      "path": "/images/scenes/title-uniform.png",
+      "sourceFile": "단체사진3.png",
+      "source": "사용자 직접 제공 첨부 파일",
+      "downloadedOn": "2026-11-06",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "756df6178c75ad81cfd62e36d21b9be382ed1617a01197cee414243d2b617748"
+    },
+    {
+      "id": "title-black",
+      "path": "/images/scenes/title-black.png",
+      "sourceFile": "단체사진4.png",
+      "source": "사용자 직접 제공 첨부 파일",
+      "downloadedOn": "2026-11-06",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "500b98268e23748bbdfa2dbdff19823b613d35de596e5808005f5f50069dbcd5"
     }
   ]
 }

@@ -35,9 +35,11 @@ export const debutMembers: IntroCharacter[] = [
     greeting: '', keywords: ['예능', '비주얼', '분위기 메이커'], abilities: { dance: 8, vocal: 7, visual: 9, variety: 10 } },
 ];
 
-export const introAssets: { cover?: string; secretary?: string; office?: string; corridor?: string; practice?: string } = {
-  cover: '/images/scenes/title.png',
-};
+export const titlePhotos = [
+  '/images/scenes/title-white.png',
+  '/images/scenes/title-uniform.png',
+  '/images/scenes/title-black.png',
+];
 
 // Producer-provided cutouts, keyed by the existing save/AI character IDs.
 export const characterPortraits: Record<string, string> = {
