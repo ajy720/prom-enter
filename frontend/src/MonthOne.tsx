@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
+import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
 import { useDialogueHistory } from './DialogueNavigation';
 import { TeamStatus } from './TeamStatus';
@@ -58,20 +59,18 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
 
         <TeamStatus/>
         <ol className="month-checklist"><li>{state.training ? '✓' : '○'} 집중 훈련 {training?.label ?? '선택'}</li><li>{talked === 3 ? '✓' : '○'} 기존 멤버 면담 {talked}/3</li><li>{state.rule ? '✓' : '○'} 합숙 규칙 정하기</li></ol>
-        {!introductory && !state.completed && <><button className="quiet-button" onClick={() => setMenu('training')}>집중 훈련 {training ? '변경' : '선택'}</button><button className="quiet-button" onClick={() => setMenu('rule')}>합숙 규칙 {rule ? '변경' : '선택'}</button></>}
+        {!introductory && !state.completed && <><button className="operation-button" onClick={() => setMenu('training')}><span>집중 훈련 {training ? '변경' : '선택'}</span><span aria-hidden="true">→</span></button><button className="operation-button" onClick={() => setMenu('rule')}><span>합숙 규칙 {rule ? '변경' : '선택'}</span><span aria-hidden="true">→</span></button></>}
       </aside>
       <div className="interview-portrait"><PhotoSlot src={displayed.portrait} name={displayed.photoName} caption="반신 사진 자리"/></div>
-      <div className="interview-context"><span>연습실 · 합숙 첫 달</span><p>처음부터 완벽한 팀은 없으니까.<br/>서로의 속도를 알아가는 시간.</p><span>프론트 데모 · 준비된 대화</span></div>
       <div className="interview-dock">
+        {!introductory && !state.completed && <div className="month-people" aria-label="대화 상대">{people.map(target => <button key={target.id} aria-pressed={speaker === target.id} onClick={() => { setSpeaker(target.id as MonthSpeaker); setText(''); }}>{target.name}<small>{target.id === 'newcomer' ? '신입' : hasDiscussion(state, target.id as MonthSpeaker) ? '면담 완료' : '면담 전'}</small></button>)}</div>}
         <section className="dialogue-box"><header className="dialogue-header"><h2>{displayed.speaker}</h2><div className="dialogue-tools"><span className="mode-label">1개월차 데모</span><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>
           <div className="dialogue-content" role="log" aria-live="polite"><p>{displayed.text}</p></div>
           {introductory ? <div className="intro-navigation"><button className="quiet-button" onClick={history.index === 0 ? onCasting : history.previous}>← 이전</button><span>{history.index + 1} / 3{history.reviewing ? ' · 지난 대화' : ''}</span><button className="primary-button" onClick={history.reviewing ? history.next : () => onUpdate(current => ({ ...current, scene: Math.min(3, current.scene + 1) }))}>{history.reviewing || state.scene < 2 ? '다음' : '첫 달 계획 세우기'} →</button></div>
             : null}
         </section>
-        {!introductory && (state.completed ? <section className="glass-panel month-finished"><p className="section-kicker">1개월차 계획 확정</p><h2>프로뮤의 첫걸음을 준비했어요.</h2>{summary}<p>선택과 대화 기록이 이 브라우저에 저장되었습니다. 실제 훈련 결과·신뢰도·성공/실패 판정은 서버 연결 후 반영합니다.</p><div className="month-actions"><button className="quiet-button" onClick={openRecords}>멤버별 대화 기록 보기</button><button className="primary-button" disabled>2개월차 · 준비 중</button></div></section> : <>
-          <div className="month-people" aria-label="대화 상대">{people.map(target => <button key={target.id} aria-pressed={speaker === target.id} onClick={() => { setSpeaker(target.id as MonthSpeaker); setText(''); }}>{target.name}<small>{target.id === 'newcomer' ? '신입' : hasDiscussion(state, target.id as MonthSpeaker) ? '면담 완료' : '면담 전'}</small></button>)}</div>
-          <div className="interview-suggestions">{monthQuestions.map(question => <button key={question} onClick={() => send(question)}>{question}</button>)}</div>
-          <form className="chat-composer glass-panel" onSubmit={event => { event.preventDefault(); send(text); }}><label htmlFor="month-message" className="sr-only">첫 합숙 대화</label><textarea id="month-message" rows={2} maxLength={2000} value={text} placeholder={`${person.name}에게 이야기하기`} onChange={event => setText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); send(text); } }}/><button className="primary-button" disabled={!text.trim()}>전송 ↑</button></form>
+        {!introductory && (state.completed ? <section className="glass-panel month-finished"><p className="section-kicker">1개월차 계획 확정</p><h2>프로뮤의 첫걸음을 준비했어요.</h2>{summary}<p>선택과 대화 기록이 이 브라우저에 저장되었습니다. 실제 훈련 결과·신뢰도·성공/실패 판정은 서버 연결 후 반영합니다.</p><div className="month-actions"><button className="quiet-button" onClick={openRecords}>멤버별 대화 기록 보기</button><span className="upcoming-feature">2개월차 준비 중</span></div></section> : <>
+          <ChatComposer id="month-message" label="첫 합숙 대화" text={text} placeholder={`${person.name}에게 이야기하기`} onTextChange={setText} onSend={() => send(text)} suggestions={monthQuestions}/>
           <div className="month-actions"><p>{canFinishMonth(state) ? '필요한 준비를 마쳤어요. 확인 후 이번 달 계획을 확정해주세요.' : '훈련 1개·기존 멤버 3명과 대화·합숙 규칙을 정해주세요.'}</p><button className="primary-button" disabled={!canFinishMonth(state)} onClick={() => setMenu('confirm')}>첫 달 계획 확인 →</button></div>
           <p className="dock-caption">준비된 주제에 답하는 데모입니다. 실제 AI와 게임 수치 판정은 아직 연결하지 않았어요.</p>
         </>)}

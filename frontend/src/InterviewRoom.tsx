@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { InterviewRecords } from './InterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
-import { ResourceStatus } from './ResourceStatus';
+import { ChatComposer } from './ChatComposer';
 import { characterPortraits, sceneBackgrounds, type IntroCharacter } from './introContent';
 import { AUTO_FINISH_TURNS, appendInterviewTurn, finishInterview, statusLabels, type CandidateId, type InterviewSession } from './interviewState';
 import { demoInterviewProvider, farewell, recommendedQuestions, type InterviewProvider, type InterviewRequest } from './interviewProvider';
@@ -47,15 +47,13 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
     }
   }
 
-  return <section className="interview-room candidate-interview" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
-    <div className="scene-resource-status"><ResourceStatus compact/></div>
+  return <section className="interview-room candidate-interview interview-refined" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <aside className="interview-info glass-panel"><p className="section-kicker">일대일 면담 · 대표실</p><h1>{character.name}</h1><p>{character.fullName} · {character.age}세</p><p className="interview-role">{character.role}</p>
       <span className={`interview-status status-${session.status}`}>{statusLabels[session.status]}</span>
       <p className="interview-count">나눈 이야기 <strong>{session.turnCount}</strong> / {AUTO_FINISH_TURNS}</p>
       <p className="interview-help">이야기를 한 번 나눈 뒤 마무리할 수 있어요.</p>
     </aside>
     <div className="interview-portrait"><PhotoSlot src={characterPortraits[secretarySpeaking ? 'baek_hayeon' : character.id]} name={secretarySpeaking ? '백하연' : character.name} caption="반신 사진 자리"/></div>
-    <div className="interview-context"><span>우리의 첫 면담</span><p>잘하는 것부터, 아직 서툰 마음까지.<br/>한 사람의 이야기를 들어보세요.</p></div>
     <div className="interview-dock">
       <section className="dialogue-box"><header className="dialogue-header"><h2>{speaker}</h2><div className="dialogue-tools"><span className="mode-label">데모 면담</span><button className="text-button" onClick={() => setRecordsOpen(true)}>면담 내용 다시보기</button></div></header>
         <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}><p>{busy ? '답변을 생각하고 있어요…' : latest?.text ?? character.greeting}</p></div>
@@ -64,11 +62,7 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
         </div>
       </section>
       {complete ? <div className="interview-complete glass-panel"><span>오늘의 이야기는 기록에 남았습니다.</span><button className="primary-button" onClick={onBack}>면담 상대 목록으로 →</button></div> : <>
-        <div className="interview-suggestions" aria-label="추천 질문">{recommendedQuestions.map(question => <button key={question} disabled={locked} onClick={() => void send(question)}>{question}</button>)}</div>
-        <form className="chat-composer glass-panel" onSubmit={event => { event.preventDefault(); void send(); }}><label htmlFor="interview-message" className="sr-only">면담 질문</label>
-          <textarea id="interview-message" rows={2} maxLength={2000} value={text} placeholder="어떤 이야기가 궁금하신가요?" disabled={locked} onChange={event => setText(event.target.value)} onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); void send(); } }}/>
-          <button className="primary-button" aria-label="면담 질문 전송" disabled={locked || !text.trim()}>전송 ↑</button>
-        </form>
+        <ChatComposer id="interview-message" label="면담 질문" text={text} placeholder="궁금한 이야기를 물어보세요." disabled={locked} onTextChange={setText} onSend={() => send()} suggestions={recommendedQuestions}/>
         <div className="dock-caption"><span>Enter로 전송 · Shift + Enter로 줄바꿈</span><span>데모는 추천 질문과 주요 주제에 맞춰 답변합니다.</span></div>
       </>}
       {error && <div className="error-banner interview-error" role="alert"><span>{error}</span>{pending && <button disabled={busy} onClick={() => void send(undefined, pending)}>같은 질문 재시도</button>}<button disabled={busy} onClick={() => { setText(pending?.message ?? text); setPending(null); setError(''); }}>질문 수정</button></div>}

@@ -27,9 +27,8 @@ export function TitleScreen({ onStart, onContinue, busy = false }: { onStart: ()
   const saved = readIntroProgress();
   return <section className="title-screen">
     <div className="title-art"><PhotoSlot src={introAssets.cover} name="Prom::Enter의 새로운 얼굴들" caption="시작 화면 단체 사진 자리"/>
-      <span className="title-art-caption">새로운 무대, 우리의 이야기.</span>
     </div>
-    <div className="title-copy"><p className="section-kicker">INTERACTIVE STORY · ARTIST MANAGEMENT</p><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
+    <div className="title-copy"><p className="section-kicker">PROM::ENTER</p><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
       <p className="title-subtitle">다시 빛날 무대의 시작.</p><p className="title-description">당신의 선택으로 만나고,<br/>대화로 함께 만들어가는 이야기.</p>
       <div className="title-actions"><button className="primary-button" disabled={busy} onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
         {(saved || localStorage.getItem(storyGameKey)) && <button className="quiet-button" disabled={busy} onClick={onContinue}>{busy ? '불러오는 중…' : '이야기 이어하기'}</button>}
@@ -132,8 +131,8 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
     <Modal open={resourceNoticeOpen} title="회사 자금과 남은 시간 안내" className="resource-notice-modal" onClose={closeResourceNotice}>
       <p className="section-kicker">백하연의 운영 브리핑</p><h2>우리에게 남은 자금과 시간</h2><ResourceStatus/>
       <p>현재 회사의 운영 자금은 20억 원입니다. 프로뮤의 계약 기간은 2년이며, 데뷔 쇼케이스까지는 3개월이 남았습니다.</p>
-      <p>지금부터 대화 화면 상단에 자금과 계약 기간이 계속 표시됩니다. 활동과 지출을 결정할 때 함께 확인해주세요.</p>
-      <small>도입에서는 초기 자금을 표시합니다. 서버 면담과 첫 달 활동에서는 저장된 잔액과 현재 진행 시점을 표시합니다.</small>
+      <p>운영 안내와 활동 화면에서 자금과 계약 기간을 확인할 수 있습니다. 활동과 지출을 결정할 때 함께 살펴봐주세요.</p>
+      <small>도입에서는 초기 자금을, 첫 달 활동에서는 저장된 잔액과 현재 진행 시점을 표시합니다. 후보 면담에는 자금과 기간을 표시하지 않습니다.</small>
       <button className="primary-button" onClick={closeResourceNotice}>확인 · 안내 계속하기 →</button>
     </Modal>
     <Modal open={profilesOpen} title="기존 데뷔조 프로필" className="profiles-modal" onClose={() => setProfilesOpen(false)}>

@@ -696,6 +696,68 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
   .candidate-interview.interview-room:has(> .scene-resource-status) > .interview-portrait { position: relative; inset: auto; width: min(420px, 100%); height: clamp(320px, 50dvh, 440px); margin: var(--space-3) auto -32px; transform: none; z-index: 0; }
 }
 
+/* Interview-specific layout; shared visual rules are in design-system.css. */
+.interview-room.candidate-interview.interview-refined {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: 1fr; gap: var(--space-5) var(--space-6);
+  padding: var(--space-5) var(--space-6); align-items: start;
+}
+.interview-room.interview-refined > .interview-info {
+  position: absolute; top: var(--space-6); left: var(--space-6); width: 180px;
+  display: block; padding: 0; color: var(--white); background: none; border: 0;
+}
+.interview-refined .interview-info .section-kicker { margin: 0 0 var(--space-4); color: var(--white); font-size: 11px; font-weight: 400; }
+.interview-refined .interview-info h1 { font-size: 32px; font-weight: 600; letter-spacing: -1px; margin: 0 0 var(--space-2); }
+.interview-refined .interview-info > p:not(.section-kicker) { color: var(--white); font-size: 12px; line-height: 1.8; }
+.interview-refined .interview-info .interview-role { margin: var(--space-2) 0 var(--space-5); word-break: keep-all; }
+.interview-refined .interview-info .interview-count { display: flex; justify-content: space-between; gap: var(--space-4); border-top: 1px solid rgb(255 255 255 / 35%); padding-top: var(--space-3); margin: 0; }
+.interview-refined .interview-count strong { color: var(--pink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.interview-room.candidate-interview.interview-refined > .interview-portrait {
+  position: relative; inset: auto; grid-column: 1; grid-row: 1 / -1; align-self: end;
+  width: 100%; height: calc(100dvh - 120px); min-height: 480px; max-height: 900px;
+  margin: 0 0 -24px; z-index: 0;
+}
+.interview-refined > .interview-portrait .photo-slot > img { object-fit: contain; object-position: center top; transform: translateX(48px) scale(1.12); transform-origin: center top; }
+.interview-room.interview-refined > .interview-dock {
+  grid-column: 2; grid-row: 1; align-self: center; width: 100%; min-width: 0;
+  margin: 0; padding: var(--space-5); background: var(--white);
+  border: 0; border-radius: var(--radius-small); box-shadow: none;
+}
+.interview-refined .dialogue-box { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; backdrop-filter: none; }
+.interview-refined .dialogue-header { min-height: 40px; align-items: baseline; padding-bottom: var(--space-3); gap: var(--space-2); }
+.interview-refined .dialogue-header h2 { align-self: auto; display: block; min-width: 0; padding: 0; background: none; font-size: 18px; font-weight: 600; }
+.interview-refined .dialogue-tools { margin-left: auto; }
+.interview-refined .text-button { color: var(--ink-muted); font-size: 12px; padding: var(--space-2) 0; border-radius: 0; }
+.interview-refined .text-button:hover:not(:disabled) { color: var(--accent); background: none; text-decoration: underline; text-underline-offset: 4px; }
+.interview-refined .dialogue-content { min-height: 140px; max-height: min(32dvh, 300px); padding: var(--space-5) 0 var(--space-3); }
+.interview-refined .dialogue-content p { font-size: clamp(16px, 1.3vw, 18px); line-height: 1.85; }
+.interview-refined .pending-response { padding: 0; background: none; }
+.interview-refined .interview-dialogue-footer { justify-content: flex-end; padding: 0 0 var(--space-2); }
+.interview-refined .primary-button { font-size: 14px; padding: var(--space-3) var(--space-4); box-shadow: none; }
+.interview-refined .interview-complete { margin-top: var(--space-4); padding: var(--space-4) 0 0; border-top: 1px solid var(--border); }
+.interview-refined .dock-caption { color: var(--ink-muted); text-shadow: none; margin-top: var(--space-3); font-size: 10px; flex-wrap: wrap; }
+@media (max-width: 1000px) {
+  .interview-room.candidate-interview.interview-refined { grid-template-rows: auto auto auto; gap: var(--space-4); padding: var(--space-4); }
+  .interview-room.interview-refined > .interview-info { position: static; grid-column: 1; grid-row: 1; width: 100%; }
+  .interview-refined .interview-info .section-kicker { margin-bottom: var(--space-2); }
+  .interview-refined .interview-info .interview-role { margin-bottom: var(--space-2); }
+  .interview-refined .interview-info h1 { font-size: 26px; }
+  .interview-refined .interview-info .interview-count { max-width: 220px; }
+  .interview-room.candidate-interview.interview-refined > .interview-portrait { grid-column: 1 / -1; grid-row: 2; height: clamp(260px, 45dvh, 400px); min-height: 0; width: min(440px, 100%); justify-self: center; margin: -48px 0 -24px; }
+  .interview-refined > .interview-portrait .photo-slot > img { transform: none; }
+  .interview-room.interview-refined > .interview-dock { grid-column: 1 / -1; grid-row: 3; margin: 0; z-index: 3; }
+}
+@media (max-width: 600px) {
+  .interview-room.candidate-interview.interview-refined { grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(3, auto); gap: var(--space-3); }
+  .interview-refined .interview-info .interview-role { margin: var(--space-1) 0 var(--space-2); }
+  .interview-refined .interview-info .interview-count { max-width: none; padding-top: var(--space-2); }
+  .interview-room.candidate-interview.interview-refined > .interview-portrait { grid-row: 2; height: 280px; margin: 0 0 -24px; }
+  .interview-room.interview-refined > .interview-dock { grid-row: 3; padding: var(--space-4); }
+  .interview-refined .dialogue-content { min-height: 115px; max-height: 240px; padding-top: var(--space-4); }
+  .interview-refined .interview-complete { flex-wrap: wrap; }
+  .interview-refined .interview-complete .primary-button { margin-left: auto; white-space: normal; }
+}
+
 .recruitment-briefing .secretary-photo { width: min(520px, 44vw); align-self: end; }
 .recruitment-briefing.intro-scene:has(> .scene-resource-status) > .secretary-photo { margin-bottom: -40px; }
 .recruitment-briefing .secretary-photo .photo-slot > img { object-fit: cover; object-position: center top; }

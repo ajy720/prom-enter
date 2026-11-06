@@ -12,6 +12,6 @@ export function TeamStatus() {
       <span>{stat.label}</span><strong>{stat.value ?? '—'}<small> / 100</small></strong>
       <small>{stat.value === null ? '초기값 미정' : stat.hint}</small>
     </div>)}</div>
-    <p className="team-status-source">팀워크·스트레스/피로도는 Figma의 데모 초기값입니다. 인지도·팬덤 초기값은 미정이며, 실제 변화는 서버 연결 후 반영합니다.</p>
+    <p className="team-status-source">활동 시작 전의 팀 현황입니다. 인지도·팬덤은 아직 표시할 값이 없습니다.</p>
   </section>;
 }
