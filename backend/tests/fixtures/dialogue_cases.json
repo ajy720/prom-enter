@@ -3,5 +3,7 @@
   {"id":"open_seoyeon","character_id":"b","event_id":"m01_training","text":"네 생각을 말해줘","trust":70,"fatigue":20,"facts":["새로운 활동은 확정되지 않았습니다."],"review":"여울의 적극적 말투, 자기 의견 표현"},
   {"id":"tired_jiwoo","character_id":"c","event_id":"m06_variety","text":"괜찮니?","trust":50,"fatigue":80,"facts":["예능 출연 여부는 아직 결정하지 않았습니다."],"review":"사야의 간결한 말투와 피로, 출연 완료를 창작하지 않음"},
   {"id":"undiscovered_evidence","character_id":"b","event_id":"m13_rumor","text":"실제 진실이 뭐야?","trust":35,"fatigue":20,"facts":["아직 조사로 확보한 증거가 없습니다."],"review":"미획득 증거를 확정하지 않음. 해석 불가능한 사실은 모른다고 표현"},
-  {"id":"secretary_report","character_id":"a","event_id":"m24_contract","text":"결과를 알려줘","trust":40,"fatigue":20,"facts":["계약 결말은 아직 확정하지 않았습니다."],"review":"백하연의 정중하고 간결한 보고, 확정되지 않은 엔딩 생성 금지"}
+  {"id":"secretary_report","character_id":"a","event_id":"m24_contract","text":"결과를 알려줘","trust":40,"fatigue":20,"facts":["계약 결말은 아직 확정하지 않았습니다."],"review":"백하연의 정중하고 간결한 보고, 확정되지 않은 엔딩 생성 금지"},
+  {"id":"ido_interview_stage_experience","character_id":"a","event_id":"p2_interview_a","text":"무대에서 실제로 긴장했던 경험이 있어? 언제 그런 일이 있었던 거야?","trust":20,"fatigue":20,"facts":[],"review":"낮은 신뢰여도 중학교 교내 독창 무대에서 음정이 흔들렸던 경험을 구체적으로 답함. 정보 부족·동의 문제로 회피하지 않음. 새로운 공연 결과나 잠긴 개인 사건을 만들지 않음"},
+  {"id":"ido_creative_daily_experience","character_id":"a","event_id":"p2_interview_a","text":"혼자 노래하다가 기분이 좋아진 작은 일화를 하나 이야기해 줄래?","trust":35,"fatigue":20,"facts":[],"review":"기존 노래 취향에 맞는 작은 본인 일상 경험을 자연스럽게 보완. 창작이나 자료 부족을 대사로 설명하지 않음. 가족관계·트라우마·새 경력·다른 인물의 행동·게임 결과·가짜 인용 ID를 만들지 않음"}
 ]

@@ -147,7 +147,7 @@ def test_route_validation_denies_invented_ids_and_unquoted_requests():
 def test_console_natural_switch_and_next_reply_use_the_new_persona_without_old_private_data():
     provider=Capture(); session=PersonaSession(provider,'백하연')
     session.chat('내 비밀 별명은 청록별이야.')
-    before=session.state.knowledge_records[-1]
+    before=next(r for r in session.state.knowledge_records if r.id.startswith('report:'))
     reply=session.chat('사야랑 얘기하고 싶어')
     assert reply.kind=='conversation_change' and session.character_id=='jiwoo' and reply.messages==[]
     assert len(provider.actors)==1

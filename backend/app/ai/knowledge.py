@@ -52,9 +52,11 @@ def may_disclose(state: State, speaker: str, record: KnowledgeRecord, audience: 
 def retrieve(state: State, observer: str, query: str, audience: list[str],
              *, limit: int = 3, char_budget: int = 2200) -> list[KnowledgeRecord]:
     eligible = [r for r in catalog(state).values() if may_disclose(state, observer, r, audience)]
-    # Directory and known surface traits are short fixed context. Do not rely on
-    # a lexical match for "what are the members like?" across Korean paraphrases.
-    baseline = [r for r in eligible if r.id.endswith((':public_identity', ':observable_traits'))]
+    # Include the speaker's approved experiences even for indirect follow-ups
+    # like "언제 그런 일이 있었어?" that do not repeat the source's keywords.
+    own_past = f'profile:{canonical(observer)}:shareable_past'
+    baseline = [r for r in eligible if r.id.endswith((':public_identity', ':observable_traits'))
+                or r.id == own_past]
     q = terms(query)
     ranked = sorted(enumerate(r for r in eligible if r not in baseline),
                     key=lambda pair: (len(q & terms(pair[1].title + pair[1].text)), pair[0]), reverse=True)
@@ -75,8 +77,9 @@ def disclosure_guidance(state: State, observer: str, audience: list[str]) -> lis
     withheld = any(knows(state, observer, r) and not may_disclose(state, observer, r, audience)
                    for r in catalog(state).values())
     # Never include withheld text, IDs, subjects, or even a revealing record title.
-    return (['개인적인 사정이나 아직 공유되지 않은 이야기는 먼저 꺼내지 않는다. '
-             '그런 질문에는 내용을 추측하지 말고 본인의 동의나 별도 확인이 필요하다고 말한다.']
+    return (['현재 제공된 자료는 지금 청중에게 설명할 수 있으므로 질문에 구체적으로 답한다. '
+             '별도로 보호된 내용만 추측하거나 공개하지 않는다. 보호된 내용이 있다는 이유로 '
+             '일상 경험이나 제공된 과거 경험까지 일괄적으로 거절하지 않는다.']
             if withheld else [])
 
 
@@ -154,18 +157,14 @@ def record_resolution(state: State, facts: list[str], evidence: list[dict], obse
         add_record(state, existing or record, observers, method='observation')
 
 
-def learn_cited_records(state: State, dialogue, actor, turn_id: str):
-    """Listeners learn the words actually spoken, not an entire cited dossier.
+def record_dialogue(state: State, dialogue, actor, turn_id: str):
+    """Remember validated speech, including uncited creative recollections.
 
     A citation may refer to a paragraph while the reply discloses one sentence.
     Copying its source record would silently teach undisclosed details. Preserve
     the utterance as a sourced report; only server events grant source facts.
     """
-    records = {r.id: r for r in actor.knowledge}
     for index, message in enumerate(dialogue.messages):
-        references = [records[key] for key in message.knowledge_ids if key in records]
-        if not references:
-            continue
         speaker = actor.speakers[message.speaker_id]
         spoken = KnowledgeRecord(id=f'speech:{turn_id}:{message.speaker_id}:{index}',
             character_id=speaker.id, subject_id=speaker.id, title=f'{speaker.name}의 설명',

@@ -5,7 +5,7 @@ from app.ai.providers import PROMPT_VERSION, validate_analysis, validate_dialogu
 from app.ai.director import advance_mood
 from app.ai.demo import MONTH_ONE_COMPLETION_MESSAGE
 from app.ai.rules import action_target
-from app.ai.knowledge import canonical, learn_cited_records, record_report, record_resolution
+from app.ai.knowledge import canonical, record_dialogue, record_report, record_resolution
 from app.content import CHARACTERS, CONTENT, EVENTS, EVIDENCE, public_event
 from app.game.engine import character_direction, resolve_turn
 from app.game.conversation import conversation_view, current_conversation, make_conversation, roles_for
@@ -173,7 +173,7 @@ class TurnService:
         for role,view in views.items():
             part = validate_dialogue(self.provider.generate(text,view,direction,proposal.facts,analysis.needs_clarification),view)
             messages.extend(part.messages)
-            learn_cited_records(proposal.state,part,view,request.request_id)
+            record_dialogue(proposal.state,part,view,request.request_id)
         if auto_closed:
             messages.append(Message(speaker_id='secretary',text=CLOSING,emotion='neutral',audience=['secretary']))
         dialogue=Dialogue(messages=messages)
