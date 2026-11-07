@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "slot_mapping": {
     "a": "hyerin",
     "b": "seoyeon",
@@ -56,6 +56,19 @@
           "text": "하연은 회사가 가장 어려웠던 시기에 작성한 사직서를 아직 개인 노트북에 보관하고 있다.\n\n그러나 제출하지 않았다.\n\n또한 회사가 배출했던 첫 성공 그룹의 데뷔 무대 영상을 개인적으로 보관하고 있다.\n\n회사의 미래에 대한 확신이 흔들릴 때 가끔 그 영상을 다시 본다.\n\n이 사실은 플레이어와의 신뢰가 충분히 높아지거나 회사가 심각한 위기에 처했을 때만 드러난다.",
           "source": "characters/00. 백하연 (BAEK HAYEON).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:baek_hayeon:shareable_past",
+          "character_id": "baek_hayeon",
+          "subject_id": "baek_hayeon",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "백하연은 2020년 Prom::Enter에 입사했다.\n\n당시 회사는 여러 인기 아이돌을 배출하며 성장하고 있었고, 하연은 체계적인 업무 시스템과 높은 성과에 매력을 느껴 입사를 결정했다.\n\n입사 초기에는 경영지원팀 소속으로 일하며 연습생 관리와 제작 프로젝트의 예산 업무를 담당했다.\n\n업무 처리 능력을 인정받아 대표 비서실로 이동했고, 이후 회사의 주요 프로젝트와 경영 현황을 가까이에서 관리하게 되었다.",
+          "source": "characters/00. 백하연 (BAEK HAYEON).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "baek_hayeon"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     },
@@ -100,6 +113,19 @@
           "text": "리안은 과거 데뷔 프로젝트가 무산된 날, 자신이 팀원들에게 했던 말을 아직 기억하고 있다.\n\n\"조금만 더 기다리면 우리 다 같이 데뷔할 수 있을 거야.\"\n\n그 말이 결국 지켜지지 않았다는 사실에 오랫동안 죄책감을 느꼈다.\n\n현재도 개인 휴대전화에 당시 데뷔조의 마지막 단체 사진을 보관하고 있다.\n\n이 사실은 대표와의 신뢰가 높아졌을 때만 공개한다.",
           "source": "characters/01. 리안 (RIAN).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:dahyun:shareable_past",
+          "character_id": "dahyun",
+          "subject_id": "dahyun",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "리안은 15세에 Prom::Enter에 입사했다.\n\n어린 시절부터 노래와 춤을 좋아했으며, 학교 축제 무대에 오른 경험을 계기로 아이돌을 꿈꾸게 되었다.\n\n연습생 생활 초기에는 뛰어난 실력보다 성실함으로 주목받았다.\n\n누구보다 일찍 연습실에 도착했고, 마지막까지 남아 부족한 부분을 반복해서 연습했다.",
+          "source": "characters/01. 리안 (RIAN).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "dahyun"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     },
@@ -144,6 +170,19 @@
           "text": "도하는 과거 데뷔 프로젝트가 무산되었을 때 자신이 충분히 뛰어나지 않았기 때문이라고 생각했다.\n\n실제로 프로젝트가 무산된 이유는 회사의 경영 문제였지만, 도하는 이를 자신의 실력 부족으로 받아들였다.\n\n이후 연습량을 지나치게 늘리는 습관이 생겼다.\n\n자신의 노력만으로 모든 문제를 해결할 수 없다는 사실을 인정하는 것이 두렵다.\n\n이 사실은 대표와의 신뢰가 높아지거나 번아웃 이벤트가 발생했을 때 공개된다.",
           "source": "characters/02. 도하 (DOHA).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:haram:shareable_past",
+          "character_id": "haram",
+          "subject_id": "haram",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "도하는 15세에 Prom::Enter에 입사했다.\n\n어린 시절부터 춤에 뛰어난 재능을 보였으며, 지역 댄스 대회에서 여러 차례 좋은 성적을 거두었다.\n\n연습생으로 입사한 뒤에도 빠르게 실력을 인정받았다.",
+          "source": "characters/02. 도하 (DOHA).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "haram"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     },
@@ -188,6 +227,19 @@
           "text": "세인은 데뷔 프로젝트가 무산되었던 날, 다른 멤버들이 보는 앞에서는 울지 않았다.\n\n대신 혼자 연습실에 남아 휴대전화로 자신의 연습 영상을 보며 울었다.\n\n그날 이후 힘든 일이 생기면 일부러 더 밝게 행동하는 습관이 생겼다.\n\n리안과 도하는 세인이 밝은 성격이라고 생각하지만, 세인이 얼마나 많은 감정을 숨기고 있는지는 완전히 알지 못한다.\n\n이 사실은 대표와의 신뢰가 높아지거나 세인이 심각한 스트레스를 경험할 때 드러난다.",
           "source": "characters/03. 세인 (SEIN).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:yuna:shareable_past",
+          "character_id": "yuna",
+          "subject_id": "yuna",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "세인은 15세에 Prom::Enter에 입사했다.\n\n어린 시절부터 사람들 앞에 서는 것을 좋아했으며, 학교 행사와 공연에 적극적으로 참여했다.\n\n연습생 생활 초기에는 밝은 성격과 뛰어난 친화력으로 빠르게 적응했다.",
+          "source": "characters/03. 세인 (SEIN).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "yuna"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     },
@@ -232,6 +284,19 @@
           "text": "여울은 과거 오디션에서 여러 차례 탈락한 경험을 가족에게 모두 이야기하지 않았다.\n\n가족에게는 오디션이 잘 진행되고 있다고 말했지만, 실제로는 탈락 통보를 받은 뒤 혼자 울었던 적이 많다.\n\n현재도 휴대전화 메모장에 자신이 탈락했던 오디션의 날짜와 평가 내용을 기록해 두고 있다.\n\n그 기록을 지우지 않는 이유는 언젠가 데뷔에 성공했을 때 다시 읽어 보고 싶기 때문이다.\n\n서울에 올라온 뒤에도 가족에게 힘든 일을 자세히 말하지 않는다.\n\n이 사실은 대표와의 신뢰가 높아지거나 여울이 자신의 실력에 대한 불안을 털어놓을 때 공개된다.",
           "source": "characters/04. 여울 (YEOUL).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:seoyeon:shareable_past",
+          "character_id": "seoyeon",
+          "subject_id": "seoyeon",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "여울은 경상북도 구미에서 태어나고 자랐다.\n\n어린 시절부터 노래와 춤을 좋아했다.\n\n학교 축제나 장기자랑에 적극적으로 참여했으며, 사람들 앞에서 공연하는 순간을 가장 즐거워했다.\n\n그러나 전문적인 트레이닝을 받을 기회는 많지 않았다.\n\n다른 연습생들처럼 어린 나이부터 체계적으로 교육받지 못했고, 대부분의 춤은 영상을 보며 독학했다.\n\n중학교 시절 학교 축제에서 친구들과 K-POP 커버 무대를 준비한 경험이 있다.\n\n당시 여울은 팀에서 가장 실력이 부족했지만, 매일 늦게까지 연습하며 무대를 완성했다.\n\n공연이 끝난 뒤 관객들이 보내 준 환호를 듣고 처음으로 아이돌이 되고 싶다는 꿈을 구체적으로 갖게 되었다.\n\n이후 여러 기획사 오디션에 지원했지만 대부분 탈락했다.\n\n오디션에서 들었던 '열정은 좋은데 기본기가 부족하다'는 평가를 아직도 기억하고 있다.\n\nProm::Enter 오디션에서는 뛰어난 실력보다 밝은 에너지와 성장 가능성을 인정받아 합격했다.\n\n합격 이후 아이돌이라는 꿈을 이루기 위해 구미를 떠나 서울로 올라왔다.\n\n처음 서울에 도착했을 때는 모든 것이 낯설었다. 복잡한 지하철 노선과 빠른 생활 속도, 처음 보는 거리와 사람들에 적응하는 데 시간이 필요했다.\n\n고향에서는 춤을 잘 추는 학생으로 알려져 있었지만, 서울에서 전문적인 트레이닝을 받으면서 자신보다 뛰어난 연습생이 많다는 사실을 실감했다.\n\n입사한 지 얼마 되지 않아 데뷔 멤버 선발 기회를 얻게 되었지만, 기존 데뷔조와의 실력 차이가 크다는 사실에 부담을 느끼고 있다.",
+          "source": "characters/04. 여울 (YEOUL).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "seoyeon"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     },
@@ -276,6 +341,19 @@
           "text": "이도는 과거 교내 독창 무대에서 실수했던 경험을 아직도 생생하게 기억한다.\n\n그날 이후 자신이 무대에 서는 것에 적합하지 않은 사람일지도 모른다고 생각했다.\n\n그러나 노래를 포기할 수는 없었다.\n\n현재도 혼자 연습실에 남아 노래를 부를 때는 누구보다 자신감 있는 모습을 보여 준다.\n\n대표가 우연히 이도의 혼자 연습하는 모습을 보게 되면, 평소와 전혀 다른 모습을 발견할 수 있다.\n\n이 사건은 이도의 숨겨진 재능을 확인하는 중요한 이벤트가 된다.",
           "source": "characters/05. 이도 (IDO).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:hyerin:shareable_past",
+          "character_id": "hyerin",
+          "subject_id": "hyerin",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "이도는 어린 시절부터 노래를 좋아했다.\n\n집에서 혼자 노래를 부르거나 학교 음악 시간에 노래하는 것을 즐겼다.\n\n초등학교 시절 합창단에 참여하면서 처음으로 자신의 보컬 재능을 인정받았다.\n\n합창단에서는 여러 사람과 함께 노래했기 때문에 큰 부담을 느끼지 않았다.\n\n그러나 중학교 시절 교내 독창 무대에 서게 되면서 처음으로 심한 긴장을 경험했다.\n\n무대에 오르기 직전 가사를 잊어버릴까 봐 불안해했고, 실제 공연에서도 긴장으로 인해 음정이 흔들렸다.\n\n공연 이후 주변 사람들은 큰 실수가 아니었다고 말했지만, 이도는 그 경험을 오래 기억했다.\n\n이후 혼자 노래할 때는 뛰어난 실력을 보여 주면서도 사람들 앞에서는 쉽게 위축되는 모습을 보였다.\n\nProm::Enter 오디션에서도 처음에는 긴장으로 인해 실력을 충분히 발휘하지 못했다.\n\n그러나 심사위원의 요청으로 다시 노래했을 때 뛰어난 음색과 표현력을 인정받아 합격했다.",
+          "source": "characters/05. 이도 (IDO).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "hyerin"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     },
@@ -320,12 +398,25 @@
           "text": "사야는 과거 일본에서 참여했던 단체 공연에서 다른 멤버와의 갈등을 경험한 적이 있다.\n\n당시 사야는 자신의 실력이 충분하다면 팀의 결과도 좋아질 것이라고 생각했다.\n\n그러나 다른 멤버들과의 의견 충돌로 공연 준비가 원활하게 진행되지 않았다.\n\n공연 결과도 기대에 미치지 못했다.\n\n사야는 그 경험을 통해 팀워크의 중요성을 어느 정도 이해했지만, 여전히 타인에게 의존하는 일을 어려워한다.\n\n현재도 당시 공연 영상을 보관하고 있으며, 자신의 실수보다 다른 멤버들과의 호흡이 맞지 않았던 순간을 반복해서 확인한다.\n\n이 사실은 대표와의 신뢰가 높아지거나 팀워크 갈등 이벤트가 발생했을 때 공개된다.",
           "source": "characters/06. 사야 (SAYA).md#section-16",
           "visibility": "locked"
+        },
+        {
+          "id": "profile:jiwoo:shareable_past",
+          "character_id": "jiwoo",
+          "subject_id": "jiwoo",
+          "title": "면담에서 이야기할 수 있는 경험",
+          "text": "사야는 일본에서 태어나고 자랐다.\n\n어린 시절부터 춤과 음악에 뛰어난 재능을 보였다.\n\n학교 공연과 지역 댄스 대회에서 좋은 성적을 거두며 주변의 기대를 받았다.\n\nK-POP 무대에 관심을 갖게 된 뒤 한국어 공부와 퍼포먼스 연습을 병행했다.\n\n한국어는 오랫동안 꾸준히 공부해 왔으며, 한국에 오기 전부터 일상적인 의사소통이 가능할 정도의 실력을 갖추었다.\n\nK-POP 아이돌이 되기 위해 일본을 떠나 한국으로 건너왔다.\n\nProm::Enter 오디션에서는 높은 수준의 퍼포먼스와 안정적인 보컬 실력을 보여 주었다.\n\n그러나 단체 평가에서는 다른 지원자들과 호흡을 맞추는 데 어려움을 보였다.\n\n심사위원들은 사야의 실력을 높게 평가하면서도 팀 적응력에 대한 우려를 남겼다.",
+          "source": "characters/06. 사야 (SAYA).md#section-8",
+          "visibility": "public",
+          "initial_known_by": [
+            "jiwoo"
+          ],
+          "disclosure": "ordinary"
         }
       ]
     }
   ],
   "knowledge_policy_source": "characters/knowledge-policy.json",
-  "knowledge_policy_sha256": "0064a4c4a9db4392787bbca4cdaec015ad6d479a5174a45d56bda78caf43a03b",
+  "knowledge_policy_sha256": "58257b31a18d10a38db1143020e41cb9563fd381fef8aaba1285cf1738e9d587",
   "public_roster": [
     {
       "id": "profile:baek_hayeon:public_identity",

@@ -4,9 +4,10 @@ import pytest
 from fastapi.testclient import TestClient
 from app.ai.context import build_context, build_dialogue_context, scope_actor
 from app.ai.knowledge import (add_record, catalog, disclosure_guidance, grant_knowledge,
-    knows, learn_cited_records, may_disclose, permit_disclosure, record_report,
+    knows, record_dialogue, may_disclose, permit_disclosure, record_report,
     record_resolution, retrieve)
 from app.ai.persona import PersonaSession
+from app.ai.profiles import PROFILES
 from app.ai.providers import DemoProvider, OpenAIProvider
 from app.ai.validation import validate_dialogue
 from app.main import create_app
@@ -41,6 +42,39 @@ def test_legacy_defaults_and_empty_runtime_state_remain_readable():
     assert record.disclosure=='sealed'
 
 
+@pytest.mark.parametrize('character_id', list(PROFILES))
+def test_owner_can_tell_approved_experiences_without_releasing_full_past(character_id):
+    s=state()
+    # An indirect follow-up must work without lexical overlap with the source.
+    actor=PersonaSession(DemoProvider(),character_id).context('언제 그런 일이 있었어?',s)
+    record=catalog(s)[f'profile:{character_id}:shareable_past']
+    assert record.id in identities(actor.knowledge)
+    assert record.initial_known_by==[character_id] and record.disclosure=='ordinary'
+    for suffix in ['past','secret']:
+        protected=catalog(s)[f'profile:{character_id}:{suffix}']
+        assert protected.id not in identities(actor.knowledge)
+        assert not may_disclose(s,character_id,protected,['player',character_id])
+    assert not knows(s,'player',record)
+    other='baek_hayeon' if character_id!='baek_hayeon' else 'hyerin'
+    assert record.id not in identities(PersonaSession(DemoProvider(),other).context(record.text,s).knowledge)
+
+
+def test_interview_context_includes_ido_stage_experience_but_not_hidden_event():
+    s=State(game_id='interview-past',character_id='a',event_id='p2_interview_a')
+    actor=scope_actor(build_dialogue_context(s,[],speaker_roles=['newcomer']),
+                      s,'무대에서 실제로 그런 경험이 있어? 언제야?','newcomer',[])
+    record=next(r for r in actor.knowledge if r.id.endswith(':shareable_past'))
+    assert '중학교 시절 교내 독창 무대' in record.text and '음정이 흔들렸다' in record.text
+    assert 'profile:hyerin:secret' not in identities(actor.knowledge)
+    assert '대표가 우연히 이도의 혼자 연습하는 모습' not in actor.model_dump_json()
+    reply=validate_dialogue(Dialogue(messages=[Message(speaker_id='newcomer',
+        text='중학교 때 교내 독창 무대에서 긴장해서 음정이 흔들렸어요.',
+        emotion='anxious',knowledge_ids=[record.id])]),actor)
+    record_dialogue(s,reply,actor,'approved-experience')
+    assert not knows(s,'player',catalog(s)['profile:hyerin:past'])
+    assert knows(s,'player',catalog(s)['speech:approved-experience:newcomer:0'])
+
+
 def test_knowing_secret_does_not_authorize_its_disclosure():
     s=state(); secret=catalog(s)['profile:hyerin:secret']
     grant_knowledge(s,secret.id,['baek_hayeon'],event_id='discovery',turn_id='learn-secret')
@@ -58,7 +92,7 @@ def test_knowing_secret_does_not_authorize_its_disclosure():
     actor=PersonaSession(DemoProvider(),'백하연').context(secret.text,s)
     assert secret.id in identities(actor.knowledge)
     dialogue=validate_dialogue(Dialogue(messages=[Message(speaker_id='secretary',text='동의받은 이야기를 전합니다.',emotion='neutral',knowledge_ids=[secret.id])]),actor)
-    learn_cited_records(s,dialogue,actor,'actual-disclosure')
+    record_dialogue(s,dialogue,actor,'actual-disclosure')
     # Merely citing a source does not disclose every sentence of its contents.
     assert not knows(s,'player',secret) and not knows(s,'yuna',secret)
     spoken=catalog(s)['speech:actual-disclosure:secretary:0']
@@ -89,8 +123,8 @@ def test_validated_ordinary_disclosures_teach_only_actual_listeners():
     actor=scope_actor(build_dialogue_context(s,[]),s,'여울의 특징','secretary')
     assert record.id in identities(actor.knowledge)
     part=validate_dialogue(Dialogue(messages=[Message(speaker_id='secretary',text='여울은 적극적입니다.',emotion='neutral',knowledge_ids=[record.id])]),actor)
-    learn_cited_records(s,part,actor,'public-report')
-    learn_cited_records(s,part,actor,'public-report')
+    record_dialogue(s,part,actor,'public-report')
+    record_dialogue(s,part,actor,'public-report')
     assert not knows(s,'hyerin',record)  # The rest of the profile was not spoken.
     spoken=catalog(s)['speech:public-report:secretary:0']
     assert knows(s,'hyerin',spoken) and not knows(s,'yuna',spoken)
@@ -113,7 +147,7 @@ def test_public_citation_does_not_declassify_a_private_spoken_reply():
     actor=scope_actor(build_dialogue_context(s,[],speaker_roles=['secretary']),s,'명단','secretary')
     part=validate_dialogue(Dialogue(messages=[Message(speaker_id='secretary',text='대표님과 나눈 사적인 면담 내용입니다.',
         emotion='neutral',knowledge_ids=['profile:hyerin:public_identity'])]),actor)
-    learn_cited_records(s,part,actor,'private-spoken-reply')
+    record_dialogue(s,part,actor,'private-spoken-reply')
     spoken=catalog(s)['speech:private-spoken-reply:secretary:0']
     assert knows(s,'player',spoken) and not knows(s,'hyerin',spoken)
     assert not may_disclose(s,'baek_hayeon',spoken,['player','baek_hayeon','hyerin'])
@@ -193,6 +227,45 @@ def test_http_private_report_persists_without_reaching_other_characters(game_cli
     assert record.id in identities(provider.actors[-1].knowledge)
 
 
+def test_uncited_creative_experience_is_persisted_and_recalled_beyond_recent_history(game_client):
+    client,provider,game,owner=game_client
+    first='평소에는 어디에서 노래하니?'
+    experience='집 창가에서 흥얼거리다가 노랫소리를 조금씩 키워 본 적이 있어요.'
+    def generate(text,actor,*args):
+        provider.actors.append(actor)
+        return Dialogue(messages=[Message(speaker_id=actor.allowed_speakers[0],
+            text=experience if text==first else '차분하게 이야기하고 있어요.',emotion='neutral')])
+    provider.generate=generate
+    original=game
+    response=send(client,game,text=first,recipient='newcomer',request_id='creative-experience')
+    assert response.status_code==200,response.text
+    game=response.json()['game']
+    repo=client.app.state.service.repository
+    record_id='speech:creative-experience:newcomer:0'
+    saved=repo.get(game['game_id'],owner)
+    spoken=catalog(saved)[record_id]
+    assert spoken.text==experience and spoken.kind=='report' and spoken.certainty=='reported'
+    assert knows(saved,'hyerin',spoken) and knows(saved,'player',spoken)
+    assert not knows(saved,'baek_hayeon',spoken)
+    assert record_id not in identities(retrieve(saved,'hyerin','창가',['player','hyerin','baek_hayeon']))
+    retry=send(client,original,text=first,recipient='newcomer',request_id='creative-experience')
+    assert retry.status_code==200 and repo.get(game['game_id'],owner)==saved
+    for index in range(9):
+        response=send(client,game,text='다른 주제로 이야기해 보자.',recipient='newcomer',
+                      request_id=f'unrelated-{index}')
+        assert response.status_code==200,response.text
+        game=response.json()['game']
+    response=send(client,game,text='창가에서는 어떻게 노래했어?',recipient='newcomer',
+                  request_id='recall-experience')
+    assert response.status_code==200,response.text
+    actor=provider.actors[-1]
+    assert 'creative-experience' not in {turn.id for turn in actor.recent_turns}
+    assert record_id in identities(actor.knowledge)
+    assert next(r.text for r in actor.knowledge if r.id==record_id)==experience
+    assert response.json()['game']['stats']==original['stats']
+    assert repo.get(game['game_id'],owner).evidence_ids==[]
+
+
 def test_actions_create_provenance_and_retry_does_not_duplicate_it(game_client):
     client,provider,game,owner=game_client
     response=send(client,game,action='train_variety')
@@ -241,7 +314,7 @@ def test_private_command_does_not_execute_game_action(game_client):
 def test_console_switches_keep_learned_information_separate_and_failure_is_atomic():
     provider=Capture(); session=PersonaSession(provider,'백하연')
     session.chat('내 별명은 청록별이야. 너에게만 말할게.')
-    report=session.state.knowledge_records[-1]
+    report=next(r for r in session.state.knowledge_records if r.id.startswith('report:'))
     session.switch('이도')
     assert report.id not in identities(session.context('청록별 별명').knowledge)
     session.switch('백하연')

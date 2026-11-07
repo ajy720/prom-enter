@@ -2,6 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 import runpy
+import shutil
 from types import SimpleNamespace
 import pytest
 from fastapi.testclient import TestClient
@@ -71,6 +72,18 @@ def test_real_profiles_match_sources_and_all_seven_are_packaged():
     assert CHARACTERS['a']['name']=='이도' and CHARACTERS['b']['name']=='여울'
     assert '보고드립니다' in character_profile('baek_hayeon').speech_style
     assert '제가 해볼게예' in character_profile('b').speech_style
+
+
+def test_shareable_past_policy_rejects_text_that_drifted_from_source(tmp_path):
+    root=Path(__file__).resolve().parents[2]
+    compile_profiles=runpy.run_path(str(root/'scripts/compile_characters.py'))['compile_profiles']
+    shutil.copytree(root/'characters',tmp_path/'characters')
+    path=tmp_path/'characters/knowledge-policy.json'
+    policy=json.loads(path.read_text())
+    policy['shareable_past']['hyerin'].append('원문에 없는 새로운 공식 공연 경력')
+    path.write_text(json.dumps(policy,ensure_ascii=False))
+    with pytest.raises(ValueError,match='Shareable past must match source paragraphs: hyerin'):
+        compile_profiles(tmp_path)
 
 
 def test_locked_knowledge_filter_precedes_retrieval():
@@ -292,7 +305,8 @@ def test_evaluation_report_keeps_dialogue_quality_for_human_review():
     root=Path(__file__).resolve().parents[2]
     evaluate=runpy.run_path(str(root/'scripts/evaluate_ai.py'))['evaluate']
     report=evaluate(DemoProvider())
-    assert report['provider']=='demo' and report['passed']==report['total']==33
+    dialogue_cases=json.loads((root/'backend/tests/fixtures/dialogue_cases.json').read_text())
+    assert report['provider']=='demo' and report['passed']==report['total']==len(FIXTURES)+len(dialogue_cases)
     assert all(r['human_review_required'] for r in report['results'] if r['stage']=='dialogue')
 
 

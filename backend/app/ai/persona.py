@@ -8,7 +8,7 @@ from app.ai.contracts import AIProvider, AnalysisContext, DialogueContext, Event
 from app.ai.director import character_direction
 from app.ai.memory import recent_turns, related_turns
 from app.ai.profiles import PROFILES, character_profile, profile_id
-from app.ai.knowledge import disclosure_guidance, learn_cited_records, record_report, retrieve
+from app.ai.knowledge import disclosure_guidance, record_dialogue, record_report, retrieve
 from app.ai.validation import validate_analysis, validate_dialogue
 from app.ai.routing import routing_context
 from app.models import Dialogue, Message, Model, State, Stats
@@ -134,7 +134,7 @@ class PersonaSession:
                 text=analysis.clarification_question,emotion='neutral')])
         else:
             dialogue=validate_dialogue(self.provider.generate(text,actor,direction,[],False),actor)
-        learn_cited_records(staged,dialogue,actor,turn_id)
+        record_dialogue(staged,dialogue,actor,turn_id)
         self.state=staged
         self.pending_target_selection=bool(intent and intent.needs_clarification)
         self.history.append({'id':turn_id,'event_id':'persona_sandbox','input':text,
