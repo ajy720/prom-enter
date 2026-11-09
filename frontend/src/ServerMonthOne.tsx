@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
+import { MonthlyInterviewRecords } from './MonthlyInterviewRecords';
 import { MonthlyOpening, useMonthlyOpening } from './MonthlyOpening';
 import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
@@ -19,7 +20,6 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
 }) {
   const [menu, setMenu] = useState<'training' | 'rule' | 'records' | 'confirm' | null>(null);
   const opening = useMonthlyOpening(game);
-  const [recordTargetId, setRecordTargetId] = useState<string | null>(null);
   const complete = monthPlanCompleted(game);
   const candidate = newcomers.find(person => person.id === recruitedCandidateId(game))!;
   const training = savedMonthTraining(game);
@@ -42,11 +42,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
   const conversationTargets = game.conversation.available_targets.filter(person => person.role === 'newcomer' || debutMembers.some(member => member.id === person.id));
   const confirmAction = game.event.actions.find(action => action.id === 'confirm_month_plan' && !action.used);
   const readyToConfirm = canConfirmMonthPlan(game);
-  const recordHistory = dialogueHistory.filter(turn => recordTargetId
-    ? turn.conversation?.mode === 'private' && turn.conversation.target_character_id === recordTargetId
-    : !turn.conversation || turn.conversation.mode === 'public');
-  const recordFrames = serverInterviewFrames({ ...game, history: recordHistory, event_openings: recordTargetId ? [] : game.event_openings }).filter(frame => frame.id !== 'briefing');
-  function openRecords() { setRecordTargetId(conversationTargets.find(person => person.id === target?.id)?.id ?? conversationTargets[0]?.id ?? null); setMenu('records'); }
+  function openRecords() { setMenu('records'); }
   async function openActivity(activity: 'training' | 'rule' | 'confirm') {
     if (activity === 'confirm' && (!readyToConfirm || locked || !confirmAction)) return;
     if (activity === 'confirm' && privateRoom && !await onConversationChange('public')) return;
@@ -89,6 +85,6 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
       return <button key={option.id} aria-pressed={rule?.id === action?.id && !!action} disabled={locked || !action || action.used} onClick={async () => { if (action) { setMenu(null); await onSend(action.id); } }}><strong>{option.label}</strong><span>{option.description}</span></button>;
     })}</div></Modal>
     <Modal open={menu === 'confirm'} title="첫 달 계획 확인" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">대표님의 첫 운영 계획</p><h2>이 계획으로 마무리할까요?</h2>{summary}<p>확정 후에는 대화와 선택을 바꿀 수 없습니다. 완료 화면에서 2개월차로 이어갈 수 있습니다. 지금까지 준비한 내용으로 첫 달을 마무리합니다.</p><button className="primary-button" disabled={locked || privateRoom || !confirmAction || !readyToConfirm} onClick={async () => { if (confirmAction && readyToConfirm && !locked && !privateRoom) { setMenu(null); await onSend(confirmAction.id); } }}>첫 달 계획 확정</button></Modal>
-    <Modal open={menu === 'records'} title="첫 달 서버 기록" className="records-modal" onClose={() => setMenu(null)}><h2>첫 합숙 기록</h2><div className="record-navigation">{conversationTargets.map(person => <button key={person.id} aria-pressed={recordTargetId === person.id} onClick={() => setRecordTargetId(person.id)}>{person.name}</button>)}</div><div className="interview-history">{recordFrames.length ? recordFrames.map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>) : <p>아직 나눈 이야기가 없습니다.</p>}</div></Modal>
+    <Modal open={menu === 'records'} title="1개월차 면담 기록" className="records-modal" onClose={() => setMenu(null)}>{menu === 'records' && <MonthlyInterviewRecords game={game}/>}</Modal>
   </section>;
 }

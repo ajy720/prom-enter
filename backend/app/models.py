@@ -141,10 +141,10 @@ class CenterDecision(Model):
     member_id: str
     member_name: str
     reason: str
-    outcome: Literal['success', 'failure']
+    outcome: Literal['success', 'failure', 'neutral']
     feedback: str
     provider: str
-    assessment: CenterAssessment
+    assessment: CenterAssessment | None = None
 
 
 class CenterChoiceDraft(Model):

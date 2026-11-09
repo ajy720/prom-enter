@@ -29,7 +29,7 @@ def compile_profiles(root=ROOT):
         sections = {int(m.group(1)): block.split("\n", 1)[1].strip()
                     for block in blocks[1:] if (m := re.match(r"(\d+)\.", block))}
         name = re.search(r"CHARACTER \d+\. (.+?) \(", raw).group(1)
-        source = str(path.relative_to(root))
+        source = path.relative_to(root).as_posix()
         # Share company-directory facts, never another character's private persona,
         # narrative arc, initial skills, past, or secret sections.
         identity_fields = {'이름', '활동명', '나이', '국적', '출신', '언어 능력', '직업', '소속', '연습생 기간', '포지션', '데뷔 여부', '직책'}
@@ -76,7 +76,7 @@ def compile_profiles(root=ROOT):
     return {"version": 5, "slot_mapping": {"a":"hyerin", "b":"seoyeon", "c":"jiwoo"},
             "aliases": ALIASES,
             "secretary_id":"baek_hayeon", "profiles":profiles,
-            'knowledge_policy_source':str(policy_path.relative_to(root)),
+            'knowledge_policy_source':policy_path.relative_to(root).as_posix(),
             'knowledge_policy_sha256':hashlib.sha256(policy_raw.encode()).hexdigest(),
             "public_roster": [r for r in public_roster if r['kind'] == 'identity'],
             "initial_knowledge": [r for r in public_roster if r['kind'] != 'identity']}

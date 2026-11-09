@@ -4,8 +4,29 @@ from app.models import CenterChoiceDraft
 
 EVENT = 'p2_m02_center'
 LIMIT = 8
-GUIDE = '대표님, 네 멤버와의 면담을 모두 마쳤습니다. 누구를 센터로 선택하시겠습니까? 멤버들과 나눈 이야기를 바탕으로 선택한 이유도 함께 알려주세요.'
+TEAMWORK_MIN = 42
 FINISHED = EVENT + ':finish_interviews'
+
+
+def completion(state, reason):
+    return {'month': 2, 'reason': reason, 'teamwork': state.stats.teamwork, 'teamwork_min': TEAMWORK_MIN}
+
+
+def finish(state):
+    from app.content import EVENTS
+    from app.game.conversation import make_conversation
+    outcome = 'success' if state.stats.teamwork >= TEAMWORK_MIN else 'failure'
+    if FINISHED not in state.applied_effects:
+        state.applied_effects.append(FINISHED)
+    state.center_choice_draft = None
+    state.completed_events[EVENT] = outcome
+    state.event_id = EVENTS[EVENT]['next']
+    state.conversation = make_conversation(state)
+    message = (f'대표님, 2개월차 면담을 마쳤습니다. 현재 팀워크는 {state.stats.teamwork}입니다. '
+               + ('서로의 의견을 모아 팀의 방향을 정리했습니다. 이번 달은 성공입니다.' if outcome == 'success'
+                  else '서로의 의견 차이가 남았습니다. 이번 달은 실패입니다.')
+               + ' 결과를 확인한 뒤 3개월차 쇼케이스 리허설을 시작해주세요.')
+    return outcome, message
 
 
 def marker(person_id):
@@ -83,9 +104,9 @@ def progress(state, history):
     last = history[-1] if history and history[-1].get('event_id') == EVENT else {}
     action = last.get('analysis', {}).get('action_id')
     notice = '\n'.join(m['text'] for m in last.get('messages', []) if m['speaker_id'] == 'secretary')
-    return {'turn_limit': LIMIT, 'members': members, 'ready_for_decision': ready,
-            'pending_member_id': choice_draft(state, history).member_id if choice_draft(state, history) else None,
+    return {'turn_limit': LIMIT, 'members': members, 'ready_for_decision': False,
+            'success_teamwork_min': TEAMWORK_MIN, 'pending_member_id': None,
             'can_finish': heard, 'missing_member_ids': [m['character_id'] for m in members if m['turn_count'] < 1],
             'finish_notice': notice if not ready and action in {'finish_center_interviews', 'close_center_interview'} else None,
             'selection_feedback': notice if action == 'select_center' and last.get('outcome') == 'pending' else None,
-            'decision_prompt': GUIDE if ready else None}
+            'decision_prompt': None}

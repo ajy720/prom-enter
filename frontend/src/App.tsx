@@ -1,11 +1,14 @@
 import { useSceneViewport } from './useSceneViewport';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
+import { clearPending, rememberPending, restorePending } from './pendingTurn';
 import { Prologue, readIntroProgress, TitleScreen } from './Prologue';
 import { ServerInterviewRoom } from './ServerInterviewRoom';
 import { ServerCasting } from './ServerCasting';
 import { ServerMonthOne } from './ServerMonthOne';
 import { ServerMonthly } from './ServerMonthly';
+import { ServerRehearsal } from './ServerRehearsal';
+import { MonthTwoTransition } from './MonthTwoTransition';
 import { interviewCandidateId, serverCandidates, storyGameKey } from './serverInterviewState';
 import type { CreateGameInput, Game, TurnInput } from './types';
 
@@ -24,8 +27,24 @@ export default function App() {
 
   const introServerId = useRef<string | null>(null);
 
+  const playtestStarted = useRef(false);
+  useEffect(() => {
+    if (!import.meta.env.DEV || !['center', 'month3'].includes(new URLSearchParams(location.search).get('playtest') ?? '') || playtestStarted.current) return;
+    playtestStarted.current = true;
+    requestInFlight.current = true; setBusy(true);
+    void import('./prepareCenterPlaytest').then(module => module.prepareCenterPlaytest(new URLSearchParams(location.search).get('playtest') === 'month3')).then(next => {
+      setGame(next); setFormationReviewed(true);
+      const interrupted = restorePending(sessionStorage, next);
+      setPending(interrupted); setText(interrupted?.text ?? '');
+      if (interrupted) setError('완료를 확인하지 못한 요청이 있습니다. 같은 요청으로 다시 시도해주세요.');
+      setView('game');
+    }).catch(cause => setError(cause instanceof Error ? cause.message : '플레이 시작 지점 준비에 실패했습니다.'))
+      .finally(() => { requestInFlight.current = false; setBusy(false); });
+  }, []);
+
   async function send(actionId?: string, retry?: TurnInput, question?: string): Promise<boolean> {
     if (!game || requestInFlight.current || game.ending || (pending && !retry)) return false;
+    if (retry) return submit(retry);
     const value = (question ?? text).trim();
     if (!actionId && !retry && !value) return false;
     // Preserve the payload on retry so the server can prevent duplicate turns.
@@ -48,21 +67,24 @@ export default function App() {
     requestInFlight.current = true;
     setBusy(true); setError(''); setPending(input);
     try {
+      rememberPending(sessionStorage, game.game_id, input);
       const result = await api<{ game: Game }>('/games/' + game.game_id + '/turns', input);
       setGame(result.game);
+      clearPending(sessionStorage, game.game_id);
       if (game.event.id.startsWith('p2_interview_') && result.game.event.id !== game.event.id) setInterviewOpen(false);
       setPending(null);
-      const unfinishedInterview = ['finish_center_interviews', 'close_center_interview'].includes(input.action_id ?? '') && !result.game.center_interviews?.ready_for_decision;
+      const unfinishedInterview = ['finish_center_interviews', 'close_center_interview'].includes(input.action_id ?? '') && result.game.event.id === 'p2_m02_center';
       if (input.input_type !== 'conversation' && !unfinishedInterview) setText('');
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
         try {
           setGame(await api<Game>('/games/' + game.game_id)); setPending(null);
+          clearPending(sessionStorage, game.game_id);
           setError('다른 요청의 진행을 반영해 최신 상태를 불러왔습니다.');
         } catch { setError('최신 상태를 불러오지 못했습니다. 같은 요청으로 다시 시도해주세요.'); }
       } else {
-        if (e instanceof ApiError && e.status < 500) setPending(null);
+        if (e instanceof ApiError && e.status < 500) { setPending(null); clearPending(sessionStorage, game.game_id); }
         setError(e instanceof Error ? e.message : '연결이 끊겼습니다. 같은 요청으로 다시 시도해주세요.');
       }
       return false;
@@ -107,7 +129,10 @@ export default function App() {
     try {
       const next = await api<Game>('/games/' + id);
       setGame(next); setInterviewOpen(!!interviewCandidateId(next.event.id) && (!!next.interview?.completed || next.conversation.mode === 'private')); setFormationReviewed(Number(localStorage.getItem('prom-recruitment-step:' + id)) >= 4);
-      setPending(null); setText(''); setView('game');
+      const interrupted = restorePending(sessionStorage, next);
+      setPending(interrupted); setText(interrupted?.text ?? '');
+      if (interrupted) setError('완료를 확인하지 못한 요청이 있습니다. 같은 요청으로 다시 시도해주세요.');
+      setView('game');
     } catch (cause) { setError(cause instanceof Error ? cause.message : '저장한 이야기를 불러오지 못했습니다. 다시 시도해주세요.'); }
     finally { requestInFlight.current = false; setBusy(false); }
   }
@@ -120,11 +145,13 @@ export default function App() {
 
   return <main ref={viewportRef} className="app-shell is-playing">
     <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy || !!pending} onClick={() => setView('title')}>prom::enter.</button><span>{game.event.title}</span><button className="quiet-button" disabled={busy || !!pending} onClick={() => setView('title')}>시작 화면</button></header>
+    {import.meta.env.DEV && game.event.month >= 3 && game.event.month <= 6 && <p className="six-demo-entry">새 3~6개월 흐름은 별도 프런트 데모에서 확인할 수 있습니다. <a href="/?sixMonthDemo=1">화면 데모 열기</a> · 실제 서버 저장은 유지됩니다.</p>}
     {error && <div className="error-banner" role="alert"><span>{error}</span>{pending && <button disabled={busy} onClick={() => void send(undefined, pending)}>같은 요청 재시도</button>}<button disabled={busy} onClick={() => window.location.reload()}>다시 불러오기</button></div>}
     {interviewing && interviewOpen ? <ServerInterviewRoom key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onBack={() => { if (game.interview?.completed) void send('finish_interview'); else setInterviewOpen(false); }}/>
       : interviewing || game.event.id === 'p2_casting' || (game.event.id === 'p2_m01_training' && !!game.completed_events.p2_casting && !formationReviewed && !game.history.some(turn => turn.event_id === 'p2_m01_training')) ? <ServerCasting key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} nickname={nickname} onInterview={async id => { const person = serverCandidates.find(candidate => candidate.id === id); if (person && (person.eventId === game.event.id || await send('interview_' + person.slot))) setInterviewOpen(true); }} onSend={send} onBack={() => setView('title')} onProceed={() => setFormationReviewed(true)}/>
       : game.event.id === 'p2_m01_training' ? <ServerMonthOne key={game.game_id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')}/>
-      : /^p2_m0[2-6]_/.test(game.event.id) || game.event.id === 'p2_complete' ? <ServerMonthly key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)}/>
-      : <p role="alert">이 저장은 Part 2의 1~6개월차 범위에 포함되지 않습니다.</p>}
+      : game.event.id === 'p2_m03_rehearsal' ? <MonthTwoTransition key={game.game_id} game={game}><ServerRehearsal game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')}/></MonthTwoTransition>
+      : (game.event.month >= 2 && game.event.month <= 24) || !!game.ending || game.event.id === 'p2_complete' ? <ServerMonthly key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)}/>
+      : <p role="alert">이 사건은 아직 화면 연결이 필요합니다. 저장은 유지됩니다.</p>}
   </main>;
 }

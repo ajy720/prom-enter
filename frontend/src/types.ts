@@ -23,12 +23,13 @@ export type Analysis = {
   conversation_change?: {mode: 'public' | 'private' | null; target_character_id: string | null; quote: string; needs_clarification: boolean} | null;
 };
 export type Turn = {
+  month_completion?: {month: 2; reason: 'manual' | 'limit'; teamwork: number; teamwork_min: number} | null;
   input_type?: 'chat' | 'action' | 'conversation'; interview_closed?: boolean;
   id: string; input: string; event_id: string; event_title: string;
   kind?: 'dialogue' | 'conversation_change' | 'activity'; conversation?: Conversation;
   source_input?: string; previous_conversation?: Conversation;
   input_audience?: SpeakerRole[];
-  messages: {speaker_id: string; text: string; emotion: string; fact_ids?: string[]; knowledge_ids?: string[]; audience?: string[]}[];
+  messages: {speaker_id: string; text: string; emotion: string; expression?: 'neutral' | 'excited' | 'angry' | 'happy' | 'sad' | 'surprised'; fact_ids?: string[]; knowledge_ids?: string[]; audience?: string[]}[];
   analysis: Analysis;
   direction: {emotion: string; openness: string; instruction: string; secondary_emotion?: string | null; triggers?: string[]};
   facts: string[]; outcome: string; new_evidence: Evidence[];
@@ -36,12 +37,13 @@ export type Turn = {
   ai_trace?: {prompt_version: string; provider: string; analysis_calls?: number; evaluation_calls?: number; generation_calls: number; phase: string; profile_id: string};
 };
 export type Game = {
-  center_interviews?: {turn_limit: number; ready_for_decision: boolean; decision_prompt: string | null;
+  rehearsal?: {phase: 'reprimand' | 'interviews'} | null;
+  center_interviews?: {turn_limit: number; success_teamwork_min?: number; ready_for_decision: boolean; decision_prompt: string | null;
     can_finish: boolean; missing_member_ids: string[]; finish_notice: string | null; selection_feedback: string | null;
     pending_member_id?: string | null;
     members: {character_id: string; name: string; turn_count: number; completed: boolean; completed_by: 'limit' | 'player' | null}[];
   } | null;
-  center_selection?: {member_id: string; member_name: string; reason: string; outcome: 'success' | 'failure'; feedback: string; provider: string} | null;
+  center_selection?: {member_id: string; member_name: string; reason: string; outcome: 'success' | 'failure' | 'neutral'; feedback: string; provider: string} | null;
   interview?: {turn_count: number; turn_limit: number; completed: boolean; completed_by: 'secretary' | 'player' | null; closing_message: string | null} | null;
   game_id: string; version: number; provider: string; character: Character;
   conversation: Conversation;

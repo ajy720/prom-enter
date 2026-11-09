@@ -1,5 +1,6 @@
 """Part 1–2 prototype: existing actors, explicit decisions, converging monthly events."""
 from app.content import EVENTS
+from app.game import rehearsal
 from app.models import GameError, Memory
 from app.ai.memory import remember, fulfill_promises
 
@@ -25,6 +26,8 @@ def resolve_part2(original, analysis, turn_id):
         state.character_id = action[-1]
         state.conversation = make_conversation(state)
         return Proposal(state, ['선택한 후보와 면담을 시작합니다. 수치 변화는 없습니다.'], 'pending', [])
+    if state.event_id == rehearsal.EVENT and rehearsal.phase(state) == 'reprimand' and action in {'mediate_rehearsal', 'continue_rehearsal'}:
+        raise GameError('공개 질책을 먼저 중단시킨 뒤 멤버들의 이야기를 들어주세요.', 422)
     key = f'{state.event_id}:{action}'
     if action != 'talk' and key in state.applied_effects:
         return Proposal(state, ['이미 실행한 행동입니다. 효과를 다시 지급하지 않습니다.'], 'pending', [])
@@ -113,11 +116,9 @@ def resolve_part2(original, analysis, turn_id):
     elif action == 'skip_training':
         outcome = 'failure'
         apply_delta(state, {'teamwork': -5, 'fatigue': 10})
-    elif action in {'agree_center','assign_center'}:
-        if action == 'agree_center':
-            apply_delta(state, {'teamwork': 8})
-        outcome = 'success' if state.stats.teamwork >= 42 else 'failure'
-        apply_delta(state, {'fatigue': 10, **({'trust': 3} if outcome == 'success' else {'teamwork': -8})})
+    elif action == rehearsal.STOP:
+        state.conversation = make_conversation(state, 'private', state.character_id)
+        facts.append('공개 질책을 중단했습니다. 세인의 질책은 끝났으며 신입과 기존 멤버의 개별 면담을 시작합니다. 수치는 바뀌지 않았습니다.')
     elif action in {'mediate_rehearsal','continue_rehearsal'}:
         if action == 'mediate_rehearsal':
             apply_delta(state, {'teamwork': 5, 'fatigue': -10})
