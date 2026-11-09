@@ -116,6 +116,45 @@ class EventOpening(Model):
     choices: list[OpeningChoice]
 
 
+class CenterEvidence(Model):
+    turn_id: str
+    member_id: str
+    quote: str = Field(min_length=1, max_length=600)
+
+
+class CenterCriterion(Model):
+    criterion_id: Literal['selected_member', 'team_perspective', 'reasoning']
+    status: Literal['met', 'not_met', 'unclear']
+    reason_quote: str = Field(max_length=2000)
+    evidence: list[CenterEvidence] = Field(max_length=4)
+
+
+class CenterAssessment(Model):
+    criteria: list[CenterCriterion] = Field(min_length=3, max_length=3)
+
+
+class CenterDecision(Model):
+    member_id: str
+    member_name: str
+    reason: str
+    outcome: Literal['success', 'failure']
+    feedback: str
+    provider: str
+    assessment: CenterAssessment
+
+
+class CenterChoiceDraft(Model):
+    member_id: str
+    reason_turn_ids: list[str] = Field(default_factory=list)
+
+
+class CenterChatInterpretation(Model):
+    intent: Literal['decision', 'question', 'conversation', 'withdraw']
+    member_id: str | None
+    ambiguous: bool
+    reply: str = Field(max_length=500)
+
+
 class State(Model):
     game_id: str
     character_id: str
@@ -138,6 +177,8 @@ class State(Model):
     disclosure_grants: list[DisclosureGrant] = Field(default_factory=list)
     conversation: Conversation | None = None
     event_openings: list[EventOpening] = Field(default_factory=list)
+    center_decision: CenterDecision | None = None
+    center_choice_draft: CenterChoiceDraft | None = None
 
     @model_validator(mode='after')
     def part2_starting_funds(self):
@@ -164,6 +205,8 @@ class TurnRequest(Model):
     conversation_mode: Literal['public', 'private'] | None = None
     target_character_id: str | None = Field(default=None, max_length=40)
     stop_after_month_one: bool = False
+    center_member_id: str | None = Field(default=None, max_length=40)
+    center_reason: str | None = Field(default=None, max_length=2000)
 
 
 class Assessment(Model):

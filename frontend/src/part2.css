@@ -1,0 +1,96 @@
+/* Monthly play extends the approved white/pink dialogue and operation controls. */
+.monthly-intro { min-height: calc(100dvh - 72px); padding: var(--space-6); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-5); align-content: center; background-size: cover; background-position: center; }
+.monthly-intro > header { grid-column: 1 / -1; width: min(100%, 1000px); margin: 0 auto; }
+.monthly-intro h1 { font-size: clamp(26px, 3vw, 38px); margin: var(--space-3) 0; }
+.monthly-intro-copy { min-width: 0; align-self: center; width: 100%; max-width: 680px; }
+.monthly-intro .dialogue-content { max-height: none; overflow: visible; min-height: 0; }
+.monthly-intro .dialogue-content p { margin: 0; line-height: 1.9; }
+.monthly-intro .monthly-buttons { justify-content: flex-end; }
+.monthly-intro.is-narration .monthly-intro-copy { grid-column: 1 / -1; justify-self: center; max-width: 1000px; padding-block: var(--space-7); }
+.monthly-intro-portrait { width: min(380px, 100%); justify-self: end; align-self: end; }
+.monthly-intro-portrait .photo-slot { height: min(58dvh, 540px); min-height: 300px; border: 0; background: none; }
+.monthly-intro-portrait .photo-slot > img { object-fit: contain; object-position: center bottom; }
+@media (max-width: 700px) {
+  .monthly-intro { grid-template-columns: minmax(0, 1fr); padding: var(--space-5) var(--space-4); align-content: start; }
+  .monthly-intro-portrait { width: 200px; justify-self: center; }
+  .monthly-intro-portrait .photo-slot { height: 260px; min-height: 0; }
+  .monthly-intro.is-narration .monthly-intro-copy { padding-block: var(--space-6); }
+}
+.monthly-stage { min-height: calc(100dvh - 65px); display: grid; grid-template-columns: 220px minmax(180px, .85fr) minmax(360px, 1.3fr); gap: var(--space-6); padding: var(--space-6); background-size: cover; background-position: center; color: var(--ink); }
+.monthly-heading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); }
+.monthly-heading h1 { margin: var(--space-2) 0 0; font-size: clamp(25px, 2.6vw, 38px); letter-spacing: -.04em; }
+.monthly-heading .section-kicker { margin: 0; }
+.monthly-heading .resource-status { flex: 0 0 340px; }
+.monthly-info { align-self: start; padding-top: var(--space-4); }
+.monthly-info h2 { font-size: 16px; margin: 0 0 var(--space-4); }
+.monthly-stats { margin: 0 0 var(--space-6); }
+.monthly-stats > div, .monthly-progress > li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) 0; border-bottom: 1px solid var(--border); }
+.monthly-stats dt { color: var(--ink-muted); font-size: 13px; }
+.monthly-stats dd { margin: 0; font-size: 18px; font-weight: 600; }
+.monthly-stats small { font-size: 11px; font-weight: 400; color: var(--ink-muted); }
+.monthly-progress { list-style: none; padding: 0; margin: 0 0 var(--space-5); font-size: 12px; }
+.monthly-progress small { flex-shrink: 0; color: var(--ink-muted); }
+.monthly-progress [aria-current] { font-weight: 700; border-bottom-color: var(--mauve); }
+.monthly-portrait { align-self: start; position: sticky; top: var(--space-5); min-width: 0; padding-top: var(--space-6); }
+.monthly-portrait .photo-slot { height: clamp(330px, 47vw, 590px); min-height: 0; background: none; border: 0; border-radius: 0; }
+.monthly-portrait .photo-slot > img { width: 100%; height: 100%; object-fit: contain; object-position: center bottom; }
+.monthly-portrait > p { margin: 0; text-align: center; color: var(--ink-muted); font-size: 11px; }
+.monthly-dock { align-self: start; min-width: 0; padding-top: var(--space-4); }
+.monthly-briefing { border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); padding-bottom: var(--space-4); }
+.monthly-briefing p { margin: var(--space-2) 0; line-height: 1.8; overflow-wrap: anywhere; }
+.monthly-briefing .section-kicker { font-size: 12px; }
+.monthly-conversation { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+.monthly-conversation label { display: flex; align-items: center; gap: var(--space-3); font-size: 12px; }
+.monthly-conversation select, .monthly-record-filter select { min-height: 44px; max-width: 100%; border: 1px solid var(--border); border-radius: 4px; background: var(--white); color: var(--ink); padding: var(--space-2); font: inherit; font-size: 14px; }
+.monthly-dialogue-area { padding: var(--space-4); background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-dialogue); }
+.monthly-dialogue-area .dialogue-box { padding: 0; }
+.monthly-dialogue-area .dialogue-content { min-height: 100px; max-height: none; overflow: visible; padding-block: var(--space-4); }
+.monthly-dialogue-area .dialogue-content p { margin: 0; }
+.monthly-dialogue-area .dialogue-history-navigation { flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.monthly-dialogue-area .dialogue-history-navigation button { min-height: 44px; }
+.monthly-deltas { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); padding-block: var(--space-4); margin: 0; border-block: 1px solid var(--border); }
+.monthly-deltas > div { display: flex; align-items: center; gap: var(--space-2); font-size: 13px; }
+.monthly-deltas dt { color: var(--ink-muted); }
+.monthly-deltas dd { margin: 0; font-weight: 600; }
+.monthly-buttons { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+.monthly-buttons button, .monthly-result > button { min-height: 44px; white-space: normal; }
+.monthly-note { color: var(--ink-muted); font-size: 13px; line-height: 1.8; }
+.monthly-result { padding: var(--space-5); background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-panel); }
+.monthly-result h2 { margin: var(--space-3) 0 var(--space-5); font-size: 23px; line-height: 1.5; }
+.monthly-result > p { line-height: 1.85; overflow-wrap: anywhere; }
+.monthly-result .monthly-deltas { margin-top: var(--space-5); }
+.monthly-record-filter { display: flex; align-items: center; gap: var(--space-3); margin-block: var(--space-5); }
+.monthly-record-turn, .monthly-opening { border-bottom: 1px solid var(--border); padding-block: var(--space-5); }
+.monthly-record-turn p, .monthly-opening p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; }
+.monthly-record-turn .monthly-deltas { border: 0; padding-block: var(--space-2); }
+.monthly-opening h3 { margin: var(--space-3) 0; font-size: 19px; }
+.monthly-stage select:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 1100px) {
+  .monthly-stage { grid-template-columns: 190px minmax(120px, .65fr) minmax(340px, 1.5fr); gap: var(--space-5); padding: var(--space-5); }
+}
+@media (max-width: 900px) {
+  .monthly-stage { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); padding: var(--space-5); }
+  .monthly-heading { grid-column: 1; flex-wrap: wrap; }
+  .monthly-info { padding: 0; }
+  .monthly-info h2 { font-size: 14px; }
+  .monthly-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-3); margin-bottom: var(--space-4); }
+  .monthly-stats > div { flex-direction: column; align-items: start; gap: var(--space-2); }
+  .monthly-progress { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--space-4); margin-bottom: var(--space-3); }
+  .monthly-portrait { position: static; padding-top: 0; width: min(260px, 100%); justify-self: center; }
+  .monthly-portrait .photo-slot { height: 270px; }
+  .monthly-dock { padding: 0; }
+}
+@media (max-width: 480px) {
+  .monthly-stage { padding: var(--space-4); gap: var(--space-4); }
+  .monthly-heading { gap: var(--space-4); }
+  .monthly-heading .resource-status { flex: 0 1 340px; }
+  .monthly-stats { gap: var(--space-2); }
+  .monthly-stats dd { font-size: 16px; }
+  .monthly-stats dt { font-size: 11px; }
+  .monthly-stats small { display: block; }
+  .monthly-dialogue-area, .monthly-result { padding: var(--space-4); }
+  .monthly-conversation { align-items: flex-start; }
+  .monthly-conversation label { flex-direction: column; align-items: flex-start; gap: var(--space-1); min-width: 0; }
+  .monthly-portrait .photo-slot { height: 230px; }
+  .monthly-record-filter { align-items: start; flex-direction: column; }
+}

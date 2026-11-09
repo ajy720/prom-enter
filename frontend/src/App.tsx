@@ -5,6 +5,7 @@ import { Prologue, readIntroProgress, TitleScreen } from './Prologue';
 import { ServerInterviewRoom } from './ServerInterviewRoom';
 import { ServerCasting } from './ServerCasting';
 import { ServerMonthOne } from './ServerMonthOne';
+import { ServerMonthly } from './ServerMonthly';
 import { interviewCandidateId, serverCandidates, storyGameKey } from './serverInterviewState';
 import type { CreateGameInput, Game, TurnInput } from './types';
 
@@ -50,7 +51,9 @@ export default function App() {
       const result = await api<{ game: Game }>('/games/' + game.game_id + '/turns', input);
       setGame(result.game);
       if (game.event.id.startsWith('p2_interview_') && result.game.event.id !== game.event.id) setInterviewOpen(false);
-      setPending(null); if (input.input_type !== 'conversation') setText('');
+      setPending(null);
+      const unfinishedInterview = ['finish_center_interviews', 'close_center_interview'].includes(input.action_id ?? '') && !result.game.center_interviews?.ready_for_decision;
+      if (input.input_type !== 'conversation' && !unfinishedInterview) setText('');
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
@@ -121,6 +124,7 @@ export default function App() {
     {interviewing && interviewOpen ? <ServerInterviewRoom key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onBack={() => { if (game.interview?.completed) void send('finish_interview'); else setInterviewOpen(false); }}/>
       : interviewing || game.event.id === 'p2_casting' || (game.event.id === 'p2_m01_training' && !!game.completed_events.p2_casting && !formationReviewed && !game.history.some(turn => turn.event_id === 'p2_m01_training')) ? <ServerCasting key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} nickname={nickname} onInterview={async id => { const person = serverCandidates.find(candidate => candidate.id === id); if (person && (person.eventId === game.event.id || await send('interview_' + person.slot))) setInterviewOpen(true); }} onSend={send} onBack={() => setView('title')} onProceed={() => setFormationReviewed(true)}/>
       : game.event.id === 'p2_m01_training' ? <ServerMonthOne key={game.game_id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')}/>
-      : <p role="alert">저장한 장면은 현재 연결된 1개월차 범위 밖입니다.</p>}
+      : /^p2_m0[2-6]_/.test(game.event.id) || game.event.id === 'p2_complete' ? <ServerMonthly key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)}/>
+      : <p role="alert">이 저장은 Part 2의 1~6개월차 범위에 포함되지 않습니다.</p>}
   </main>;
 }

@@ -9,7 +9,7 @@ def people(state: State) -> dict[str, str]:
     available = {'newcomer':profile_id(state.character_id), 'secretary':DATA['secretary_id']}
     if is_interview(state.event_id):
         return {'newcomer':available['newcomer']}
-    if state.event_id == 'p2_m01_training':
+    if state.event_id in {'p2_m01_training', 'p2_m02_center'}:
         available.update({person:person for person in ('dahyun','haram','yuna')})
     return available
 

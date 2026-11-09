@@ -16,6 +16,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
     secretary=character_profile(DATA['secretary_id'])
     template=OPENINGS.get(state.event_id,{'narration':'{briefing}','secretary':'대표님, {briefing} {goal}'})
     values={'name':f'{character.name} 씨','briefing':event['briefing'],'goal':event['goal'],
+            'promotion_scene':('쇼케이스에서 서로를 감싸준 멤버들의 모습이 화제가 됐습니다. 음원과 첫 음악방송을 향한 기대 속에서 다음 활동을 준비합니다.'
+                               if state.completed_events.get('p2_m04_showcase') == 'success' else
+                               '쇼케이스의 실수 영상이 퍼지고 음원 반응도 주춤합니다. 멤버들은 다시 연습실에 모여 다음 무대를 준비합니다.'),
             'training_status':'예능 훈련을 마친 기록이 있습니다.' if 'variety' in state.training_history
                               else '현재 기록에는 예능 훈련 이력이 없습니다.'}
     if after_turn_id is None and history:
@@ -31,9 +34,14 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
 
 
 def openings_for_view(state: State, history: list[dict]) -> list[EventOpening]:
+    # Refresh authored monthly introductions for old saves too, keeping their
+    # stable IDs and chronological anchors. Saved turns and game results stay intact.
+    openings = [make_opening(state.model_copy(update={'event_id': opening.event_id}), [],
+                            after_turn_id=opening.after_turn_id).model_copy(update={'id': opening.id})
+                if opening.event_id.startswith('p2_m0') else opening for opening in state.event_openings]
     if any(opening.event_id==state.event_id for opening in state.event_openings):
-        return list(state.event_openings)
-    return [*state.event_openings,make_opening(state,history)]
+        return openings
+    return [*openings,make_opening(state,history)]
 
 
 def ensure_opening(state: State, history: list[dict], *, after_turn_id: str | None = None):

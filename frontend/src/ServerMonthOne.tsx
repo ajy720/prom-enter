@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal } from './Modal';
+import { MonthlyOpening, useMonthlyOpening } from './MonthlyOpening';
 import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
@@ -17,6 +18,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
   onConversationChange: (target: string) => Promise<boolean>; onTitle: () => void;
 }) {
   const [menu, setMenu] = useState<'training' | 'rule' | 'records' | 'confirm' | null>(null);
+  const opening = useMonthlyOpening(game);
   const [recordTargetId, setRecordTargetId] = useState<string | null>(null);
   const complete = monthPlanCompleted(game);
   const candidate = newcomers.find(person => person.id === recruitedCandidateId(game))!;
@@ -50,6 +52,8 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
   }
   const summary = <dl className="month-summary"><div><dt>합류 멤버</dt><dd>{candidate.name}</dd></div><div><dt>집중 훈련</dt><dd>{training?.label ?? '미지정'}</dd></div><div><dt>기존 멤버 면담</dt><dd>{discussed} / 3명</dd></div><div><dt>합숙 규칙</dt><dd>{rule?.label ?? '미지정'}</dd></div></dl>;
 
+  if (!complete && opening.phase !== 'play') return <MonthlyOpening game={game} phase={opening.phase} onNext={opening.advance} disabled={busy || !!pending}/>;
+
   return <section className="interview-room month-one month-photo-stage" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div>
     <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
@@ -68,7 +72,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
       </section>}
       {!complete && <>
       <ChatComposer id="month-server-message" label="첫 합숙 대화" text={text} placeholder={target ? `${target.name}에게 이야기하기` : '함께 이야기하기'} disabled={locked} onTextChange={onTextChange} onSend={() => onSend()} suggestions={monthQuestions}/></>}
-      {complete ? <section className="glass-panel month-finished" aria-label="1개월차 완료"><p className="section-kicker">1개월차 계획 확정</p><h2>프로뮤의 첫걸음을 준비했어요.</h2>{summary}<p>선택과 대화 기록이 저장되었습니다.</p><div className="month-actions"><button className="quiet-button" onClick={openRecords}>멤버별 대화 기록 보기</button><span className="upcoming-feature">2개월차 준비 중</span></div></section>
+      {complete ? <section className="glass-panel month-finished" aria-label="1개월차 완료"><p className="section-kicker">1개월차 계획 확정</p><h2>프로뮤의 첫걸음을 준비했어요.</h2>{summary}<p>선택과 대화 기록이 저장되었습니다.</p><div className="month-actions"><button className="quiet-button" onClick={openRecords}>멤버별 대화 기록 보기</button><button className="primary-button" disabled={busy || !!pending || !game.event.actions.some(action => action.id === 'start_month_two')} onClick={() => void onSend('start_month_two')}>2개월차로 →</button></div></section>
         : <div className="month-actions"><p>훈련과 멤버들의 이야기, 합숙 규칙을 확인하고 이번 달 계획을 확정해주세요.</p><button className="primary-button" disabled={locked || !confirmAction} onClick={() => void openActivity('confirm')}>첫 달 계획 확인 →</button></div>}
     </div>
     <Modal open={menu === 'training'} title="집중 훈련 선택" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">이번 달 집중 분야 · 하나 선택</p><h2>{candidate.name}의 첫 트레이닝</h2><p>첫 달 계획 확정 전까지 자유롭게 변경할 수 있습니다. 첫 선택 시 비용 4천만 원과 피로도 10 증가가 한 번만 반영되며, 분야를 바꿔도 추가로 차감되지 않습니다.</p>
@@ -82,7 +86,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
       const action = game.event.actions.find(item => item.id === `rule_${option.id}`);
       return <button key={option.id} aria-pressed={rule?.id === action?.id && !!action} disabled={locked || !action || action.used} onClick={async () => { if (action) { setMenu(null); await onSend(action.id); } }}><strong>{option.label}</strong><span>{option.description}</span></button>;
     })}</div></Modal>
-    <Modal open={menu === 'confirm'} title="첫 달 계획 확인" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">대표님의 첫 운영 계획</p><h2>이 계획으로 마무리할까요?</h2>{summary}<p>확정 후에는 대화와 선택을 바꿀 수 없습니다. 2개월차로 이동하지 않으며, 훈련 비용이나 보상도 다시 적용하지 않습니다.</p><button className="primary-button" disabled={locked || privateRoom || !confirmAction} onClick={async () => { if (confirmAction) { setMenu(null); await onSend(confirmAction.id); } }}>첫 달 계획 확정</button></Modal>
+    <Modal open={menu === 'confirm'} title="첫 달 계획 확인" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">대표님의 첫 운영 계획</p><h2>이 계획으로 마무리할까요?</h2>{summary}<p>확정 후에는 대화와 선택을 바꿀 수 없습니다. 완료 화면에서 2개월차로 이어갈 수 있습니다. 지금까지 준비한 내용으로 첫 달을 마무리합니다.</p><button className="primary-button" disabled={locked || privateRoom || !confirmAction} onClick={async () => { if (confirmAction) { setMenu(null); await onSend(confirmAction.id); } }}>첫 달 계획 확정</button></Modal>
     <Modal open={menu === 'records'} title="첫 달 서버 기록" className="records-modal" onClose={() => setMenu(null)}><h2>첫 합숙 기록</h2><div className="record-navigation">{conversationTargets.map(person => <button key={person.id} aria-pressed={recordTargetId === person.id} onClick={() => setRecordTargetId(person.id)}>{person.name}</button>)}</div><div className="interview-history">{recordFrames.length ? recordFrames.map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>) : <p>아직 나눈 이야기가 없습니다.</p>}</div></Modal>
   </section>;
 }
