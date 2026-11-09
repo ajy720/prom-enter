@@ -37,7 +37,8 @@ class TurnService:
             raise GameError("콘텐츠 버전이 바뀌었습니다. 새 플레이를 시작해주세요.", 409)
         event = public_event(state.event_id)
         # Copy before annotating actions: the content registry is shared by all players.
-        event = {**event, "actions": [{**a, "used": f"{state.event_id}:{a['id']}" in state.applied_effects} for a in event["actions"]]}
+        event = {**event, "actions": [{**a, "used": f"{state.event_id}:{a['id']}" in state.applied_effects} for a in event["actions"]
+                 if a['id'] != 'start_month_two' or 'p2_m01_training:confirm_month_plan' in state.applied_effects]}
         history=self.repository.history(state.game_id)
         # Refresh the old offline fixture's awkward wording without rewriting
         # saved turns or replacing responses produced by a real provider.
@@ -80,7 +81,9 @@ class TurnService:
         if (request.center_member_id is not None or request.center_reason is not None) and not (
                 state.event_id == center.EVENT and request.input_type == 'action' and request.action_id == 'select_center'):
             raise GameError('별도의 센터 선택 필드는 센터 선택 요청에서만 사용할 수 있습니다.', 422)
-        if 'p2_m01_training:confirm_month_plan' in state.applied_effects:
+        continuing_month = (state.event_id == 'p2_m01_training' and request.input_type == 'action'
+                            and request.action_id == 'start_month_two')
+        if state.event_id == 'p2_m01_training' and 'p2_m01_training:confirm_month_plan' in state.applied_effects and not continuing_month:
             raise GameError('1개월차 계획이 확정되었습니다. 저장한 결과와 기록을 확인해주세요.',409)
         history = self.repository.history(game_id)
         center_progress = center.progress(state, history)
@@ -169,6 +172,7 @@ class TurnService:
         if not changed_character and proposal.state.event_id == state.event_id:
             proposal.state.conversation = current_conversation(state)
         if proposal.state.event_id != state.event_id:
+            proposal.state.conversation = make_conversation(proposal.state)
             ensure_opening(proposal.state,history,after_turn_id=request.request_id)
         if request.input_type == 'chat':
             record_report(proposal.state,text,listeners,event_id=event['id'],turn_id=request.request_id)

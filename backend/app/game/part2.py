@@ -96,6 +96,15 @@ def resolve_part2(original, analysis, turn_id):
     elif action == 'confirm_month_plan':
         outcome = 'success'
         facts.append('첫 달 계획을 확정했습니다. 훈련·합숙 규칙·대화 기록을 보존하고 1개월차에서 마무리합니다. 2개월차로 이동하지 않습니다.')
+    elif action == 'start_month_two':
+        if 'p2_m01_training:confirm_month_plan' not in state.applied_effects:
+            raise GameError('첫 달 계획을 먼저 확정해주세요.', 422)
+        prepared = any(k in state.applied_effects for k in (
+            'p2_m01_training:train_vocal', 'p2_m01_training:train_dance',
+            'p2_m01_training:train_variety', 'p2_m01_training:rest'))
+        outcome = 'success' if prepared else 'failure'
+        apply_delta(state, {'teamwork': 5} if prepared else {'teamwork': -5, 'fatigue': 10})
+        facts.append('확정한 첫 달 계획의 활동 결과를 한 번 반영합니다. 기존 훈련 비용과 피로도는 다시 적용하지 않습니다.')
     elif action == 'finish_event':
         if not any(k.startswith(state.event_id+':train_') or k == state.event_id+':rest' for k in state.applied_effects):
             raise GameError('훈련이나 휴식을 먼저 배정하거나 준비 없이 마무리를 선택해주세요.', 422)

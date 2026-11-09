@@ -505,6 +505,51 @@ def test_month_one_completion_preserves_training_rule_and_private_records(sessio
     assert all(next(a for a in completed['event']['actions'] if a['id'] == action)['used'] for action in ['train_vocal','rule_buddy','confirm_month_plan'])
 
 
+@pytest.mark.parametrize('prepared', [True, False])
+def test_confirmed_month_can_continue_once_without_reapplying_training(session, prepared):
+    client, provider, game = session
+    game = cast(client, game)
+    assert not any(a['id'] == 'start_month_two' for a in game['event']['actions'])
+    send(client, game, 'start_month_two', action=True, status=422)
+    if prepared:
+        game = send(client, game, 'train_variety', action=True)
+        game = send(client, game, 'rule_buddy', action=True)
+    completed = send(client, game, 'confirm_month_plan', action=True, stop=True)
+    completed = client.get(f"/api/games/{game['game_id']}").json()
+    assert any(a['id'] == 'start_month_two' for a in completed['event']['actions'])
+    provider.fail = True
+    send(client, completed, 'start_month_two', action=True, status=502, key='continue-month-two', stop=True)
+    assert client.get(f"/api/games/{game['game_id']}").json() == completed
+    provider.fail = False
+    advanced = send(client, completed, 'start_month_two', action=True, key='continue-month-two', stop=True)
+    assert advanced['event']['id'] == 'p2_m02_center'
+    assert advanced['completed_events']['p2_m01_training'] == ('success' if prepared else 'failure')
+    assert advanced['stats']['teamwork'] == completed['stats']['teamwork'] + (5 if prepared else -5)
+    assert advanced['stats']['fatigue'] == completed['stats']['fatigue'] + (0 if prepared else 10)
+    assert advanced['stats']['funds_won'] == completed['stats']['funds_won']
+    assert advanced['training_history'] == completed['training_history']
+    assert advanced['history'][:-1] == completed['history']
+    assert advanced['event_openings'][-1]['after_turn_id'] == 'continue-month-two'
+    assert send(client, completed, 'start_month_two', action=True, key='continue-month-two', stop=True) == advanced
+    send(client, advanced, 'start_month_two', action=True, status=422)
+    # The old completion marker must not lock any later month's conversation or decisions.
+    game = finish_center_discussions(client, advanced)
+    game = send(client, game, '연습 이야기를 들려줘')
+    actions = (['agree_center', 'mediate_rehearsal', 'support', 'respond_press', 'hold_showcase', 'promote_lowcost', 'accept_offer']
+               if prepared else ['assign_center', 'continue_rehearsal', 'hold_showcase', 'skip_promotion', 'decline_offer'])
+    for action in actions:
+        if game['event']['id'] == 'p2_m02_center':
+            game = choose_center(client, game, grounded=prepared)
+            continue
+        game = send(client, game, action, action=True)
+    assert game['event']['id'] == 'p2_complete'
+    assert game['completed_events']['p2_m04_showcase'] == ('success' if prepared else 'failure')
+    game = send(client, game, 'finish_prototype', action=True)
+    assert game['ending']['id'] == 'part2_complete' and game['event']['month'] == 6
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    send(client, game, '계속 진행해줘', status=409)
+
+
 def test_candidate_gallery_allows_free_order_without_extra_dialogue(session):
     client, provider, game = session
     before = game['stats'].copy()
@@ -526,6 +571,32 @@ def test_candidate_gallery_allows_free_order_without_extra_dialogue(session):
     assert game['event']['id'] == 'p2_casting'
     assert all(game['completed_events'][f'p2_interview_{slot}'] == 'success' for slot in 'abc')
     assert client.get(f"/api/games/{game['game_id']}").json() == game
+
+
+def test_old_monthly_openings_refresh_without_exposing_rules_or_rewriting_save(session):
+    from app.content import EVENTS
+    from app.models import EventOpening, OpeningMessage
+    from app.game.openings import openings_for_view
+    client, _, game = session
+    from hashlib import sha256
+    owner = sha256(client.cookies['prom_owner'].encode()).hexdigest()
+    state = client.app.state.service.repository.get(game['game_id'], owner)
+    state.event_id = 'p2_m02_center'
+    state.event_openings = [EventOpening(id='legacy-opening', event_id=state.event_id,
+        after_turn_id='legacy-transition', month=2, title='센터와 포지션 갈등', scene='연습실',
+        narration='팀워크 42 이상이면 성공합니다.',
+        messages=[OpeningMessage(character_id='baek_hayeon', name='백하연', text='팀워크 +8 후 판정합니다.')],
+        goal='기존 목표', choices=[])]
+    before = state.model_dump_json()
+    refreshed = openings_for_view(state, [])
+    assert refreshed[0].id == 'legacy-opening' and refreshed[0].after_turn_id == 'legacy-transition'
+    assert '42' not in refreshed[0].model_dump_json() and '판정' not in refreshed[0].model_dump_json()
+    assert '면담을 한 번에' in refreshed[0].messages[0].text
+    assert state.model_dump_json() == before
+    for event in EVENTS.values():
+        if event['id'].startswith('p2_m0'):
+            public_copy = str([event['briefing'], *[action['hint'] for action in event['actions']]])
+            assert all(word not in public_copy for word in ['이상이면', '미만', '판정', '실패로', '이면 성공'])
 
 
 def test_low_funds_can_finish_fixed_event(session):
