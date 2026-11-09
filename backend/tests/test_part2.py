@@ -62,6 +62,13 @@ def test_full_part2_free_chat_and_restore(session,slot):
                ['p2_m02_center','p2_m03_rehearsal','p2_m04_showcase','p2_m05_promotion','p2_m06_variety'])
     game=send(client,game,'프로토타입 결과 확인해줘')
     assert game['ending']['id']=='part2_complete'
+    generated_turns = [turn for turn in game['history'] if turn['ai_trace']['generation_calls']]
+    assert {turn['event_id'] for turn in generated_turns} >= {
+        'p2_interview_a', 'p2_m01_training', 'p2_m02_center', 'p2_m03_rehearsal',
+        'p2_m04_showcase', 'p2_m05_promotion', 'p2_m06_variety',
+    }
+    expressions = {message['expression'] for turn in generated_turns for message in turn['messages']}
+    assert expressions == {'neutral', 'happy'}
     assert client.get(f"/api/games/{game['game_id']}").json()==game
     assert all(len(view.allowed_speakers) == 1 for view in provider.views)
     send(client,game,'안녕',status=409)

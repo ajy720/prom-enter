@@ -1,7 +1,11 @@
-from typing import Literal
+from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 SpeakerRole = Literal['newcomer', 'secretary', 'dahyun', 'haram', 'yuna']
+Expression = Annotated[
+    Literal["neutral", "excited", "angry", "happy", "sad", "surprised"],
+    Field(description="대사에 겉으로 드러나는 표정. neutral=기본, excited=설렘, angry=화남, happy=기쁨, sad=슬픔, surprised=놀람."),
+]
 
 
 class Model(BaseModel):
@@ -153,6 +157,7 @@ class CenterChatInterpretation(Model):
     member_id: str | None
     ambiguous: bool
     reply: str = Field(max_length=500)
+    expression: Expression = "neutral"
 
 
 class State(Model):
@@ -247,6 +252,7 @@ class Message(Model):
     speaker_id: SpeakerRole
     text: str = Field(min_length=1, max_length=1200)
     emotion: Literal["anxious", "hopeful", "tired", "relieved", "neutral"]
+    expression: Expression = "neutral"
     fact_ids: list[str] = Field(default_factory=list)
     knowledge_ids: list[str] = Field(default_factory=list)
     audience: list[SpeakerRole] = Field(default_factory=lambda: ["newcomer", "secretary"])

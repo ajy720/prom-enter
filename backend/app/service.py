@@ -10,7 +10,7 @@ from app.content import CHARACTERS, CONTENT, EVENTS, EVIDENCE, public_event
 from app.game.engine import character_direction, resolve_turn
 from app.game.conversation import conversation_view, current_conversation, make_conversation, roles_for
 from app.game.openings import ensure_opening, openings_for_view
-from app.models import Analysis, CenterChatInterpretation, CenterChoiceDraft, CenterDecision, Dialogue, GameError, Memory, Message, State, TurnRequest
+from app.models import Analysis, CenterChatInterpretation, CenterChoiceDraft, CenterDecision, Dialogue, Expression, GameError, Memory, Message, State, TurnRequest
 from app.ai.center_selection import CHAT_PROMPT_VERSION, PROMPT_VERSION as CENTER_PROMPT_VERSION, build_evaluation_context, validate_assessment
 from app.ai.memory import remember
 from app.game.engine import apply_delta
@@ -226,12 +226,12 @@ class TurnService:
         committed = self.repository.commit(proposal.state, owner, state.version, request.request_id, fingerprint, turn)
         return {"turn": committed, "game": self.view(self.repository.get(game_id, owner))}
 
-    def _center_turn(self, owner, state, updated, request, fingerprint, message, *, outcome='pending', input_text='면담 마무리', evaluation_calls=0, interpretation_calls=0, clarification=False):
+    def _center_turn(self, owner, state, updated, request, fingerprint, message, *, outcome='pending', input_text='면담 마무리', evaluation_calls=0, interpretation_calls=0, clarification=False, expression: Expression = "neutral"):
         updated.version += 1
         turn = {'id': request.request_id, 'kind': 'dialogue' if request.input_type == 'chat' else 'activity', 'input_type': request.input_type,
                 'input': input_text, 'event_id': state.event_id, 'event_title': EVENTS[state.event_id]['title'],
                 'conversation': conversation_view(state, make_conversation(state, 'private', 'baek_hayeon')), 'input_audience': ['secretary'],
-                'messages': [Message(speaker_id='secretary', text=message, emotion='neutral', audience=['secretary']).model_dump()],
+                'messages': [Message(speaker_id='secretary', text=message, emotion='neutral', expression=expression, audience=['secretary']).model_dump()],
                 'analysis': Analysis(action_id='select_center' if evaluation_calls else request.action_id or 'center_choice_chat', needs_clarification=clarification or outcome == 'pending' and evaluation_calls > 0,
                                      reference_turn_id=None, assessments=[]).model_dump(),
                 'direction': character_direction(updated, outcome).model_dump(),
@@ -295,7 +295,8 @@ class TurnService:
             if interpretation.intent == 'withdraw':
                 updated.center_choice_draft = None
             feedback = interpretation.reply or '네, 대표님. 생각을 정리하시고 편하게 말씀해주세요.'
-            return self._center_turn(owner, state, updated, request, fingerprint, feedback, input_text=text, interpretation_calls=1)
+            return self._center_turn(owner, state, updated, request, fingerprint, feedback, input_text=text, interpretation_calls=1,
+                                     expression=interpretation.expression if interpretation.reply else "neutral")
         selected_id = interpretation.member_id or (draft.member_id if draft else None)
         if interpretation.ambiguous or not selected_id:
             return self._center_turn(owner, state, updated, request, fingerprint,

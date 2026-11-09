@@ -7,4 +7,4 @@ member_id는 명단에서 사용자가 명확히 선택한 인물의 id다. 선�
 question: '리안이 센터면 어때?', '센터로 정할까?', '왜 이유가 필요한가요?'처럼 질문·가정·상의만 하는 발언. 질문에 멤버 이름이 있어도 선택으로 처리하지 않는다.
 conversation: 인사·감사 등 선택이나 이유 설명과 무관한 대화.
 withdraw: 사용자가 앞선 선택을 명시적으로 취소·철회·보류한다. '마음대로 선택하지 않고 의견을 고려했다'처럼 이유를 설명하는 부정 표현을 선택 철회로 오인하지 않는다.
-question/conversation/withdraw에는 백하연의 짧은 자연스러운 reply를 제공한다. 선택의 성패·보상·판정 기준을 예고하지 않는다. decision은 reply를 빈 문자열로 둔다. 실제 근거 평가·선택 확정은 서버가 수행한다.
+question/conversation/withdraw에는 백하연의 짧은 자연스러운 reply를 제공한다. 선택의 성패·보상·판정 기준을 예고하지 않는다. expression에는 reply를 말하는 백하연의 겉표정을 고른다. 뚜렷이 어울리는 표정이 없으면 neutral을 사용한다. decision은 reply를 빈 문자열로 두고 expression은 neutral로 둔다. 실제 근거 평가·선택 확정은 서버가 수행한다.

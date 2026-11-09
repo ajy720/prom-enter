@@ -47,9 +47,18 @@ def test_selection_and_reasons_are_accumulated_as_distinct_chat_turns_and_restor
 
 
 def test_questions_and_greetings_do_not_confirm_a_choice_or_become_its_reason(session):
-    client, _, game = ready(session)
+    client, provider, game = ready(session)
     before = game['stats'].copy()
+
+    def interpret(context):
+        result = demo_interpretation(context)
+        if result.intent == 'question':
+            return result.model_copy(update={'expression': 'surprised'})
+        return result
+
+    provider.interpret_center_choice = interpret
     game = send(client, game, '리안이 센터면 어때?')
+    assert game['history'][-1]['messages'][0]['expression'] == 'surprised'
     assert game['center_interviews']['pending_member_id'] is None
     assert game['history'][-1]['ai_trace']['evaluation_calls'] == 0
     game = send(client, game, '센터는 리안으로 할게요.')
