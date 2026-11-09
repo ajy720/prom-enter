@@ -13,3 +13,5 @@ __pycache__/
 data/
 .DS_Store
 deploy/.private/
+frontend/test-results/
+frontend/playwright-report/

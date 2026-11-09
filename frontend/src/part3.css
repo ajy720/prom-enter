@@ -1,0 +1,40 @@
+/* Extend the existing interview layout and shared controls. */
+.part3-stage .interview-dock { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-dialogue); padding: var(--space-5); }
+.part3-stage .dialogue-content { max-height: none; overflow: visible; }
+.part3-stage .dialogue-box { padding: 0; background: none; border: 0; box-shadow: none; backdrop-filter: none; }
+.part3-stage .dialogue-content p, .part3-speech-preview { white-space: pre-wrap; overflow-wrap: anywhere; }
+.part3-stage .interview-dock > .primary-button { margin-top: var(--space-4); }
+.part3-stage .month-tasks h1 { font-size: clamp(22px, 2.4vw, 30px); }
+.part3-stage .monthly-stats { margin-bottom: var(--space-4); }
+.part3-stage .monthly-progress { max-height: none; overflow: visible; scrollbar-gutter: auto; }
+.part3-stage .month-tasks :is(dt, dd, small) { color: var(--white); }
+.part3-stage .center-member-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-2); margin: 0 0 var(--space-4); }
+.part3-stage .center-member-tabs button { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-1); }
+.part3-stage .center-member-tabs small { font-size: 11px; }
+.part-three [aria-pressed=true] { background: var(--surface-tint); border-color: var(--mauve); box-shadow: inset 0 0 0 1px var(--mauve); }
+.part3-decisions { display: grid; gap: var(--space-4); margin-top: var(--space-4); }
+.part3-decisions .operation-button { color: var(--ink); border-color: var(--border); }
+.part3-decisions fieldset { min-width: 0; border: 0; padding: 0; margin: 0; }
+.part3-decisions legend { font-weight: 600; margin-bottom: var(--space-3); }
+.part3-speech { display: flex; flex-direction: column; gap: var(--space-3); }
+.part3-speech textarea { min-height: 170px; width: 100%; box-sizing: border-box; resize: vertical; font: inherit; padding: var(--space-3); border: 1px solid var(--border); border-radius: 6px; background: var(--white); color: var(--ink); }
+.part3-completion p { line-height: 1.9; }
+.part3-completion > a, .part3-completion > button { display: inline-flex; margin: var(--space-3) var(--space-3) 0 0; }
+.part3-awards { background: #eadfda; }
+.part3-awards::before { content: none; }
+.part3-awards .month-tasks, .part3-awards .month-tasks :is(.section-kicker, p, dt, dd, small, .operation-button) { color: var(--ink); }
+.part-three .fixture-toolbar { flex-wrap: wrap; }
+@media (min-width: 1001px) {
+  .part3-narration > .interview-dock, .part3-stage:has(.part3-completion) > .interview-dock { grid-column: 2 / -1; max-width: 900px; justify-self: center; }
+}
+@media (max-width: 1000px) {
+  .part3-stage .interview-dock { margin-top: 0; }
+  .part3-stage .monthly-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--space-2); }
+  .part3-stage .monthly-stats > div { flex-direction: column; align-items: flex-start; }
+  .part3-stage .monthly-stats dd { font-size: 16px; }
+  .part3-stage .monthly-stats small { font-size: 10px; }
+}
+@media (max-width: 480px) {
+  .part3-stage .interview-dock { padding: var(--space-4); }
+  .part3-stage .center-member-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

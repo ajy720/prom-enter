@@ -1,3 +1,4 @@
+import { createPart3, part3SaveKey, part3SourceKey } from './part3State';
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { CenterInterview, CenterMonthSidebar, centerInterviewDialogue } from './CenterInterview';
@@ -67,6 +68,16 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
     : pendingPortrait?.speakerId ? pendingPortrait.name
     : speakerId === 'player' ? target?.name ?? game.character.name : activeDialogue.name ?? game.character.name;
   const expression = pendingPortrait || (completeScene && !showingResult) ? undefined : activeDialogue.expression;
+  function openPartThree() {
+    try {
+      const snapshot = createPart3({ game });
+      sessionStorage.setItem(part3SourceKey, JSON.stringify(game));
+      if (!localStorage.getItem(part3SaveKey)) localStorage.setItem(part3SaveKey, JSON.stringify(snapshot));
+      window.location.href = '/?part3Demo=1&from=server';
+    } catch (cause) { setPart3Error(cause instanceof Error ? cause.message : 'Part 3 준비에 실패했습니다.'); }
+  }
+  const [part3Error, setPart3Error] = useState('');
+
   async function openActions() {
     if (privateRoom && !await onConversationChange('public')) return;
     setMenu('actions');
@@ -88,7 +99,7 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
     <div className={centerLayout ? "interview-dock" : "monthly-dock"}>
       {showingResult ? <section className="monthly-result" aria-label="이번 달 결과"><p className="section-kicker">{outcomes[boundary.outcome] ?? '결과'}</p><h2>{boundary.event_title} · 결과</h2>{boundary.messages.map((message, index) => <p key={index}><strong>{boundary.conversation?.participants.find(person => person.role === message.speaker_id || person.id === message.speaker_id)?.name ?? (message.speaker_id === 'secretary' ? '백하연' : game.character.name)}</strong>　{message.text}</p>)}<Deltas turn={boundary}/>{!Object.keys(boundary.stat_delta).length && <p>이번 결정으로 바뀐 수치는 없습니다.</p>}<p className="monthly-note">{game.provider === 'fixture' ? '개발용 fixture에만 보관된 결과입니다.' : '결과와 다음 장면이 서버에 저장되었습니다.'}</p><button className="primary-button" disabled={busy || !!pending} onClick={continueReading}>{completeScene ? '결산 보기' : `${game.event.month}개월차 이야기 보기`} →</button></section>
       : completeScene && !prototypeScene ? <section className="monthly-result" aria-label="계약 결말"><p className="section-kicker">{game.provider === 'fixture' ? '개발용 엔딩 미리보기 · 서버 판정 아님' : '계약 결말'}</p><h2>{game.ending!.title}</h2><p>{game.ending!.description}</p>{game.history.at(-1)?.messages.map((message, index) => <p key={index}>{message.text}</p>)}<div className="monthly-buttons"><button className="quiet-button" onClick={() => setMenu('records')}>이번 달 면담 기록</button><button className="quiet-button" onClick={onTitle}>시작 화면</button><button className="primary-button" onClick={onNewGame}>새 이야기 시작</button></div></section>
-      : completeScene ? <section className="monthly-result"><p className="section-kicker">{game.ending ? 'PART 2 COMPLETE' : 'PART 2 · 활동 결산'}</p><h2>{game.character.name}의 첫 여섯 달</h2><p>후보 선발과 1~6개월차 활동을 마쳤습니다. 7~24개월차의 서버 사건은 아직 연결되지 않았습니다.</p><p>현재 수치와 월별 결과, 대화 기록을 다시 확인할 수 있습니다.</p><dl className="month-summary"><div><dt>합류 멤버</dt><dd>{game.character.name}</dd></div>{game.center_selection && <div><dt>센터</dt><dd>{game.center_selection.member_name}</dd></div>}<div><dt>훈련 분야</dt><dd>{game.training_history.map(skill => ({ vocal: '보컬', dance: '댄스', variety: '예능' })[skill] ?? skill).join(', ') || '훈련 이력 없음'}</dd></div></dl><p className="monthly-note">24개월 계약의 최종 엔딩과는 별개의 Part 2 마무리입니다.</p><div className="monthly-buttons"><button className="quiet-button" onClick={() => setMenu('records')}>이번 달 면담 기록</button>{game.ending ? <><button className="quiet-button" onClick={onTitle}>시작 화면</button><button className="primary-button" onClick={onNewGame}>새 이야기 시작</button></> : <button className="primary-button" disabled={locked} onClick={() => void onSend('finish_prototype')}>Part 2 마무리</button>}</div></section>
+      : completeScene ? <section className="monthly-result"><p className="section-kicker">{game.ending ? 'PART 2 COMPLETE' : 'PART 2 · 활동 결산'}</p><h2>{game.character.name}의 첫 여섯 달</h2><p>후보 선발과 1~6개월차 활동을 마쳤습니다. 7~24개월차의 서버 사건은 아직 연결되지 않았습니다.</p><p>현재 수치와 월별 결과, 대화 기록을 다시 확인할 수 있습니다.</p><dl className="month-summary"><div><dt>합류 멤버</dt><dd>{game.character.name}</dd></div>{game.center_selection && <div><dt>센터</dt><dd>{game.center_selection.member_name}</dd></div>}<div><dt>훈련 분야</dt><dd>{game.training_history.map(skill => ({ vocal: '보컬', dance: '댄스', variety: '예능' })[skill] ?? skill).join(', ') || '훈련 이력 없음'}</dd></div></dl><p className="monthly-note">24개월 계약의 최종 엔딩과는 별개의 Part 2 마무리입니다.</p><p className="monthly-note">7~12개월차는 임시 대사와 브라우저 저장으로 이어집니다.</p>{part3Error && <p role="alert">{part3Error}</p>}<button className="primary-button" disabled={busy || !!pending} onClick={openPartThree}>7개월차로 · Part 3 프런트 데모 →</button><div className="monthly-buttons"><button className="quiet-button" onClick={() => setMenu('records')}>이번 달 면담 기록</button>{game.ending ? <><button className="quiet-button" onClick={onTitle}>시작 화면</button><button className="primary-button" onClick={onNewGame}>새 이야기 시작</button></> : <button className="primary-button" disabled={locked} onClick={() => void onSend('finish_prototype')}>Part 2 마무리</button>}</div></section>
       : centerDisplay ? <CenterInterview displayed={centerDisplay} feedback={feedback} game={game} busy={busy} pending={pending} text={text} onTextChange={onTextChange} onSend={onSend} onConversationChange={onConversationChange} onRecords={() => setMenu('records')}/>
       : <>
         <section className="monthly-briefing"><h2>이번 달 목표</h2><p>{game.event.goal}</p>{game.evidence.length > 0 && <details><summary>확보한 단서 · {game.evidence.length}개</summary>{game.evidence.map(item => <article key={item.id}><h3>{item.title}</h3><p>{item.text}</p></article>)}</details>}</section>
