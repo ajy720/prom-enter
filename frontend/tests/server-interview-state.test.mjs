@@ -53,7 +53,7 @@ test('세 후보 모두 8번째 답변을 먼저 읽은 뒤 종료 안내를 표
     assert.equal(before.awaitingClosing, true);
     assert.deepEqual(candidateInterviewDisplay(JSON.parse(JSON.stringify(completed)), null), before);
     const after = candidateInterviewDisplay(completed, before.closingId);
-    assert.equal(after.displayed.speakerId, 'secretary');
+    assert.equal(after.displayed.speakerId, 'baek_hayeon');
     assert.equal(after.displayed.text, '면담을 마무리하겠습니다.');
     assert.equal(after.awaitingClosing, false);
     assert.deepEqual(candidateInterviewDisplay(JSON.parse(JSON.stringify(completed)), before.closingId), after);

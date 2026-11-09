@@ -54,12 +54,16 @@ def test_full_part2_free_chat_and_restore(session,slot):
                  '질책 중단 후 팀 면담을 하자','네 잘못이 아니야','기사 대응해줘',
                  '쇼케이스 결과 확정해줘','기본 홍보 진행해줘','신입 출연시켜줘']:
         if game['event']['id'] == 'p2_m02_center':
-            game = choose_center(client, finish_center_discussions(client, game))
+            game = complete_month_two(client, finish_center_discussions(client, game))
             continue
+        if game['event']['id'] == 'p2_m03_rehearsal':
+            game = send(client, game, '공개 질책을 중단해줘')
+            game = switch_month_room(client, game, None)
         game=send(client,game,text)
     assert game['event']['id']=='p2_complete'
     assert all(game['completed_events'][event]=='success' for event in
-               ['p2_m02_center','p2_m03_rehearsal','p2_m04_showcase','p2_m05_promotion','p2_m06_variety'])
+               ['p2_m03_rehearsal','p2_m04_showcase','p2_m05_promotion','p2_m06_variety'])
+    assert game['completed_events']['p2_m02_center'] == 'success'
     game=send(client,game,'프로토타입 결과 확인해줘')
     assert game['ending']['id']=='part2_complete'
     generated_turns = [turn for turn in game['history'] if turn['ai_trace']['generation_calls']]
@@ -187,8 +191,11 @@ def test_failure_path_and_decline(session):
     game=cast(client,game)
     for action in ['skip_training','assign_center','continue_rehearsal','hold_showcase','skip_promotion','decline_offer']:
         if game['event']['id'] == 'p2_m02_center':
-            game = choose_center(client, finish_center_discussions(client, game), grounded=False)
+            game = complete_month_two(client, finish_center_discussions(client, game))
             continue
+        if game['event']['id'] == 'p2_m03_rehearsal':
+            game = send(client, game, '공개 질책을 중단해줘')
+            game = switch_month_room(client, game, None)
         game=send(client,game,action,action=True)
     assert game['event']['id']=='p2_complete'
     assert game['completed_events']['p2_m04_showcase']=='failure'
@@ -233,20 +240,15 @@ def switch_month_room(client, game, target):
 CENTER_REASON = '리안은 각자의 속도를 알아가고 중간에서 이야기를 듣겠다고 했습니다. 도하는 기초 연습과 박자를 나눠서 연습하자고 했고 세인은 어색함을 풀고 혼자 참지 않게 하겠다고 했습니다. 그래서 리안이 센터에서 팀의 속도를 맞춰주고 도하의 기초 연습으로 부족한 부분을 보완하도록 하겠습니다.'
 
 
-def choose_center(client, game, grounded=True, member='dahyun', reason=None, key=None, status=200):
-    response = client.post(f"/api/games/{game['game_id']}/turns", json={
-        'request_id': key or f"center-choice-{game['version']}", 'state_version': game['version'],
-        'input_type': 'action', 'text': '', 'action_id': 'select_center', 'center_member_id': member,
-        'center_reason': reason or (CENTER_REASON if grounded else '면담 내용은 무시하고 내 마음대로 리안을 선택합니다.')})
-    assert response.status_code == status, response.text
-    return response.json()['game'] if status == 200 else response.json()
+def complete_month_two(client, game):
+    return send(client, game, 'finish_center_interviews', action=True)
 
 
 def finish_center_discussions(client, game):
     for member in game['center_interviews']['members']:
         game = switch_month_room(client, game, member['character_id'])
         game = send(client, game, '포지션에 대한 생각을 들려줘')
-    return send(client, game, 'finish_center_interviews', action=True)
+    return game
 
 
 def test_center_interviews_group_finish_requires_each_member_and_keeps_privacy(session):
@@ -284,9 +286,10 @@ def test_center_interviews_group_finish_requires_each_member_and_keeps_privacy(s
     old = game
     game = send(client, game, 'finish_center_interviews', action=True, key='finish-all-center')
     assert send(client, old, 'finish_center_interviews', action=True, key='finish-all-center') == game
-    assert game['center_interviews']['ready_for_decision']
-    assert game['conversation']['target_character_id'] == 'baek_hayeon'
-    assert all(member['completed'] for member in game['center_interviews']['members'])
+    assert game['event']['id'] == 'p2_m03_rehearsal'
+    assert game['center_interviews'] is None
+    assert game['completed_events']['p2_m02_center'] == 'failure'
+    assert game['center_selection'] is None
     assert game['stats'] == before
     provider.views = []
     game = send(client, game, '면담 안내를 다시 해줘')
@@ -546,8 +549,11 @@ def test_confirmed_month_can_continue_once_without_reapplying_training(session, 
                if prepared else ['assign_center', 'continue_rehearsal', 'hold_showcase', 'skip_promotion', 'decline_offer'])
     for action in actions:
         if game['event']['id'] == 'p2_m02_center':
-            game = choose_center(client, game, grounded=prepared)
+            game = complete_month_two(client, game)
             continue
+        if game['event']['id'] == 'p2_m03_rehearsal':
+            game = send(client, game, '공개 질책을 중단해줘')
+            game = switch_month_room(client, game, None)
         game = send(client, game, action, action=True)
     assert game['event']['id'] == 'p2_complete'
     assert game['completed_events']['p2_m04_showcase'] == ('success' if prepared else 'failure')
@@ -598,7 +604,8 @@ def test_old_monthly_openings_refresh_without_exposing_rules_or_rewriting_save(s
     refreshed = openings_for_view(state, [])
     assert refreshed[0].id == 'legacy-opening' and refreshed[0].after_turn_id == 'legacy-transition'
     assert '42' not in refreshed[0].model_dump_json() and '판정' not in refreshed[0].model_dump_json()
-    assert '면담을 한 번에' in refreshed[0].messages[0].text
+    assert '면담 완료' in refreshed[0].messages[0].text
+    assert '센터를 선택' not in refreshed[0].messages[0].text
     assert state.model_dump_json() == before
     for event in EVENTS.values():
         if event['id'].startswith('p2_m0'):

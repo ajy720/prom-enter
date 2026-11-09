@@ -3,13 +3,14 @@ import uuid
 from app.ai.profiles import DATA, character_profile, profile_id
 from app.models import Conversation, GameError, State
 from app.game.interviews import is_interview
+from app.game import rehearsal
 
 
 def people(state: State) -> dict[str, str]:
     available = {'newcomer':profile_id(state.character_id), 'secretary':DATA['secretary_id']}
     if is_interview(state.event_id):
         return {'newcomer':available['newcomer']}
-    if state.event_id in {'p2_m01_training', 'p2_m02_center'}:
+    if state.event_id in {'p2_m01_training', 'p2_m02_center', rehearsal.EVENT}:
         available.update({person:person for person in ('dahyun','haram','yuna')})
     return available
 
@@ -24,6 +25,8 @@ def make_conversation(state: State, mode: str = 'public', target: str | None = N
     elif mode == 'public' and target is None:
         # Keep existing public rooms compatible. Established members join only 1:1.
         participants = ['player',available['newcomer']] + ([available['secretary']] if 'secretary' in available else [])
+        if state.event_id == rehearsal.EVENT and rehearsal.phase(state) == 'reprimand':
+            participants.append('yuna')
     else:
         raise GameError('함께 대화에는 대상을 지정하지 않고, 1:1 대화에는 대상을 지정해주세요.',422)
     # Stable room IDs permit deterministic restoration of pre-conversation saves
@@ -40,6 +43,8 @@ def current_conversation(state: State) -> Conversation:
         return make_conversation(state)
     room = state.conversation
     expected = make_conversation(state,room.mode,room.target_character_id)
+    if state.event_id == rehearsal.EVENT and room.mode == 'public':
+        return expected
     if room != expected:
         raise GameError('저장된 대화방 정보가 현재 장면과 맞지 않습니다.',409)
     return room

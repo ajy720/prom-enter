@@ -1,4 +1,4 @@
-import { debutMembers, newcomers } from './introContent';
+import { debutMembers, newcomers } from './introContent.ts';
 import type { Expression, Game, Turn } from './types';
 
 export type InterviewFrame = { id: string; speakerId: string; name: string; text: string; expression?: Expression };

@@ -10,12 +10,10 @@ from app.content import CHARACTERS, CONTENT, EVENTS, EVIDENCE, public_event
 from app.game.engine import character_direction, resolve_turn
 from app.game.conversation import conversation_view, current_conversation, make_conversation, roles_for
 from app.game.openings import ensure_opening, openings_for_view
-from app.models import Analysis, CenterChatInterpretation, CenterChoiceDraft, CenterDecision, Dialogue, Expression, GameError, Memory, Message, State, TurnRequest
-from app.ai.center_selection import CHAT_PROMPT_VERSION, PROMPT_VERSION as CENTER_PROMPT_VERSION, build_evaluation_context, validate_assessment
-from app.ai.memory import remember
-from app.game.engine import apply_delta
+from app.models import Analysis, Dialogue, GameError, Message, State, TurnRequest
 from app.game.interviews import LIMIT, CLOSING, is_interview, progress, turn_count
 from app.game import center_interviews as center
+from app.game import rehearsal
 
 
 class TurnService:
@@ -37,7 +35,7 @@ class TurnService:
             raise GameError("콘텐츠 버전이 바뀌었습니다. 새 플레이를 시작해주세요.", 409)
         event = public_event(state.event_id)
         # Copy before annotating actions: the content registry is shared by all players.
-        event = {**event, "actions": [{**a, "used": f"{state.event_id}:{a['id']}" in state.applied_effects} for a in event["actions"]
+        event = {**event, "actions": [{**a, "used": f"{state.event_id}:{a['id']}" in state.applied_effects} for a in rehearsal.actions_for(state, event["actions"])
                  if a['id'] != 'start_month_two' or 'p2_m01_training:confirm_month_plan' in state.applied_effects]}
         history=self.repository.history(state.game_id)
         # Refresh the old offline fixture's awkward wording without rewriting
@@ -53,6 +51,7 @@ class TurnService:
             'conversation':conversation_view(state),
             'interview':progress(state,history),
             'center_interviews':center.progress(state,history),
+            'rehearsal': {'phase': rehearsal.phase(state)} if state.event_id == rehearsal.EVENT else None,
             'center_selection':state.center_decision.model_dump(exclude={'assessment'}) if state.center_decision else None,
             "stats": state.stats.model_dump(), "training_history": state.training_history,
             "evidence": [EVIDENCE[e] for e in state.evidence_ids],
@@ -110,17 +109,13 @@ class TurnService:
         if center_progress:
             if request.input_type == 'action' and request.action_id in {'finish_center_interviews', 'close_center_interview'}:
                 return self._close_center_interview(owner, state, request, fingerprint, history, room)
-            if request.input_type == 'action' and request.action_id == 'select_center':
-                return self._select_center(owner, state, request, fingerprint, history)
-            if request.input_type == 'chat' and center_progress['ready_for_decision'] and (center_secretary or room.mode == 'public'):
-                return self._chat_center(owner, state, request, fingerprint, history)
+            if request.input_type == 'action' and request.action_id in {'select_center', 'agree_center', 'assign_center'}:
+                raise GameError('센터 선택 단계는 제거되었습니다. 면담을 마무리해주세요.', 422)
             member = next((person for person in center_progress['members'] if person['character_id'] == room.target_character_id), None)
             if request.input_type == 'chat' and member and member['completed']:
                 raise GameError('이 멤버의 면담을 마쳤습니다. 다른 멤버의 이야기를 듣거나 백하연의 안내를 확인해주세요.', 409)
-            if (center_secretary or room.mode == 'public') and not center_progress['ready_for_decision']:
+            if center_secretary or room.mode == 'public':
                 raise GameError('네 멤버와 각각 1~8회 대화한 뒤 면담을 마쳐주세요.', 422)
-            if request.input_type == 'action' and request.action_id in {'agree_center', 'assign_center'} and not center_progress['ready_for_decision']:
-                raise GameError('모든 멤버의 면담을 마친 뒤 센터를 결정해주세요.', 422)
         if state.event_id == 'p2_m01_training' and request.input_type == 'action' and request.action_id in {'train_vocal','train_dance','train_variety','rule_buddy','rule_meeting','rule_rest'}:
             return self._save_month_plan_choice(owner,state,request,fingerprint)
         if request.input_type == 'action' and room.mode != 'public' and not center_secretary:
@@ -149,6 +144,8 @@ class TurnService:
                 analysis = analysis.model_copy(update={'action_id':'talk','conversation_change':None,'needs_clarification':False})
             if is_interview(state.event_id) and (analysis.action_id in {'interview_a','interview_b','interview_c'} or interview_count + 1 >= LIMIT):
                 analysis = analysis.model_copy(update={'action_id':'talk','target_id':None})
+            if state.event_id == rehearsal.EVENT and analysis.action_id == rehearsal.STOP:
+                analysis = analysis.model_copy(update={'conversation_change': None})
             if analysis.conversation_change is not None:
                 if analysis.needs_clarification:
                     return self._clarify_conversation(owner,state,request,fingerprint,analysis,room)
@@ -169,7 +166,7 @@ class TurnService:
         if auto_closed:
             proposal.state.completed_events[state.event_id] = 'success'
         changed_character = proposal.state.character_id != state.character_id
-        if not changed_character and proposal.state.event_id == state.event_id:
+        if not changed_character and proposal.state.event_id == state.event_id and analysis.action_id != rehearsal.STOP:
             proposal.state.conversation = current_conversation(state)
         if proposal.state.event_id != state.event_id:
             proposal.state.conversation = make_conversation(proposal.state)
@@ -205,12 +202,26 @@ class TurnService:
             record_dialogue(proposal.state,part,view,request.request_id)
         if auto_closed:
             messages.append(Message(speaker_id='secretary',text=CLOSING,emotion='neutral',audience=['secretary']))
+        month_completion = None
+        if center_progress and request.input_type == 'chat':
+            pending_turn = {'id': request.request_id, 'event_id': state.event_id, 'input_type': 'chat',
+                            'kind': 'dialogue', 'conversation': conversation_view(state, room),
+                            'messages': [message.model_dump() for message in messages]}
+            after = center.progress(proposal.state, [*history, pending_turn])
+            if all(member['turn_count'] >= center.LIMIT for member in after['members']):
+                month_completion = center.completion(proposal.state, 'limit')
+                proposal.outcome, notice = center.finish(proposal.state)
+                proposal.facts.append(notice)
+                messages.append(Message(speaker_id='secretary', text=notice, emotion='neutral', expression='neutral', audience=['secretary']))
+                ensure_opening(proposal.state, history, after_turn_id=request.request_id)
+                direction = character_direction(proposal.state, proposal.outcome)
         dialogue=Dialogue(messages=messages)
         proposal.state.version += 1
         turn = {
             "id": request.request_id, "input": text, "event_id": event["id"], "event_title": event["title"],
             'kind':'dialogue', 'conversation':conversation_view(state,room),
             'input_type':request.input_type, 'interview_closed':auto_closed,
+            'month_completion': month_completion,
             'input_audience':roles,
             "messages": [m.model_dump() for m in dialogue.messages],
             "analysis": analysis.model_dump(), "direction": direction.model_dump(),
@@ -226,21 +237,22 @@ class TurnService:
         committed = self.repository.commit(proposal.state, owner, state.version, request.request_id, fingerprint, turn)
         return {"turn": committed, "game": self.view(self.repository.get(game_id, owner))}
 
-    def _center_turn(self, owner, state, updated, request, fingerprint, message, *, outcome='pending', input_text='면담 마무리', evaluation_calls=0, interpretation_calls=0, clarification=False, expression: Expression = "neutral"):
+    def _center_turn(self, owner, state, updated, request, fingerprint, message, *, outcome='pending'):
         updated.version += 1
         turn = {'id': request.request_id, 'kind': 'dialogue' if request.input_type == 'chat' else 'activity', 'input_type': request.input_type,
-                'input': input_text, 'event_id': state.event_id, 'event_title': EVENTS[state.event_id]['title'],
+                'input': '면담 마무리', 'event_id': state.event_id, 'event_title': EVENTS[state.event_id]['title'],
                 'conversation': conversation_view(state, make_conversation(state, 'private', 'baek_hayeon')), 'input_audience': ['secretary'],
-                'messages': [Message(speaker_id='secretary', text=message, emotion='neutral', expression=expression, audience=['secretary']).model_dump()],
-                'analysis': Analysis(action_id='select_center' if evaluation_calls else request.action_id or 'center_choice_chat', needs_clarification=clarification or outcome == 'pending' and evaluation_calls > 0,
+                'messages': [Message(speaker_id='secretary', text=message, emotion='neutral', expression='neutral', audience=['secretary']).model_dump()],
+                'analysis': Analysis(action_id=request.action_id, needs_clarification=False,
                                      reference_turn_id=None, assessments=[]).model_dump(),
                 'direction': character_direction(updated, outcome).model_dump(),
                 'facts': [message], 'outcome': outcome, 'new_evidence': [],
+                'month_completion': center.completion(state, 'manual') if outcome in {'success', 'failure'} else None,
                 'stat_delta': {key: value - state.stats.model_dump()[key] for key, value in updated.stats.model_dump().items()
                                if value != state.stats.model_dump()[key]}, 'image': '/portraits/hopeful.svg',
-                'ai_trace': {'prompt_version': CENTER_PROMPT_VERSION if evaluation_calls else CHAT_PROMPT_VERSION if interpretation_calls else PROMPT_VERSION, 'provider': self.provider.name if evaluation_calls or interpretation_calls else 'system',
-                             'analysis_calls': interpretation_calls, 'generation_calls': 0, 'evaluation_calls': evaluation_calls,
-                             'phase': 'center_selection' if evaluation_calls else 'center_choice_chat' if interpretation_calls else 'center_interview_finish',
+                'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': 'system',
+                             'analysis_calls': 0, 'generation_calls': 0, 'evaluation_calls': 0,
+                             'phase': 'center_interview_finish',
                              'profile_id': canonical(state.character_id)}}
         if updated.event_id != state.event_id:
             ensure_opening(updated, self.repository.history(state.game_id), after_turn_id=request.request_id)
@@ -249,8 +261,6 @@ class TurnService:
 
     def _close_center_interview(self, owner, state, request, fingerprint, history, room):
         status = center.progress(state, history)
-        if status['ready_for_decision']:
-            raise GameError('면담을 모두 마쳤습니다. 센터를 선택해주세요.', 409)
         if request.text.strip():
             raise GameError('면담 마무리 요청에 대화를 섞지 마세요.', 422)
         updated = state.model_copy(deep=True)
@@ -258,84 +268,9 @@ class TurnService:
         if missing:
             message = f"대표님, 아직 대화하지 않은 멤버는 {'·'.join(missing)}입니다. 모든 멤버와 한 번 이상 대화한 뒤 면담을 마무리해주세요."
         else:
-            updated.applied_effects.append(center.FINISHED)
-            updated.conversation = make_conversation(updated, 'private', 'baek_hayeon')
-            message = center.GUIDE
+            outcome, message = center.finish(updated)
+            return self._center_turn(owner, state, updated, request, fingerprint, message, outcome=outcome)
         return self._center_turn(owner, state, updated, request, fingerprint, message)
-
-    def _select_center(self, owner, state, request, fingerprint, history):
-        status = center.progress(state, history)
-        if not status['ready_for_decision']:
-            raise GameError('모든 멤버와 대화한 뒤 면담을 마무리해주세요.', 422)
-        selected = next((m for m in status['members'] if m['character_id'] == request.center_member_id), None)
-        reason = (request.center_reason or '').strip()
-        if not selected or not reason or request.text.strip():
-            raise GameError('센터로 선택할 멤버와 선택 이유를 입력해주세요.', 422)
-        updated = state.model_copy(deep=True)
-        updated.center_choice_draft = CenterChoiceDraft(member_id=selected['character_id'], reason_turn_ids=[request.request_id])
-        return self._evaluate_center_choice(owner, state, updated, request, fingerprint, history, status, selected, reason,
-                                           input_text=f"센터 선택 · {selected['name']}\n{reason}")
-
-    def _chat_center(self, owner, state, request, fingerprint, history):
-        text = request.text.strip()
-        if not text:
-            raise GameError('메시지를 입력해주세요.', 422)
-        status = center.progress(state, history)
-        draft = center.choice_draft(state, history)
-        dialogue = center.decision_dialogue(history)
-        context = {'members': [{'id': m['character_id'], 'name': m['name']} for m in status['members']],
-                   'pending_member_id': draft.member_id if draft else None, 'decision_dialogue': dialogue, 'user_text': text}
-        interpretation = CenterChatInterpretation.model_validate(self.provider.interpret_center_choice(context))
-        if interpretation.member_id is not None and interpretation.member_id not in {m['character_id'] for m in status['members']}:
-            raise ValueError('Center chat selected an unknown member')
-        updated = state.model_copy(deep=True)
-        updated.conversation = make_conversation(updated, 'private', 'baek_hayeon')
-        updated.center_choice_draft = draft
-        if interpretation.intent != 'decision':
-            if interpretation.intent == 'withdraw':
-                updated.center_choice_draft = None
-            feedback = interpretation.reply or '네, 대표님. 생각을 정리하시고 편하게 말씀해주세요.'
-            return self._center_turn(owner, state, updated, request, fingerprint, feedback, input_text=text, interpretation_calls=1,
-                                     expression=interpretation.expression if interpretation.reply else "neutral")
-        selected_id = interpretation.member_id or (draft.member_id if draft else None)
-        if interpretation.ambiguous or not selected_id:
-            return self._center_turn(owner, state, updated, request, fingerprint,
-                                     '대표님, 센터로 선택할 멤버의 이름을 말씀해주시겠어요?', input_text=text, interpretation_calls=1, clarification=True)
-        if not draft or draft.member_id != selected_id:
-            draft = CenterChoiceDraft(member_id=selected_id)
-        draft.reason_turn_ids.append(request.request_id)
-        updated.center_choice_draft = draft
-        reasons = center.rationale_turns(history, draft.reason_turn_ids, request.request_id, text)
-        reason = '\n'.join(turn['text'] for turn in reasons)
-        selected = next(m for m in status['members'] if m['character_id'] == selected_id)
-        return self._evaluate_center_choice(owner, state, updated, request, fingerprint, history, status, selected, reason,
-                                           input_text=text, interpretation_calls=1, rationale_turns=reasons, decision_dialogue=dialogue)
-
-    def _evaluate_center_choice(self, owner, state, updated, request, fingerprint, history, status, selected, reason, *, input_text,
-                                interpretation_calls=0, rationale_turns=None, decision_dialogue=None):
-        context = build_evaluation_context(state, history, status['members'], selected['character_id'], reason)
-        if rationale_turns is not None:
-            context['rationale_turns'] = rationale_turns
-            context['decision_dialogue'] = decision_dialogue
-        assessment, outcome = validate_assessment(self.provider.evaluate_center(context), context)
-        if outcome == 'pending':
-            feedback = '대표님, 선택 이유가 면담에서 들은 어떤 이야기와 연결되는지 조금 더 알려주시겠어요? 다른 멤버들의 의견도 어떻게 고려하셨는지 궁금합니다.'
-        else:
-            updated.center_choice_draft = None
-            feedback = (f"대표님, {selected['name']}을 센터로 정했습니다. " +
-                        ('멤버들의 이야기를 고려한 결정이라 팀도 방향을 잡을 수 있겠습니다.' if outcome == 'success' else
-                         '다만 면담에서 나온 이야기들이 결정에 충분히 반영되지 않아 멤버들의 마음을 모으기 어려웠습니다.'))
-            updated.center_decision = CenterDecision(member_id=selected['character_id'], member_name=selected['name'], reason=reason,
-                outcome=outcome, feedback=feedback, provider=self.provider.name, assessment=assessment)
-            apply_delta(updated, {'teamwork': 8, 'trust': 3, 'fatigue': 10} if outcome == 'success' else {'teamwork': -8, 'fatigue': 10})
-            updated.completed_events[center.EVENT] = outcome
-            updated.applied_effects.append(center.EVENT + ':select_center')
-            updated.event_id = EVENTS[center.EVENT]['next']
-            updated.conversation = make_conversation(updated)
-            remember(updated, Memory(event_id=center.EVENT, kind='action', text=f"{selected['name']} 센터 선발", turn_id=request.request_id, action_id='select_center'))
-            remember(updated, Memory(event_id=center.EVENT, kind='outcome', text=f"센터 선발: {outcome}", turn_id=request.request_id))
-        return self._center_turn(owner, state, updated, request, fingerprint, feedback, outcome=outcome,
-                                 input_text=input_text, evaluation_calls=1, interpretation_calls=interpretation_calls)
 
     def _save_month_plan_choice(self, owner, state, request, fingerprint):
         analysis = Analysis(action_id=request.action_id,needs_clarification=False,reference_turn_id=None,assessments=[])
@@ -375,6 +310,8 @@ class TurnService:
 
     def _change_conversation(self, owner, state, request, fingerprint, *,
                              source_text=None, source_analysis=None, source_room=None):
+        if state.event_id == rehearsal.EVENT and rehearsal.phase(state) == 'reprimand':
+            raise GameError('공개 질책을 먼저 중단시켜주세요.', 422)
         if is_interview(state.event_id):
             raise GameError('후보 면담에서는 현재 연습생과만 대화할 수 있습니다.',422)
         if state.ending_id:
@@ -384,8 +321,8 @@ class TurnService:
         current_conversation(state)
         room = make_conversation(state,request.conversation_mode,request.target_character_id)
         status = center.progress(state, self.repository.history(state.game_id))
-        if status and (room.mode == 'public' or room.target_character_id == 'baek_hayeon') and not status['ready_for_decision']:
-            raise GameError('멤버들의 면담을 모두 마친 뒤 백하연과 이야기할 수 있습니다.', 422)
+        if status and (room.mode == 'public' or room.target_character_id == 'baek_hayeon'):
+            raise GameError('멤버를 선택해 면담하고 면담 완료 버튼으로 이번 달을 마무리해주세요.', 422)
         updated = state.model_copy(deep=True)
         updated.conversation = room
         if source_text is not None:

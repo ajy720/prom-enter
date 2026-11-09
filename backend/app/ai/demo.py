@@ -15,7 +15,8 @@ PATTERNS = {
     'skip_training':r'준비 없이.{0,8}(?:마무리|마치)',
     'agree_center':r'(?:센터|포지션).{0,12}(?:합의|함께 결정|조율)',
     'assign_center':r'(?:센터|포지션).{0,12}(?:일방|통보)',
-    'mediate_rehearsal':r'질책.{0,8}(?:중단|멈)|팀 면담',
+    'stop_reprimand':r'(?:질책|꾸중|지적).{0,24}(?:중단|멈|그만)|그만(?:해|하자|하고|하세요|하렴|합시다|하도록|두자)|멈(?:춰|추자|추고|추세요|추도록|추라고)|(?:질책|꾸중|지적)(?:은|을)?\s*하지\s*(?:마|말)|혼내지\s*(?:마|말)|그만[.!…\s]*$',
+    'mediate_rehearsal':r'면담.{0,8}(?:마무리|마치|종료)|팀 면담',
     'continue_rehearsal':r'(?:그대로|계속).{0,8}리허설',
     'respond_press':r'(?:기사|언론).{0,8}대응',
     'hold_showcase':r'쇼케이스.{0,8}(?:확정|진행|개최)',
@@ -46,6 +47,21 @@ def classify(text):
     return 'command' if re.search(r'마칠게|마치자|끝낼게|선발해|뽑아|결정해|진행하자|진행할게|해줘|하자|시키자|시켜줘|배정해|확인해|추천해|연락해|진행해|확정해|마무리해|보여줘',text) else 'conversation'
 
 
+def reprimand_stop_requested(text):
+    """Context-limited offline fixture; never used to override a real provider."""
+    if not re.search(PATTERNS['stop_reprimand'], text):
+        return False
+    if classify(text) in {'question', 'proposal', 'recollection'}:
+        return False
+    # Negative imperatives directed at the reprimand ("혼내지 마") request a
+    # stop. Negating the stop itself ("멈추지 마") must keep the current phase.
+    if re.search(r'(?:중단하|멈추|그만두|그만하|중지하|멈춰)\s*지\s*(?:마|말|않)|(?:안|못)\s*(?:멈|중단)|그만하자는.{0,8}아니', text):
+        return False
+    if re.search(r'번역|라는\s*(?:말|문장|대사)|라고\s*(?:말했|했)', text):
+        return False
+    return True
+
+
 class DemoProvider:
     name = 'demo'
 
@@ -59,6 +75,9 @@ class DemoProvider:
 
     def analyze(self, text, context):
         text = text.strip()
+        if 'stop_reprimand' in context['allowed_actions'] and reprimand_stop_requested(text):
+            return Analysis(action_id='stop_reprimand', needs_clarification=False, reference_turn_id=None,
+                            assessments=[], utterance_kind='command')
         routing=offline_intent(text,context.get('conversation'))
         if routing is not None:
             return Analysis(action_id='talk',needs_clarification=routing.needs_clarification,
@@ -69,7 +88,9 @@ class DemoProvider:
         actions = context.get('event',{}).get('actions',[])
         exact = next((a['id'] for a in actions if a['label'] == text), None)
         kind = 'command' if exact else classify(text)
-        found = [key for key,pattern in PATTERNS.items() if re.search(pattern,text,re.I)]
+        # Stop commands are handled only by the scene-specific check above;
+        # a rejected negative/quoted phrase must not fall through as an action.
+        found = [key for key,pattern in PATTERNS.items() if key != 'stop_reprimand' and re.search(pattern,text,re.I)]
         candidates = [key for key in found if key in context['allowed_actions']]
         reference, clarification = None, False
         if '그 친구' in text:

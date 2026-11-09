@@ -1,4 +1,5 @@
 from app.content import EVENTS, EVIDENCE
+from app.game import rehearsal
 from app.models import State
 from app.ai.contracts import ActionSpec, AnalysisContext, DialogueContext, EventContext
 from app.ai.memory import recent_turns, related_turns, retrieve_memories
@@ -22,6 +23,7 @@ def participant_history(state: State, history: list[dict], roles: list[str]) -> 
 
 def build_context(state: State, history: list[dict], query: str = '', *, conversation=None) -> tuple[AnalysisContext, DialogueContext]:
     event = EVENTS[state.event_id]
+    event = {**event, 'actions': rehearsal.actions_for(state, event['actions'])}
     character = character_profile(state.character_id)
     criteria = criteria_for(state.event_id)
     actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions']]
