@@ -31,11 +31,13 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/hayeon/half-body-transparent.png",
-          "sourceFile": "백하연_비서/1.백하연_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "백하연_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "5f752c0e67fb8c51459d0ebeaf62b48a167cacbfaea952df2f3304aa1cdcc4e7",
-          "backgroundRemovedBy": "producer"
+          "sha256": "ef8755cfcf8c276c162e80d1729ec09c66ff917ff623b36ca2b45fd8a134ffab",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     },
@@ -67,11 +69,13 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/rian/half-body-transparent.png",
-          "sourceFile": "리안_리더/2.리안_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "리안_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "565f462d61ddc22259f16d16103af0269b28c0215dd7e789301f83f89b0fecb4",
-          "backgroundRemovedBy": "producer"
+          "sha256": "3982cf0e936717d1d3f36250769a103e549691d7861b2a857b433101ac4ca440",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     },
@@ -103,11 +107,13 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/doha/half-body-transparent.png",
-          "sourceFile": "도하_매댄/도하_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "도하_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "8c6cdc3630fe2e9278311b192baadde86a62cf6dd4fb601d841d3f5279a8a66d",
-          "backgroundRemovedBy": "producer"
+          "sha256": "9c30bfe7c35041a8bac96a886fc11cd1d68a64e90c2dba84aca7007e990781f5",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     },
@@ -139,11 +145,13 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/sein/half-body-transparent.png",
-          "sourceFile": "세인_예능/세인_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "세인_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "49194871b34643a7ae834b30bc4afebe478bbfbffe9e7acb512929aa20f5111e",
-          "backgroundRemovedBy": "producer"
+          "sha256": "4da06f2541e14f2f5388e3b64b864b5975422b981da0191e31ae61eb37da5fb9",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     },
@@ -175,11 +183,13 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/yeoul/half-body-transparent.png",
-          "sourceFile": "여울_신입/여울_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "여울_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "0bc24cf0951015ea6912f1ba701cdc6f8e3f52531275bc346185edc46b2d3415",
-          "backgroundRemovedBy": "producer"
+          "sha256": "a4028a7fa86a70f2dc5149dc6a522183045612e7f3e4ff659cfcd0de2f9c7856",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     },
@@ -211,11 +221,13 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/ido/half-body-transparent.png",
-          "sourceFile": "이도_신입/이도_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "이도_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "ab1ed0008dc90df4b4d9df4ef37ac4054fa394c83133a3c9e727d43ab5fc9727",
-          "backgroundRemovedBy": "producer"
+          "sha256": "019c4bab7095fae1532c3a79eeea6de9a5813a0a9c0561c9658e92f7281ebc74",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     },
@@ -247,13 +259,17 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/saya/half-body-transparent.png",
-          "sourceFile": "사야_신입/사야_상반신_배경제거.png",
-          "width": 1080,
+          "sourceFile": "사야_정방향_기본.png",
+          "width": 1440,
           "height": 1440,
-          "sha256": "c6a14283e2fb6b0fc4618111e23347fc6a80fb037cfd001ce73dee2fcf8ce9e8",
-          "backgroundRemovedBy": "producer"
+          "sha256": "0f0ef406bc8a5f086946de758c0f85f44b0462824c80c6c1eb7d36d311e1d390",
+          "backgroundRemovedBy": "producer",
+          "source": "user-attachment",
+          "replacedOn": "2026-11-09"
         }
       }
     }
-  ]
+  ],
+  "updatedOn": "2026-11-09",
+  "updateNote": "대화용 배경 제거본 7장을 사용자가 직접 제공한 정방향 기본 PNG로 교체. 공유 폴더는 접속 실패로 최신 상태를 확인하지 못함. 나머지 21장은 기존 원본 유지."
 }
