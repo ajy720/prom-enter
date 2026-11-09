@@ -1,28 +1,42 @@
 import { useEffect, useRef } from 'react';
 import { ChatComposer } from './ChatComposer';
 import { PendingResponse } from './PendingResponse';
-import { pendingFeedback } from './pendingFeedback';
-import { serverInterviewFrames } from './serverInterviewState';
+import type { pendingFeedback } from './pendingFeedback';
+import { serverInterviewFrames, type InterviewFrame } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
-export function CenterInterview({ game, busy, pending, text, onTextChange, onSend, onConversationChange, onRecords }: {
+export function centerInterviewDialogue(game: Game): Omit<InterviewFrame, 'id'> {
+  const status = game.center_interviews;
+  const targetId = game.conversation.mode === 'private' ? game.conversation.target_character_id : null;
+  const secretary = targetId === 'baek_hayeon';
+  const member = status?.members.find(person => person.character_id === targetId);
+  if (secretary) return {speakerId: 'baek_hayeon', name: '백하연', text: status?.finish_notice ?? '면담 완료를 누르면 현재 팀워크로 이번 달 결과를 확인합니다.'};
+  if (status?.finish_notice) return { speakerId: 'baek_hayeon', name: '백하연', text: status.finish_notice };
+
+  const history = game.history
+    .filter(turn => turn.event_id === game.event.id && turn.conversation?.mode === 'private'
+      && turn.conversation.target_character_id === targetId && (secretary || turn.kind !== 'activity'))
+    .map(turn => secretary ? turn : { ...turn, messages: turn.messages.filter(message => message.speaker_id !== 'secretary') });
+  const last = serverInterviewFrames({ ...game, history, event_openings: [] }).at(-1);
+  const fallback = { speakerId: targetId ?? 'baek_hayeon', name: secretary ? '백하연' : member?.name ?? '멤버 면담' };
+  if (last?.speakerId === 'player') return { ...fallback, text: last.text };
+  if (last && last.id !== 'briefing') return last;
+  const initial = secretary ? status?.decision_prompt
+    : member ? '센터와 포지션에 대해 어떤 생각인지 이야기를 들어보세요.' : '이야기를 나눌 멤버를 선택해주세요.';
+  return { ...fallback, text: initial ?? '' };
+}
+
+export function CenterInterview({ game, busy, pending, text, onTextChange, onSend, onConversationChange, onRecords, displayed, feedback }: {
   game: Game; busy: boolean; pending: TurnInput | null; text: string;
   onTextChange: (value: string) => void; onSend: (actionId?: string) => Promise<boolean>;
   onConversationChange: (target: string) => Promise<boolean>; onRecords: () => void;
+  displayed: Omit<InterviewFrame, 'id'>; feedback: ReturnType<typeof pendingFeedback> | null;
 }) {
   const status = game.center_interviews;
   const targetId = game.conversation.mode === 'private' ? game.conversation.target_character_id : null;
   const member = status?.members.find(person => person.character_id === targetId);
   const secretary = targetId === 'baek_hayeon';
   const locked = busy || !!pending;
-  const memberTurns = (id: string | null) => game.history.filter(turn => turn.event_id === game.event.id && turn.conversation?.mode === 'private' && turn.conversation.target_character_id === id && (id === 'baek_hayeon' || turn.kind !== 'activity'));
-  const turns = memberTurns(targetId).map(turn => ({ ...turn, messages: secretary ? turn.messages : turn.messages.filter(message => message.speaker_id !== 'secretary') }));
-  const frames = serverInterviewFrames({ ...game, history: turns, event_openings: [] }).filter(frame => frame.id !== 'briefing');
-  const last = frames.at(-1);
-  const feedback = busy && pending ? pendingFeedback(game, pending) : null;
-  const notice = status?.finish_notice ?? (secretary ? '면담 완료를 누르면 현재 팀워크로 이번 달 결과를 확인합니다.' : null);
-  const name = secretary ? '백하연' : member?.name ?? '멤버 면담';
-  const initial = member ? '센터와 포지션에 대해 어떤 생각인지 이야기를 들어보세요.' : '이야기를 나눌 멤버를 선택해주세요.';
   const autoFinished = useRef(false);
   const exhausted = !!status && status.members.every(person => person.turn_count >= status.turn_limit);
   useEffect(() => {
@@ -33,7 +47,7 @@ export function CenterInterview({ game, busy, pending, text, onTextChange, onSen
   }, [exhausted, locked, onSend]);
   return <>
     <CenterInterviewMembers game={game} disabled={locked} onConversationChange={onConversationChange}/>
-    <div className="monthly-dialogue-area"><section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.name ?? (notice ? '백하연' : last?.name === '대표님' ? name : last?.name ?? name)}</h2><button className="text-button" onClick={onRecords}>대화 기록</button></header><div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{feedback ? <PendingResponse feedback={feedback}/> : <p>{notice ?? last?.text ?? initial}</p>}</div></section>
+    <div className="monthly-dialogue-area"><section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.name ?? displayed.name}</h2><button className="text-button" onClick={onRecords}>대화 기록</button></header><div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{feedback ? <PendingResponse feedback={feedback}/> : <p>{displayed.text}</p>}</div></section>
       {member?.completed && !status?.ready_for_decision && <p className="monthly-note">{member.name}와 이번 면담의 대화를 모두 나눴습니다. 다른 멤버의 이야기도 듣고 전체 면담을 마무리해주세요.</p>}
       {(member && !member.completed) && <ChatComposer id="center-message" label="포지션 면담" text={text} placeholder={`${member?.name}에게 이야기하기`} disabled={locked} onTextChange={onTextChange} onSend={() => onSend()} suggestions={secretary ? [] : ['이번 포지션에서 가장 하고 싶은 역할은 뭐야?', '센터를 정할 때 어떤 점을 고려하면 좋을까?']}/>}
     </div>

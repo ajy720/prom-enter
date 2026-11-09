@@ -6,10 +6,10 @@ import { MonthlyInterviewRecords } from './MonthlyInterviewRecords';
 import { PendingResponse } from './PendingResponse';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { characterPortraits, sceneBackgrounds } from './introContent';
+import { dialoguePhoto, sceneBackgrounds } from './introContent';
 import { monthlyPortrait } from './monthlyState';
 import { pendingFeedback } from './pendingFeedback';
-import { serverInterviewFrames } from './serverInterviewState';
+import { serverInterviewFrames, type InterviewFrame } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
 type Props = {
@@ -41,7 +41,7 @@ export function ServerRehearsal({ game, busy, pending, text, onTextChange, onSen
   useEffect(() => { if (monthTurns.length) setCursor(frames.length - 1); }, [frames.length, game.conversation.id, interviewing]);
   const index = Math.min(cursor, frames.length - 1);
   const freshRoom = interviewing && !hasTalked(target?.id ?? '');
-  const displayed = freshRoom ? { speakerId: target?.id ?? 'baek_hayeon', name: target?.name ?? '백하연', text: '방금 리허설에서 어떤 마음이었는지 이야기를 들어보세요.' } : frames[index];
+  const displayed: Omit<InterviewFrame, 'id'> = freshRoom ? { speakerId: target?.id ?? 'baek_hayeon', name: target?.name ?? '백하연', text: '방금 리허설에서 어떤 마음이었는지 이야기를 들어보세요.' } : frames[index];
   const feedback = busy && pending ? pendingFeedback(game, pending) : null;
   const speakerId = monthlyPortrait(game, feedback?.speakerId ?? displayed.speakerId);
   const heard = members.filter(person => hasTalked(person.id)).length;
@@ -64,7 +64,7 @@ export function ServerRehearsal({ game, busy, pending, text, onTextChange, onSen
       <ol className="month-checklist"><li>{interviewing ? '✓' : '○'} 공개 질책 중단</li>{interviewing && <li>멤버 면담 · {heard}/{members.length}명</li>}</ol>
       <button className="operation-button" onClick={() => setRecords(true)}>이번 달 면담 기록 →</button><button className="quiet-button" disabled={locked} onClick={onTitle}>← 시작 화면</button>
     </aside>
-    <div className="interview-portrait"><PhotoSlot src={characterPortraits[speakerId]} name={feedback?.name ?? displayed.name}/></div>
+    <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(speakerId, feedback ? undefined : displayed.expression)} name={feedback?.name ?? displayed.name}/></div>
     <div className="interview-dock">
       {interviewing && <nav className="month-people center-member-tabs" aria-label="3개월차 면담 상대">{members.map(person => <button key={person.id} disabled={locked} aria-pressed={target?.id === person.id} onClick={() => void onConversationChange(person.id)}><strong>{person.name}</strong><small>{hasTalked(person.id) ? '면담 기록 있음' : '면담 전'}</small></button>)}</nav>}
       <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.name ?? displayed.name}</h2><button className="text-button" onClick={() => setRecords(true)}>대화 기록</button></header>

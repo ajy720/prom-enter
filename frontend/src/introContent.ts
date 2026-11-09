@@ -52,6 +52,16 @@ export const characterPortraits: Record<string, string> = {
   jiwoo: '/images/characters/saya/half-body-transparent.png',
 };
 
+const portraitExpressions = new Set(['excited', 'angry', 'happy', 'sad', 'surprised']);
+
+export function dialoguePhoto(characterId: string, expression?: string) {
+  const fallbackSrc = characterPortraits[characterId];
+  const src = fallbackSrc && expression && portraitExpressions.has(expression)
+    ? fallbackSrc.replace('half-body-transparent.png', `expression-${expression}.png`)
+    : fallbackSrc;
+  return { src, fallbackSrc };
+}
+
 // The producer calls these profile 1 (the files have no "2" suffix).
 export const characterProfiles: Record<string, string> = {
   baek_hayeon: '/images/characters/hayeon/profile.png',

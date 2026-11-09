@@ -31,12 +31,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/hayeon/half-body-transparent.png",
-          "sourceFile": "백하연_정방향_기본.png",
+          "sourceFile": "최종사진/1.하연_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "ef8755cfcf8c276c162e80d1729ec09c66ff917ff623b36ca2b45fd8a134ffab",
+          "sha256": "597d60e5e0fa6b19bc539a0fe38b004083219925d4901de988d57f921f6fcb8f",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/hayeon/expression-excited.png",
+          "sourceFile": "최종사진/1.하연_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "4440cd210bbdc8acc62f2616cc49b2cc983b6e3a2542d08781a926b6f931aa4d",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/hayeon/expression-angry.png",
+          "sourceFile": "최종사진/1.하연_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "f140eff161d4c38cd2fb76b162760210dff2ba9388753aefe55412c741fcdc57",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/hayeon/expression-happy.png",
+          "sourceFile": "최종사진/1.하연_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "bf9de5a994eaea0ae0bfbcbcf8a57c946ffa6d53e06e47bd002d89706948a82b",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/hayeon/expression-sad.png",
+          "sourceFile": "최종사진/1.하연_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "4f3b92a3a7c08ad0c4aee0781d15063c5f628de77a39cb41331aa1a3d797a9c6",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/hayeon/expression-surprised.png",
+          "sourceFile": "최종사진/1.하연_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "741fc1398288245008735a7a99f7bd5ab96e0d845a81ffcb729005315540c5aa",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }
@@ -69,12 +119,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/rian/half-body-transparent.png",
-          "sourceFile": "리안_정방향_기본.png",
+          "sourceFile": "최종사진/2.리안_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "3982cf0e936717d1d3f36250769a103e549691d7861b2a857b433101ac4ca440",
+          "sha256": "143a25b896bc9b1548804359d71b1da4dfc8be25af3af1bd776ff7bb69ea1a7b",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/rian/expression-excited.png",
+          "sourceFile": "최종사진/2.리안_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "569f7132f62835b82a5bcbf788d876c5f4cddcc2defcb157a4477dd4f564347c",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/rian/expression-angry.png",
+          "sourceFile": "최종사진/2.리안_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "e7b612c89c3bfe7f785d2d259ec9c9e79178a583ec6bd80f2bed23eebbf6ea38",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/rian/expression-happy.png",
+          "sourceFile": "최종사진/2.리안_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "07022f6a0dc50ebbe1ffca9508c9d6c6bdd6291f4ab1d387e87f936f83f0ca89",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/rian/expression-sad.png",
+          "sourceFile": "최종사진/2.리안_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "d4df51d06916eb5dcedf8d16c49e301ebc3e16f541fa0ab9ee29248490c18e78",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/rian/expression-surprised.png",
+          "sourceFile": "최종사진/2.리안_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "8b7a921f080006dccb7d438b1730eca372341928bfe9a908c625b437752024ca",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }
@@ -107,12 +207,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/doha/half-body-transparent.png",
-          "sourceFile": "도하_정방향_기본.png",
+          "sourceFile": "최종사진/3.도하_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "9c30bfe7c35041a8bac96a886fc11cd1d68a64e90c2dba84aca7007e990781f5",
+          "sha256": "c7613370fe4abab86e0f8fcf8e5c72dd3e2e1047415042286f9a88314b4f92f3",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/doha/expression-excited.png",
+          "sourceFile": "최종사진/3.도하_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "91bdbcc04cedbafe1df19cb14f5c5ba3edd741e508f334b9c360c0720630051b",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/doha/expression-angry.png",
+          "sourceFile": "최종사진/3.도하_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "a567f0f80a1ddf5a5728e935ec3969adc821f6d6bd564c713843147a2c8e243a",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/doha/expression-happy.png",
+          "sourceFile": "최종사진/3.도하_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "749c95a6bbe0764404e57913ac37c2a1b6dce0e05833d9b720ca50034877d645",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/doha/expression-sad.png",
+          "sourceFile": "최종사진/3.도하_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "2f809b534efda165f653a33aa79406926df586f2895d6768ed9f843c40920198",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/doha/expression-surprised.png",
+          "sourceFile": "최종사진/3.도하_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "261472b88808fba946e5f04af900cd1536ce481bea7c0c61b9be02b6e66c5bdf",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }
@@ -145,12 +295,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/sein/half-body-transparent.png",
-          "sourceFile": "세인_정방향_기본.png",
+          "sourceFile": "최종사진/4.세인_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "4da06f2541e14f2f5388e3b64b864b5975422b981da0191e31ae61eb37da5fb9",
+          "sha256": "44359b712c4c8bd0856d8fbff56ce88f9786ad232f47eacf739885fef61a3db4",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/sein/expression-excited.png",
+          "sourceFile": "최종사진/4.세인_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "03de2d48e48dca50f715ce45164a9f63426a89b4bb7bda67587b8f985b70588b",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/sein/expression-angry.png",
+          "sourceFile": "최종사진/4.세인_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "637f22ae0788e6538b97bf93525127c454ab9160f2192cd2a68e1aae92e604e6",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/sein/expression-happy.png",
+          "sourceFile": "최종사진/4.세인_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "cb8b99a0c1a9970fb25030d2ea0a9e3ed0bf22eac565ac28ad6be77cd17cc144",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/sein/expression-sad.png",
+          "sourceFile": "최종사진/4.세인_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "f80e48064df6fe59765289f156f94539ce7ea25cadfdefa25f81317022aba3a3",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/sein/expression-surprised.png",
+          "sourceFile": "최종사진/4.세인_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "0ad8f268b2398a0933bf8d79b50291f90dffc7baa977e11ebd8d1bcc96bf3bee",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }
@@ -183,12 +383,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/yeoul/half-body-transparent.png",
-          "sourceFile": "여울_정방향_기본.png",
+          "sourceFile": "최종사진/5.여울_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "a4028a7fa86a70f2dc5149dc6a522183045612e7f3e4ff659cfcd0de2f9c7856",
+          "sha256": "9cc39cd8e05017a99ddb315d76813ed7bda39f434a070d0a8d49122604dce4ad",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/yeoul/expression-excited.png",
+          "sourceFile": "최종사진/5.여울_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "fecd39a61f184e0ff92913591f161b414cd32d6576ebb88c8d4e6a87a35a4a58",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/yeoul/expression-angry.png",
+          "sourceFile": "최종사진/5.여울_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "0e6cad37785268f33887b165be69a9a1c9c08b5fdd33a6598f3b51477abf8803",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/yeoul/expression-happy.png",
+          "sourceFile": "최종사진/5.여울_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "50ea10896176c80b2f6ad1083c5adb6e545803977c1cf3a305d1ef746c8bce7d",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/yeoul/expression-sad.png",
+          "sourceFile": "최종사진/5.여울_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "423df104848c1c394bb379a76cae7f0042b0b3e5ef0dd3cbf3f0156faf473c66",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/yeoul/expression-surprised.png",
+          "sourceFile": "최종사진/5.여울_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "60f9ee4de6759f7a7e28e0ef757055c84adbfec5c270124fd4418700150c8762",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }
@@ -221,12 +471,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/ido/half-body-transparent.png",
-          "sourceFile": "이도_정방향_기본.png",
+          "sourceFile": "최종사진/6.이도_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "019c4bab7095fae1532c3a79eeea6de9a5813a0a9c0561c9658e92f7281ebc74",
+          "sha256": "ea0075abe6745a8207bb3ffeb245bad47c867dd02460671cf93da54d84213251",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/ido/expression-excited.png",
+          "sourceFile": "최종사진/6.이도_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "503cf09e4feb5d24cc083e8eaafcd4dd3a3b8eb6b79cae156fc44e8ae9630419",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/ido/expression-angry.png",
+          "sourceFile": "최종사진/6.이도_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "45306b1ddd6906dd293ceacc43ff5fffc8eefe228f3a0a508ed9332160dfb904",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/ido/expression-happy.png",
+          "sourceFile": "최종사진/6.이도_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "51ccc6d1a8a084af94cd449585fb5ed8c5c501ce505083f03b1a6029854c518e",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/ido/expression-sad.png",
+          "sourceFile": "최종사진/6.이도_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "f38e9c72f6d64ff20ddb0cbb2fb62cc8ded0123414545a0410adcf411f7eeb47",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/ido/expression-surprised.png",
+          "sourceFile": "최종사진/6.이도_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "98ea8cd2943f0dc4c580ffd7dfc8faf2ff057f48bd049f77078c03caa4cf70b4",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }
@@ -259,12 +559,62 @@
         },
         "half-body-transparent": {
           "path": "/images/characters/saya/half-body-transparent.png",
-          "sourceFile": "사야_정방향_기본.png",
+          "sourceFile": "최종사진/7.사야_기본_최종.png",
           "width": 1440,
           "height": 1440,
-          "sha256": "0f0ef406bc8a5f086946de758c0f85f44b0462824c80c6c1eb7d36d311e1d390",
+          "sha256": "cdba0254baaae3475b347149dbe131681f8300edbee22c595575d964d5c4450b",
           "backgroundRemovedBy": "producer",
-          "source": "user-attachment",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-excited": {
+          "path": "/images/characters/saya/expression-excited.png",
+          "sourceFile": "최종사진/7.사야_설렘_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "ad1a82e20dae4af253af0204336b49b314b1c834c360fe7384d00b10d88e1996",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-angry": {
+          "path": "/images/characters/saya/expression-angry.png",
+          "sourceFile": "최종사진/7.사야_화남_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "95f110ec152a2cc64f7ffb23d4346084907563c1d4df351062aef260844662f0",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-happy": {
+          "path": "/images/characters/saya/expression-happy.png",
+          "sourceFile": "최종사진/7.사야_기쁨_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "7d9b013d7686fd41ad471583e662c4b26af6e35eac5c34339552603b5f04fb02",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-sad": {
+          "path": "/images/characters/saya/expression-sad.png",
+          "sourceFile": "최종사진/7.사야_슬픔_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "3aec42642b909e48911d2fa47844d94c30212b47c9783dd49c1277d9a43b0b25",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
+          "replacedOn": "2026-11-09"
+        },
+        "expression-surprised": {
+          "path": "/images/characters/saya/expression-surprised.png",
+          "sourceFile": "최종사진/7.사야_놀람_최종.png",
+          "width": 1440,
+          "height": 1440,
+          "sha256": "0efa803781bfc5ae086b6fa3a088879319e206c46669bb3e503216abd7704b27",
+          "backgroundRemovedBy": "producer",
+          "source": "user-download",
           "replacedOn": "2026-11-09"
         }
       }

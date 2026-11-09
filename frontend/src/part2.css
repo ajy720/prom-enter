@@ -154,7 +154,7 @@
 
 /* A close secretary crop is reserved for dialogue below the portrait.
    Side-by-side scenes keep the original hip-length scale. */
-:is(.part-one-photos, .month-one-photos, .month-two-photos) .photo-slot > img[src$="/hayeon/half-body-transparent.png"] {
+:is(.part-one-photos, .month-one-photos, .month-two-photos) .photo-slot > img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"]) {
   height: var(--secretary-crop-height, 117%); bottom: var(--secretary-crop-bottom, 0); width: auto; max-width: none;
 }
 .prologue-scene.part-one-photos,
@@ -166,13 +166,13 @@
   .month-one-photos.month-photo-stage { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
   .prologue-scene.part-one-photos.intro-scene > .secretary-photo,
   .recruitment-briefing.part-one-photos.intro-scene > .secretary-photo,
-  .candidate-interview.interview-room.interview-refined.part-one-photos > .interview-portrait:has(img[src$="/hayeon/half-body-transparent.png"]),
-  .month-one-photos.month-photo-stage.interview-room:has(> .scene-resource-status) > .interview-portrait:has(img[src$="/hayeon/half-body-transparent.png"]) { width: min(340px, 100%); height: 300px; aspect-ratio: auto; }
+  .candidate-interview.interview-room.interview-refined.part-one-photos > .interview-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])),
+  .month-one-photos.month-photo-stage.interview-room:has(> .scene-resource-status) > .interview-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) { width: min(340px, 100%); height: 300px; aspect-ratio: auto; }
 }
 @media (max-width: 900px) {
   .monthly-stage.month-two-photos { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
-  .month-two-photos .monthly-portrait:has(img[src$="/hayeon/half-body-transparent.png"]) { width: min(340px, 100%); }
-  .month-two-photos .monthly-portrait:has(img[src$="/hayeon/half-body-transparent.png"]) .photo-slot { height: 300px; aspect-ratio: auto; }
+  .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) { width: min(340px, 100%); }
+  .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) .photo-slot { height: 300px; aspect-ratio: auto; }
 }
 @media (max-width: 700px) {
   .monthly-intro:is(.month-one-photos, .month-two-photos) { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
