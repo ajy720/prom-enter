@@ -49,7 +49,7 @@
 
 예를 들어 `{"speaker_id":"haram","text":"제가 센터 후보라고요?","emotion":"anxious","expression":"surprised"}`는 도하의 놀람 표정입니다. 현재 표시 중인 메시지의 `speaker_id`를 그 턴의 참여자 정보로 실제 캐릭터 ID에 연결하고, 그 메시지의 `expression`으로 이미지를 선택합니다. 예전 저장, 사건 도입, 고정 안내 등에서 값이 없거나 해당 이미지 로딩에 실패하면 같은 캐릭터의 기본 표정을 사용합니다. 백하연의 `secretary` 역할은 `baek_hayeon`에 대응합니다.
 
-백엔드 응답을 먼저 적용한 뒤 프런트에서 메시지 자료형과 이미지 매핑을 연결할 수 있습니다. 프런트의 표시 연동과 표정별 이미지 등록은 웹 담당 작업입니다.
+후보 면담과 Part 2 대화 화면은 현재 대사의 표정을 표시합니다. 표정 파일은 캐릭터별 `frontend/public/images/characters` 폴더에서 관리하며 기본 컷은 `half-body-transparent.png`, 나머지는 `expression-<값>.png`를 사용합니다.
 
 ## 턴 요청
 

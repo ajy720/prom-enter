@@ -4,7 +4,7 @@ import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
 import { PendingResponse } from './PendingResponse';
 import { pendingFeedback } from './pendingFeedback';
-import { characterPortraits, sceneBackgrounds, newcomers } from './introContent';
+import { dialoguePhoto, sceneBackgrounds, newcomers } from './introContent';
 import { candidateInterviewDisplay, candidateInterviewRecordFrames, interviewCandidateId } from './serverInterviewState';
 import type { Game, TurnInput } from './types';
 
@@ -32,7 +32,7 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
     <aside className="interview-info"><p className="section-kicker">대표실 · 후보 면담</p><h1>{character.name}</h1><p>{character.fullName} · {character.age}세</p><p className="interview-role">{character.role}</p>
       <p className="interview-count"><span>{complete ? '면담 완료' : '면담 중'}</span><span aria-label={`질문 ${count}회, 최대 ${limit}회`}><strong>{count}</strong> / {limit}</span></p>
     </aside>
-    <div className="interview-portrait"><PhotoSlot src={characterPortraits[secretarySpeaking ? 'baek_hayeon' : character.id]} name={secretarySpeaking ? '백하연' : character.name}/></div>
+    <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(secretarySpeaking ? 'baek_hayeon' : character.id, feedback?.speakerId ? undefined : displayed.expression)} name={secretarySpeaking ? '백하연' : character.name}/></div>
     <div className="interview-dock">
       <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.speakerId ? feedback.name : displayed.name}</h2><div className="dialogue-tools"><button className="text-button" onClick={() => setRecordsOpen(true)}>면담 내용 다시보기</button></div></header>
         <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{!feedback?.speakerId && <p>{displayed.text}</p>}{feedback && <PendingResponse feedback={feedback}/>}</div>

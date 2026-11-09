@@ -1,6 +1,7 @@
-import type { Game } from './types';
+import { debutMembers, newcomers } from './introContent';
+import type { Expression, Game, Turn } from './types';
 
-export type InterviewFrame = { id: string; speakerId: string; name: string; text: string };
+export type InterviewFrame = { id: string; speakerId: string; name: string; text: string; expression?: Expression };
 export const storyGameKey = 'prom-story-game';
 
 export const serverCandidates = [
@@ -50,6 +51,18 @@ export function candidateInterviewDisplay(game: Game, acknowledgedClosingId: str
   return { displayed: awaitingClosing ? answer! : closing, awaitingClosing, closingId: closing.id };
 }
 
+export function turnSpeaker(turn: Turn, speakerId: string, character: Game['character']) {
+  const participant = turn.conversation?.participants.find(person => person.role === speakerId || person.id === speakerId);
+  if (participant) return { speakerId: participant.id, name: participant.name };
+  if (speakerId === 'secretary' || speakerId === 'baek_hayeon') return { speakerId: 'baek_hayeon', name: '백하연' };
+  if (speakerId === 'newcomer') {
+    const candidateId = interviewCandidateId(turn.event_id) ?? character.profile_id
+      ?? serverCandidates.find(candidate => candidate.slot === character.id)?.id ?? character.id;
+    return { speakerId: candidateId, name: newcomers.find(candidate => candidate.id === candidateId)?.name ?? character.name };
+  }
+  return { speakerId, name: debutMembers.find(member => member.id === speakerId)?.name };
+}
+
 // Display only server-confirmed turns for this interview, using each turn's own room.
 export function serverInterviewFrames(game: Pick<Game, 'event' | 'history' | 'event_openings' | 'conversation' | 'character'>): InterviewFrame[] {
   const opening = game.event_openings.find(item => item.event_id === game.event.id);
@@ -59,9 +72,9 @@ export function serverInterviewFrames(game: Pick<Game, 'event' | 'history' | 'ev
   for (const turn of game.history.filter(item => item.event_id === game.event.id)) {
     if (turn.kind !== 'conversation_change') frames.push({ id: `${turn.id}-player`, speakerId: 'player', name: '대표님', text: turn.input });
     for (const [index, message] of turn.messages.entries()) {
-      const person = (turn.conversation ?? game.conversation).participants.find(item => item.role === message.speaker_id || item.id === message.speaker_id);
-      frames.push({ id: `${turn.id}-${index}`, speakerId: person?.id ?? message.speaker_id,
-        name: person?.name ?? (message.speaker_id === 'secretary' ? '백하연' : message.speaker_id === 'newcomer' ? game.character.name : '대화 상대'), text: message.text });
+      const speaker = turnSpeaker(turn, message.speaker_id, game.character);
+      frames.push({ id: `${turn.id}-${index}`, speakerId: speaker.speakerId,
+        name: speaker.name ?? '대화 상대', text: message.text, expression: message.expression });
     }
   }
   return frames.length ? frames : [{ id: 'briefing', speakerId: 'baek_hayeon', name: '백하연', text: game.event.briefing }];
