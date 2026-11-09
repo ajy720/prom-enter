@@ -28,7 +28,7 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
   const limit = game.interview?.turn_limit ?? 8;
   const finish = game.event.actions.find(action => action.id === 'close_interview');
 
-  return <section className="interview-room candidate-interview interview-refined" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
+  return <section className="interview-room candidate-interview interview-refined part-one-photos" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <aside className="interview-info"><p className="section-kicker">대표실 · 후보 면담</p><h1>{character.name}</h1><p>{character.fullName} · {character.age}세</p><p className="interview-role">{character.role}</p>
       <p className="interview-count"><span>{complete ? '면담 완료' : '면담 중'}</span><span aria-label={`질문 ${count}회, 최대 ${limit}회`}><strong>{count}</strong> / {limit}</span></p>
     </aside>

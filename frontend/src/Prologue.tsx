@@ -154,7 +154,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
     <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy} onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span><button className="quiet-button" disabled={busy} onClick={onTitle}>시작 화면</button></header>
     {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
     {serverError && <p className="error-banner" role="alert">{serverError}</p>}
-    {scene.kind === 'introduction' && character ? <section className="character-introduction" aria-label={`${character.name} 소개`}>
+    {scene.kind === 'introduction' && character ? <section className="character-introduction part-one-photos" aria-label={`${character.name} 소개`}>
       <div className="introduction-photo" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}><PhotoSlot src={characterPortraits[character.id]} name={character.name} caption="반신 사진 자리"/></div>
       <div className="introduction-copy"><p className="section-kicker">MEET OUR TRAINEE · 0{newcomers.indexOf(character) + 1}</p><blockquote>{scene.text}</blockquote><CharacterDetails character={character}/>{navigation}</div>
     </section> : scene.kind === 'selection' ? <InterviewHub state={progress.interviews} selectedId={progress.selectedId} nickname={nickname}
@@ -163,7 +163,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
       onUpdate={update => setProgress(current => ({ ...current, interviews: update(current.interviews) }))}
       onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}
       onProceed={() => setProgress(current => current.interviews.recruitedId && current.interviews.recruitmentStep >= 4 ? ({ ...current, step: introScenes.length, monthOne: current.monthOne ?? createMonthOneState() }) : current)}/>
-    : <section className={`intro-scene prologue-scene intro-${scene.location}`} aria-label={scene.title} style={{ backgroundImage: `url("${sceneBackgrounds[scene.location]}")` }}>
+    : <section className={`intro-scene prologue-scene part-one-photos intro-${scene.location}${scene.speaker === '이야기' ? ' is-narration' : ''}`} aria-label={scene.title} style={{ backgroundImage: `url("${sceneBackgrounds[scene.location]}")` }}>
       <div className="intro-location"><span>Prom::Enter</span><strong>{{ office: '대표실', corridor: '복도', practice: '연습실' }[scene.location]}</strong></div>
       {progress.resourcesIntroduced && <div className="scene-resource-status"><ResourceStatus compact/></div>}
       <div className="secretary-photo">{scene.speaker !== '이야기' && <PhotoSlot src={characterPortraits.baek_hayeon} name="백하연" caption="대표 비서실장 · 반신 사진 자리"/>}</div>

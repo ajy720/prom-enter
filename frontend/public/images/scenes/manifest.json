@@ -37,7 +37,9 @@
     {
       "id": "practice",
       "path": "/images/scenes/practice.png",
-      "sourceFile": "배경/연습실_정방향1.png",
+      "sourceFile": "연습실_정방향1.png",
+      "source": "사용자 직접 제공 첨부 파일 (기존 2026-11-05 사본과 바이트 동일)",
+      "downloadedOn": "2026-11-09",
       "width": 1440,
       "height": 1440,
       "sha256": "d979c096cbbca3e1e7f2f5528579c7454231e19938d54eef5785c9ecf22f0989"

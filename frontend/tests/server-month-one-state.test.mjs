@@ -1,6 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { hasMemberDiscussion, isMonthPlanChoice, monthPlanCompleted, savedDormRule, savedMonthTraining } from '../src/serverMonthOneState.ts';
+import { canConfirmMonthPlan, hasMemberDiscussion, isMonthPlanChoice, monthPlanCompleted, savedDormRule, savedMonthTraining } from '../src/serverMonthOneState.ts';
+
+test('첫 달 계획은 서버가 저장한 훈련·규칙·기존 세 멤버 면담을 모두 갖춰야 확인할 수 있다', () => {
+  const game = {
+    event: { id: 'p2_m01_training', actions: [{ id: 'train_dance', used: true }, { id: 'rule_buddy', used: true }, { id: 'confirm_month_plan', used: false }] },
+    history: ['dahyun', 'haram', 'yuna'].flatMap(member => [1, 2, 3].map(n => ({
+      id: `${member}-${n}`, event_id: 'p2_m01_training', input_type: 'chat', kind: 'dialogue',
+      conversation: { mode: 'private', target_character_id: member }, messages: [{ speaker_id: member, text: '함께 연습해요.' }],
+    }))),
+  };
+  assert.equal(canConfirmMonthPlan(game), true);
+  assert.equal(canConfirmMonthPlan(JSON.parse(JSON.stringify(game))), true);
+  for (const id of ['train_dance', 'rule_buddy']) {
+    assert.equal(canConfirmMonthPlan({ ...game, event: { ...game.event, actions: game.event.actions.map(a => a.id === id ? { ...a, used: false } : a) } }), false);
+  }
+  for (const member of ['dahyun', 'haram', 'yuna']) {
+    assert.equal(canConfirmMonthPlan({ ...game, history: game.history.filter(t => t.id !== `${member}-3`) }), false);
+  }
+  assert.equal(canConfirmMonthPlan({ ...game, history: [] }), false);
+  assert.equal(canConfirmMonthPlan({ ...game, event: { ...game.event, id: 'p2_m02_center' } }), false);
+});
 
 test('훈련·규칙 선택은 이전 저장의 안내 대사를 포함해 대화 표시에서 제외한다', () => {
   for (const id of ['train_vocal', 'train_dance', 'train_variety', 'rule_buddy', 'rule_meeting', 'rule_rest']) {
