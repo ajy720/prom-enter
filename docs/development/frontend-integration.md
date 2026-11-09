@@ -34,6 +34,23 @@
 
 현재 소유자 확인은 서버가 설정한 HttpOnly `prom_owner` 쿠키 방식입니다. 게임 ID만으로 다른 브라우저에서 플레이를 복원할 수 없습니다. 기본 프런트는 같은 출처의 `/api`를 사용하고 개발 서버가 백엔드로 중계합니다. 다른 출처로 배포하려면 CORS·쿠키·요청 credentials 설정을 별도로 맞춰야 합니다. API 키는 프런트에 넣지 않습니다.
 
+## 대사별 표정
+
+2026-11-09부터 공통 AI 대사 생성 경로를 사용하는 모든 턴은 월차나 시나리오와 관계없이 `turn.messages[].expression`을 반환합니다. 별도 생성 경로를 사용하는 센터 결정 대화도 같은 필드를 반환합니다. 서버는 대사와 함께 값을 저장하며 `game.history[].messages[]`에서도 같은 값을 읽을 수 있습니다. 표정은 화면 표시용이고 `emotion`은 기존 대사 감정 값입니다.
+
+| `expression` | 이미지 |
+|---|---|
+| `neutral` | 기본 |
+| `excited` | 설렘 |
+| `angry` | 화남 |
+| `happy` | 기쁨 |
+| `sad` | 슬픔 |
+| `surprised` | 놀람 |
+
+예를 들어 `{"speaker_id":"haram","text":"제가 센터 후보라고요?","emotion":"anxious","expression":"surprised"}`는 도하의 놀람 표정입니다. 현재 표시 중인 메시지의 `speaker_id`를 그 턴의 참여자 정보로 실제 캐릭터 ID에 연결하고, 그 메시지의 `expression`으로 이미지를 선택합니다. 예전 저장, 사건 도입, 고정 안내 등에서 값이 없거나 해당 이미지 로딩에 실패하면 같은 캐릭터의 기본 표정을 사용합니다. 백하연의 `secretary` 역할은 `baek_hayeon`에 대응합니다.
+
+백엔드 응답을 먼저 적용한 뒤 프런트에서 메시지 자료형과 이미지 매핑을 연결할 수 있습니다. 프런트의 표시 연동과 표정별 이미지 등록은 웹 담당 작업입니다.
+
 ## 턴 요청
 
 각 예시의 요청 ID와 상태 버전은 실제 값으로 교체합니다. `request_id`는 새 의도마다 UUID 등을 생성하고 `state_version`은 마지막 응답의 `game.version`을 사용합니다.
@@ -97,7 +114,7 @@
 | `game.history` | 서버 순서대로 표시할 과거 턴 |
 | `game.ending` | null이면 진행 중. 값이 있으면 엔딩 표시 및 새 턴 입력 차단 |
 
-`stat_delta`는 해당 턴의 변화 표시용입니다. `outcome`은 `pending/success/partial/failure/neutral/ending`을 처리합니다. 일반 대사의 감정은 `anxious/hopeful/tired/relieved/neutral`이며 방향 정보의 감정과 별개입니다. 이미지는 응답 URL을 사용하고 없는 과거 필드에는 기본 표시를 둡니다. `analysis`, `ai_trace`, 참조 ID는 디버깅 정보이며 행동 실행이나 상태 계산의 기준으로 사용하지 않습니다.
+`stat_delta`는 해당 턴의 변화 표시용입니다. `outcome`은 `pending/success/partial/failure/neutral/ending`을 처리합니다. 일반 대사의 감정은 `anxious/hopeful/tired/relieved/neutral`이며 방향 정보의 감정과 별개입니다. 기존 `turn.image`는 턴 단위 이미지 URL입니다. 대사별 캐릭터 이미지는 아래 표정 규격으로 연결합니다. `analysis`, `ai_trace`, 참조 ID는 디버깅 정보이며 행동 실행이나 상태 계산의 기준으로 사용하지 않습니다.
 
 ### 상대와 화자
 

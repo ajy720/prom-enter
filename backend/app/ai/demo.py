@@ -128,9 +128,10 @@ class DemoProvider:
         promises=[m['text'] for m in actor['memories'] if m['kind']=='promise' and m['text']!=text]
         if promises and not clarification:
             body += f' 전에 ‘{promises[0]}’라고 하셨던 것도 기억하고 있어요.'
+        expression = "happy" if not clarification and direction.emotion == "relieved" else "neutral"
         messages=[]
         if 'newcomer' in actor.get('allowed_speakers',['newcomer','secretary']):
-            messages.append(Message(speaker_id='newcomer',text=body,emotion=direction.emotion))
+            messages.append(Message(speaker_id='newcomer',text=body,emotion=direction.emotion,expression=expression))
         if 'secretary' in actor.get('allowed_speakers',['newcomer','secretary']):
             secretary_text = ('대표님, 보고드립니다. '+' '.join(facts)) if facts else body
             if actor.get('result_event_id') == 'p2_m01_training' and any(fact.startswith('첫 달 계획을 확정했습니다.') for fact in facts):
@@ -138,5 +139,5 @@ class DemoProvider:
             messages.append(Message(speaker_id='secretary',text=secretary_text, emotion='neutral', fact_ids=list(actor.get('resolved_facts',{}))))
         for role in ('dahyun','haram','yuna'):
             if role in actor.get('allowed_speakers',[]):
-                messages.append(Message(speaker_id=role,text=body,emotion=direction.emotion))
+                messages.append(Message(speaker_id=role,text=body,emotion=direction.emotion,expression=expression))
         return Dialogue(messages=messages)

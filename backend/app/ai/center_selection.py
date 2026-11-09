@@ -6,7 +6,7 @@ from app.ai.profiles import character_profile
 
 CRITERIA = {'selected_member', 'team_perspective', 'reasoning'}
 PROMPT_VERSION = 'center-choice-1'
-CHAT_PROMPT_VERSION = 'center-choice-chat-1'
+CHAT_PROMPT_VERSION = 'center-choice-chat-2'
 
 
 def normalize(text):
