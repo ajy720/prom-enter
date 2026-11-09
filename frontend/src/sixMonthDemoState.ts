@@ -8,7 +8,7 @@ export type DemoOutcome = 'success' | 'failure';
 export type DemoTone = 'support' | 'pressure' | 'unchanged';
 export type SceneLine = { speaker: string; name: string; text: string };
 export type SixMonthSave = {
-  schema: 1; game: Game; phase: 'intro' | 'reprimand' | 'interviews' | 'result' | 'complete'; cursor: number;
+  schema: 1; playthroughId?: string; draftText?: string; game: Game; phase: 'intro' | 'reprimand' | 'interviews' | 'result' | 'complete'; cursor: number;
   target: string; tone: DemoTone; previewOutcome: DemoOutcome; varietyGrowth: number;
   choice: string | null; plan: string; allocation: [number, number, number];
   showcaseCharged: boolean; results: Partial<Record<number, DemoOutcome>>;
@@ -23,12 +23,17 @@ export const showcaseChoices = [
   { id: 'press', label: '백하연에게 기사 대응과 무대 맥락 설명을 맡긴다', delta: { trust: 0, teamwork: 2, awareness: 2 } },
 ] as const;
 
+export function sixNewcomerId(save: Pick<SixMonthSave, 'game'>) {
+  return save.game.character.profile_id ?? ({ a:'hyerin', b:'seoyeon', c:'jiwoo' }[save.game.character.id] ?? save.game.character.id);
+}
+export function sixMemberIds(save: Pick<SixMonthSave, 'game'>) { return [sixNewcomerId(save), 'dahyun', 'haram', 'yuna']; }
+
 function setupMonth(save: SixMonthSave, month: number) {
   save.game.event = { id: `six_demo_m${month}`, month, title: titles[month], scene: titles[month], subtitle: '프런트 데모', briefing: goals[month], goal: goals[month], actions: [] };
-  save.phase = 'intro'; save.cursor = 0; save.target = 'hyerin'; save.choice = null; save.plan = '';
+  save.phase = 'intro'; save.cursor = 0; save.target = sixNewcomerId(save); save.choice = null; save.plan = '';
   save.allocation = [40, 30, 30]; save.lastDelta = {}; save.resultStats = null;
-  save.encouragement = 'none';
-  setRoom(save, [4,5].includes(month) ? 'baek_hayeon' : 'hyerin');
+  save.encouragement = 'none'; save.draftText = '';
+  setRoom(save, [4,5].includes(month) ? 'baek_hayeon' : sixNewcomerId(save));
 }
 export function createSixMonthDemo(): SixMonthSave {
   const game = createMonthlyFixture(3);
@@ -39,10 +44,26 @@ export function createSixMonthDemo(): SixMonthSave {
     choice: null, plan: '', allocation: [40,30,30], showcaseCharged: false, results: {}, lastDelta: {}, resultStats: null };
   setupMonth(save, 3); return save;
 }
+// Continue an existing game at the 2→3 boundary without creating an ID or resetting stats/history.
+export function createSixMonthContinuation(source: Game): SixMonthSave {
+  if (source.event.id !== 'p2_m03_rehearsal' || source.history.some(turn => turn.event_id === source.event.id)) throw new Error('이미 진행한 서버 사건을 새로 시작할 수 없습니다.');
+  const game = structuredClone(source);
+  game.provider = 'six-month-fixture';
+  const newcomerId = sixNewcomerId({game});
+  const names = [{ id:newcomerId, name:game.character.name, role:'newcomer' as const },
+    { id:'dahyun', name:'리안', role:'dahyun' as const }, { id:'haram', name:'도하', role:'haram' as const },
+    { id:'yuna', name:'세인', role:'yuna' as const }, { id:'baek_hayeon', name:'백하연', role:'secretary' as const }];
+  game.conversation.available_targets = names.map(person => ({...person,portrait_url:null}));
+  const save: SixMonthSave = { schema:1, playthroughId:game.game_id, game, phase:'intro', cursor:0,
+    target:newcomerId, tone:'support', previewOutcome:'success', varietyGrowth:game.training_history.filter(skill=>skill==='variety').length,
+    choice:null, plan:'', allocation:[40,30,30], showcaseCharged:false, results:{}, lastDelta:{}, resultStats:null };
+  setupMonth(save,3);
+  return save;
+}
 export function setRoom(save: SixMonthSave, target: string) {
   const person = save.game.conversation.available_targets.find(person => person.id === target);
   const monthlySecretary = [4,5].includes(save.game.event.month);
-  const allowed = monthlySecretary ? [save.encouragement === 'active' ? 'hyerin' : 'baek_hayeon'] : demoMembers;
+  const allowed = monthlySecretary ? [save.encouragement === 'active' ? sixNewcomerId(save) : 'baek_hayeon'] : sixMemberIds(save);
   if (!person || !allowed.includes(target)) throw new Error('현재 장면에서 대화할 수 없는 상대입니다.');
   save.target = target;
   save.game.conversation = { ...save.game.conversation, id: `six_demo_private_${target}`, mode: 'private', target_character_id: target,
@@ -52,7 +73,7 @@ export function interviewCount(save: SixMonthSave, target: string) {
   return save.game.history.filter(turn => turn.event_id === save.game.event.id && turn.input_type === 'chat' && turn.conversation?.mode === 'private' && turn.conversation.target_character_id === target).length;
 }
 export function missingInterviews(save: SixMonthSave) {
-  const required = [3,6].includes(save.game.event.month) ? demoMembers : save.encouragement === 'active' || save.encouragement === 'done' ? ['hyerin'] : [];
+  const required = [3,6].includes(save.game.event.month) ? sixMemberIds(save) : save.encouragement === 'active' || save.encouragement === 'done' ? [sixNewcomerId(save)] : [];
   return required.filter(id => interviewCount(save, id) < 1);
 }
 function applyDelta(save: SixMonthSave, delta: Partial<Stats>) {
@@ -68,16 +89,16 @@ export function introLines(save: SixMonthSave): SceneLine[] {
   const n = (text: string) => line('narrator', '나레이션', text);
   const secretary = (text: string) => line('baek_hayeon', '백하연', text);
   switch (save.game.event.month) {
-    case 3: return [line('yuna','세인','잠깐, 또 같은 박자를 놓쳤잖아. 계속 이렇게 틀리면 다 같이 연습하기 어렵잖아.'), line('hyerin','이도','죄송해요…… 다시 맞춰볼게요.'), secretary('대표님, 먼저 공개적인 질책을 중단시켜주세요. 그 뒤 신입과 기존 멤버들을 각각 면담해주세요.')];
-    case 4: return [n(save.results[3] === 'failure' ? '위축된 신입이 쇼케이스 무대에 오른다. 리허설의 긴장이 아직 남아 있다.' : '리허설을 함께 넘긴 멤버들이 첫 쇼케이스 무대에 오른다.'), line('hyerin','이도','아…… 박자를 놓쳤어요.'), line('haram','도하','괜찮아. 내 동작 보고 다음 박자부터 맞춰.'), n('무대가 끝나자 기자들의 카메라가 실수 장면을 쫓는다. 멤버들이 대기실에 모였다.'), secretary('대표님, 지금 대응이 중요합니다. 저와 이야기하며 신입 격려와 멤버 지지 요청, 토크에서 설명, 기사 대응 중 방향을 정해주세요.')];
+    case 3: return [line('yuna','세인','잠깐, 또 같은 박자를 놓쳤잖아. 계속 이렇게 틀리면 다 같이 연습하기 어렵잖아.'), line(sixNewcomerId(save),save.game.character.name,'죄송해요…… 다시 맞춰볼게요.'), secretary('대표님, 먼저 공개적인 질책을 중단시켜주세요. 그 뒤 신입과 기존 멤버들을 각각 면담해주세요.')];
+    case 4: return [n(save.results[3] === 'failure' ? '위축된 신입이 쇼케이스 무대에 오른다. 리허설의 긴장이 아직 남아 있다.' : '리허설을 함께 넘긴 멤버들이 첫 쇼케이스 무대에 오른다.'), line(sixNewcomerId(save),save.game.character.name,'아…… 박자를 놓쳤어요.'), line('haram','도하','괜찮아. 내 동작 보고 다음 박자부터 맞춰.'), n('무대가 끝나자 기자들의 카메라가 실수 장면을 쫓는다. 멤버들이 대기실에 모였다.'), secretary('대표님, 지금 대응이 중요합니다. 저와 이야기하며 신입 격려와 멤버 지지 요청, 토크에서 설명, 기사 대응 중 방향을 정해주세요.')];
     case 5: return [n(save.results[4] === 'success' ? '팀이 신입을 감싸는 장면이 화제가 됐다. 음원이 차트 100위권에 진입하고 음악방송 기회가 생겼다.' : '실수 영상이 퍼지고 음원 성적도 기대에 못 미쳤다. 팀은 적은 예산으로 다시 기회를 만들어야 한다.'), secretary(`쇼케이스 비용 1.50억원을 정산했습니다. 현재 자금은 ${(save.game.stats.funds_won / 100000000).toFixed(2)}억원입니다.`), secretary(save.results[4] === 'success' ? 'A트랙입니다. 저와 이야기하며 숏폼·라디오·팬사인회 홍보 예산을 나눠주세요.' : 'B트랙입니다. 저와 저예산 홍보 계획을 정해주세요. 신입을 직접 격려하기로 결정하시면 신입 면담을 준비하겠습니다.')];
-    default: return [secretary(`반기 현황을 보고드립니다. 팀워크 ${save.game.stats.teamwork}, 피로도 ${save.game.stats.fatigue}, 인지도 ${save.game.stats.awareness}, 팬 ${save.game.stats.fans.toLocaleString()}명입니다.`), secretary('방송사에서 신입의 예능 출연을 제안했습니다. 지금까지 예능 능력을 키운 경험과 멤버들의 의견을 살펴보고 결정해주세요.'), line('hyerin','이도','처음이라 떨리지만, 준비가 되어 있다면 도전해보고 싶어요.')];
+    default: return [secretary(`반기 현황을 보고드립니다. 팀워크 ${save.game.stats.teamwork}, 피로도 ${save.game.stats.fatigue}, 인지도 ${save.game.stats.awareness}, 팬 ${save.game.stats.fans.toLocaleString()}명입니다.`), secretary('방송사에서 신입의 예능 출연을 제안했습니다. 지금까지 예능 능력을 키운 경험과 멤버들의 의견을 살펴보고 결정해주세요.'), line(sixNewcomerId(save),save.game.character.name,'처음이라 떨리지만, 준비가 되어 있다면 도전해보고 싶어요.')];
   }
 }
 export function resultLines(save: SixMonthSave): SceneLine[] {
   const success = save.results[save.game.event.month] === 'success';
   const texts: Record<number, [string, string]> = { 3: ['내 말이 너무 심했어. 미안해. 다음 연습은 같이 맞춰보자.', '다음에는…… 더 잘해야 할 텐데. 무대에 서는 게 조금 무서워요.'], 4: ['우리가 함께 수습하는 모습이 전해졌어요. 팀을 응원하는 반응이 늘고 있습니다.', '실수 영상이 퍼지고 있습니다. 저예산 홍보와 신입의 자신감 회복이 필요합니다.'], 5: ['홍보를 계기로 우리 음악을 새로 들어주는 분들이 생겼어요.', '이번 홍보는 기대만큼 닿지 못했어요. 다음 활동을 차분히 준비하겠습니다.'], 6: ['준비했던 이야기를 방송에서 잘 전했어요. 다음에도 팀을 알리고 싶어요.', '너무 긴장해서 말이 꼬였어요. 부족했던 부분을 더 준비하고 싶어요.'] };
-  return [{ speaker: save.game.event.month === 3 && success ? 'yuna' : [4,5].includes(save.game.event.month) ? 'baek_hayeon' : 'hyerin', name: save.game.event.month === 3 && success ? '세인' : [4,5].includes(save.game.event.month) ? '백하연' : '이도', text: texts[save.game.event.month][success ? 0 : 1] }];
+  return [{ speaker: save.game.event.month === 3 && success ? 'yuna' : [4,5].includes(save.game.event.month) ? 'baek_hayeon' : sixNewcomerId(save), name: save.game.event.month === 3 && success ? '세인' : [4,5].includes(save.game.event.month) ? '백하연' : save.game.character.name, text: texts[save.game.event.month][success ? 0 : 1] }];
 }
 export type DemoCommand = { type: 'next' } | { type: 'stop'; text: string } | { type: 'target'; id: string } | { type: 'chat'; text: string; requestId: string }
   | { type: 'choose'; id: string } | { type: 'finish' } | { type: 'encourage_newcomer' } | { type: 'finish_encouragement' };
@@ -105,7 +126,7 @@ export function advanceSixMonthDemo(original: SixMonthSave, command: DemoCommand
         participants: [{ id:'player', name:'대표님', role:'player', portrait_url:null }, ...save.game.conversation.available_targets] },
       messages:[{speaker_id:secretary.id, text:'공개 질책을 멈췄습니다. 이제 멤버들의 이야기를 각각 들어주세요.', emotion:'neutral'}],
       analysis:{action_id:'stop_reprimand',needs_clarification:false,reference_turn_id:null,assessments:[]},direction:{emotion:'neutral',openness:'',instruction:''},facts:[],new_evidence:[],image:'',outcome:'pending',stat_delta:{} });
-    save.game.version++; save.phase = 'interviews'; setRoom(save, 'hyerin');
+    save.game.version++; save.phase = 'interviews'; setRoom(save, sixNewcomerId(save));
   } else if (command.type === 'target') {
     if (save.phase !== 'interviews') throw new Error('면담 화면에서 멤버를 선택해주세요.');
     setRoom(save, command.id);
@@ -122,9 +143,9 @@ export function advanceSixMonthDemo(original: SixMonthSave, command: DemoCommand
   } else if (command.type === 'encourage_newcomer') {
     if (save.phase !== 'interviews' || save.game.event.month !== 5 || save.results[4] !== 'failure' || save.target !== 'baek_hayeon'
       || (save.encouragement ?? 'none') !== 'none' || interviewCount(save,'baek_hayeon') < 1) throw new Error('먼저 백하연과 이야기하며 신입 격려를 결정해주세요.');
-    save.encouragement = 'active'; setRoom(save,'hyerin');
+    save.encouragement = 'active'; setRoom(save,sixNewcomerId(save));
   } else if (command.type === 'finish_encouragement') {
-    if (save.phase !== 'interviews' || save.encouragement !== 'active' || interviewCount(save,'hyerin') < 1) throw new Error('신입과 최소 1회 면담한 뒤 마무리해주세요.');
+    if (save.phase !== 'interviews' || save.encouragement !== 'active' || interviewCount(save,sixNewcomerId(save)) < 1) throw new Error('신입과 최소 1회 면담한 뒤 마무리해주세요.');
     save.encouragement = 'done'; setRoom(save,'baek_hayeon');
   } else if (command.type === 'choose') {
     if (save.phase !== 'interviews' || save.choice) throw new Error('현재 선택을 변경할 수 없습니다.');
@@ -151,9 +172,9 @@ export function advanceSixMonthDemo(original: SixMonthSave, command: DemoCommand
 export function restoreSixMonthDemo(raw: string | null): SixMonthSave | null {
   if (!raw) return null;
   const save = JSON.parse(raw) as SixMonthSave;
-  if (save.schema !== 1 || save.game?.provider !== 'six-month-fixture' || !save.game.game_id.startsWith('six_demo_') || ![3,4,5,6].includes(save.game.event.month)
+  if (save.schema !== 1 || save.game?.provider !== 'six-month-fixture' || !(save.game.game_id.startsWith('six_demo_') || save.playthroughId === save.game.game_id) || ![3,4,5,6].includes(save.game.event.month)
     || !['intro','reprimand','interviews','result','complete'].includes(save.phase) || !Number.isInteger(save.cursor) || save.cursor < 0
-    || ![...demoMembers,'baek_hayeon'].includes(save.target) || !Array.isArray(save.allocation) || save.allocation.length !== 3 || !Array.isArray(save.game.history)
+    || ![...sixMemberIds(save),'baek_hayeon'].includes(save.target) || !Array.isArray(save.allocation) || save.allocation.length !== 3 || !Array.isArray(save.game.history)
     || !save.results || typeof save.showcaseCharged !== 'boolean' || !['success','failure'].includes(save.previewOutcome)
     || !['support','pressure','unchanged'].includes(save.tone) || !Number.isFinite(save.varietyGrowth) || save.varietyGrowth < 0
     || !save.game.conversation?.available_targets || !Object.values(save.game.stats ?? {}).every(value => Number.isFinite(value))
@@ -163,7 +184,7 @@ export function restoreSixMonthDemo(raw: string | null): SixMonthSave | null {
   if (save.encouragement === 'active' && (save.game.event.month !== 5 || save.results[4] !== 'failure')) throw new Error('격려 면담 경로가 맞지 않습니다.');
   if ([4,5].includes(save.game.event.month)) {
     save.game.event.goal = goals[save.game.event.month];
-    setRoom(save,save.encouragement === 'active' ? 'hyerin' : 'baek_hayeon');
+    setRoom(save,save.encouragement === 'active' ? sixNewcomerId(save) : 'baek_hayeon');
   }
   return save;
 }

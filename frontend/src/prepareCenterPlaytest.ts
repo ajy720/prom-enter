@@ -1,6 +1,27 @@
 import { api } from './api';
 import type { Game, TurnInput } from './types';
 
+// Start at the first month for a manual playthrough. Refresh keeps this same game.
+export async function prepareMonthOnePlaytest(): Promise<Game> {
+  const health = await api<{provider: string}>('/health');
+  if (health.provider !== 'demo') throw new Error('이 시작 지점 준비는 demo 서버에서만 실행합니다.');
+  const key = 'prom-month-one-playtest-game-v1';
+  const saved = localStorage.getItem(key);
+  if (saved) return api<Game>('/games/' + saved);
+  let game = await api<Game>('/games', {character_id:'a',scenario:'part2'});
+  async function action(action_id: string) {
+    game = (await api<{game: Game}>('/games/' + game.game_id + '/turns', {
+      request_id:crypto.randomUUID(),state_version:game.version,input_type:'action',action_id,text:'',
+    } satisfies TurnInput)).game;
+  }
+  for (let i=0;i<3;i++) await action('finish_interview');
+  await action('select_a');
+  if (game.event.id !== 'p2_m01_training') throw new Error('1개월차 시작을 준비하지 못했습니다.');
+  localStorage.setItem(key,game.game_id);
+  localStorage.setItem(`prom-recruitment-step:${game.game_id}`,'4');
+  return game;
+}
+
 // Explicit local playtest entry. Every transition is processed and saved by the API.
 // Keep the normal story ID and its owner cookie; never use a paid model to seed.
 export async function prepareCenterPlaytest(startAtMonthThree = false): Promise<Game> {
