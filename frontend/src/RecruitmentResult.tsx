@@ -48,7 +48,7 @@ export function RecruitmentResult({ character, nickname, step, onAdvance, onPrev
   </section>;
 
   const current = briefing[Math.min(step, 3) - 1];
-  return <section className="intro-scene intro-office recruitment-briefing" aria-label={current.title} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
+  return <section className="intro-scene intro-office recruitment-briefing part-one-photos" aria-label={current.title} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
     <aside className="formation-status glass-panel"><p className="section-kicker">PROMYOU · 팀 상태 안내</p><h2>함께할 네 사람</h2><p>{members.map(member => member.name).join(' · ')}</p><TeamStatus/></aside>
     <div className="secretary-photo"><PhotoSlot src={characterPortraits.baek_hayeon} name="백하연" caption="대표 비서실장 · 반신 사진 자리"/></div>

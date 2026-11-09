@@ -4,6 +4,7 @@ import { CenterInterview } from './CenterInterview';
 import { MonthlyOpening, useMonthlyOpening } from './MonthlyOpening';
 import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
+import { characterPortraits, sceneBackgrounds } from './introContent';
 import { ResourceStatus } from './ResourceStatus';
 import { PendingResponse } from './PendingResponse';
 import { pendingFeedback } from './pendingFeedback';
@@ -64,6 +65,13 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
   const feedback = busy && pending ? pendingFeedback(game, pending) : null;
   const secretary = ['secretary', 'baek_hayeon'].includes(feedback?.speakerId ?? displayed.speakerId);
   const portraitName = centerScene && (game.center_interviews?.finish_notice || game.center_interviews?.ready_for_decision) ? '백하연' : centerScene && target ? target.name : secretary ? '백하연' : game.character.name;
+  // Center interviews show the selected member until the secretary's closing notice.
+  // Only resolve photos here: the server still owns conversation and decision state.
+  const centerPortraitId = game.center_interviews?.finish_notice ? 'baek_hayeon'
+    : feedback?.speakerId ?? target?.id ?? 'baek_hayeon';
+  const centerPhotoId = centerPortraitId === 'newcomer' || centerPortraitId === game.character.id
+    ? game.character.profile_id ?? game.character.id : centerPortraitId;
+  const centerPhotoName = centerPhotoId === 'baek_hayeon' ? '백하연' : target?.name ?? game.character.name;
   async function openActions() {
     if (privateRoom && !await onConversationChange('public')) return;
     setMenu('actions');
@@ -77,10 +85,10 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
 
   if (!showingResult && !completeScene && opening.phase !== 'play') return <MonthlyOpening game={game} phase={opening.phase} onNext={opening.advance} disabled={locked}/>;
 
-  return <section className="monthly-stage" aria-label={showingResult ? `${boundary.event_title} 결과` : completeScene ? 'Part 2 마무리' : `${game.event.month}개월차 ${game.event.title}`} style={{ backgroundImage: `url("${part2Visuals.background}")` }}>
+  return <section className={`monthly-stage${centerScene ? ' month-two-photos' : ''}`} aria-label={showingResult ? `${boundary.event_title} 결과` : completeScene ? 'Part 2 마무리' : `${game.event.month}개월차 ${game.event.title}`} style={{ backgroundImage: `url("${centerScene ? sceneBackgrounds.practice : part2Visuals.background}")` }}>
     <header className="monthly-heading"><div><p className="section-kicker">PROMYOU · {showingResult ? '이번 달의 기록' : completeScene ? '첫 여섯 달의 기록' : `${game.event.month}개월차 · ${game.event.scene}`}</p><h1>{showingResult ? boundary.event_title : completeScene ? '우리의 첫 여섯 달' : game.event.title}</h1></div><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></header>
     <aside className="monthly-info"><h2>프로뮤의 현재</h2><dl className="monthly-stats">{(['teamwork', 'fatigue', 'trust', 'awareness', 'fans'] as const).map(key => <div key={key}><dt>{statLabels[key]}</dt><dd>{key === 'fans' ? fansAvailable ? `${game.stats.fans.toLocaleString()}명` : '-' : <>{game.stats[key].toLocaleString()}<small> / 100</small></>}</dd></div>)}</dl><ol className="monthly-progress" aria-label="월별 진행">{part2Months.map((month, index) => <li key={month.id} aria-current={!showingResult && game.event.id === month.id ? 'step' : undefined}><span>{index + 1}개월 · {month.title}</span><small>{game.completed_events[month.id] ? outcomes[game.completed_events[month.id]] : game.event.id === month.id ? '진행 중' : '예정'}</small></li>)}</ol><button className="text-button" onClick={() => setMenu('records')}>전체 기록 보기</button></aside>
-    <div className="monthly-portrait"><PhotoSlot src={secretary ? part2Visuals.secretary : part2Visuals.newcomer} name={`${portraitName} 임시 이미지`}/><p>{portraitName} · 교체용 임시 이미지</p></div>
+    <div className="monthly-portrait"><PhotoSlot src={centerScene ? characterPortraits[centerPhotoId] : secretary ? part2Visuals.secretary : part2Visuals.newcomer} name={centerScene ? centerPhotoName : `${portraitName} 임시 이미지`}/>{!centerScene && <p>{portraitName} · 교체용 임시 이미지</p>}</div>
     <div className="monthly-dock">
       {showingResult ? <section className="monthly-result" aria-label="이번 달 결과"><p className="section-kicker">{outcomes[boundary.outcome] ?? '결과'}</p><h2>{boundary.event_title}을 마쳤습니다.</h2>{boundary.messages.map((message, index) => <p key={index}><strong>{boundary.conversation?.participants.find(person => person.role === message.speaker_id || person.id === message.speaker_id)?.name ?? (message.speaker_id === 'secretary' ? '백하연' : game.character.name)}</strong>　{message.text}</p>)}<Deltas turn={boundary}/>{!Object.keys(boundary.stat_delta).length && <p>이번 결정으로 바뀐 수치는 없습니다.</p>}<p className="monthly-note">결과와 다음 장면이 저장되었습니다.</p><button className="primary-button" disabled={busy || !!pending} onClick={continueReading}>{completeScene ? '여섯 달 결산 보기' : `${game.event.month}개월차 이야기 보기`} →</button></section>
       : completeScene ? <section className="monthly-result"><p className="section-kicker">{game.ending ? 'PART 2 COMPLETE' : 'PART 2 · 활동 결산'}</p><h2>{game.character.name}의 첫 여섯 달</h2><p>후보 선발과 1~6개월차 활동을 마쳤습니다. 이번 플레이는 여기서 마무리합니다.</p><p>현재 수치와 월별 결과, 대화 기록을 다시 확인할 수 있습니다.</p><dl className="month-summary"><div><dt>합류 멤버</dt><dd>{game.character.name}</dd></div>{game.center_selection && <div><dt>센터</dt><dd>{game.center_selection.member_name}</dd></div>}<div><dt>훈련 분야</dt><dd>{game.training_history.map(skill => ({ vocal: '보컬', dance: '댄스', variety: '예능' })[skill] ?? skill).join(', ') || '훈련 이력 없음'}</dd></div></dl><p className="monthly-note">24개월 계약의 최종 엔딩과는 별개의 Part 2 마무리입니다.</p><div className="monthly-buttons"><button className="quiet-button" onClick={() => setMenu('records')}>활동·대화 기록 보기</button>{game.ending ? <><button className="quiet-button" onClick={onTitle}>시작 화면</button><button className="primary-button" onClick={onNewGame}>새 이야기 시작</button></> : <button className="primary-button" disabled={locked} onClick={() => void onSend('finish_prototype')}>Part 2 마무리</button>}</div></section>

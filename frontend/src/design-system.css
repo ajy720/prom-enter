@@ -254,3 +254,43 @@ button.modal-footer-close { display: block; width: fit-content; min-width: 120px
     margin-bottom: -16px;
   }
 }
+
+/* Part 1: supplied square cutouts keep a consistent scale and hide the original
+   lower edge behind dialogue or at the stage boundary. Profile originals and
+   the title slideshow keep their existing contain/cover presentation. */
+.part-one-photos::before { background: var(--scene-dim); }
+.part-one-photos.is-narration::before { content: none; }
+.part-one-photos.is-narration > .secretary-photo { display: none; }
+.part-one-photos.is-narration .intro-location { text-shadow: 0 1px 3px rgb(0 0 0 / 75%); }
+.profile-cards .profile-card .photo-slot > img { object-fit: contain; object-position: center; }
+.prologue-scene.part-one-photos.intro-scene > .secretary-photo,
+.recruitment-briefing.part-one-photos.intro-scene > .secretary-photo {
+  width: min(430px, 100%); height: clamp(340px, calc(100dvh - 350px), 590px);
+  min-height: 0; aspect-ratio: auto; margin: 0 auto -48px; align-self: end;
+}
+.part-one-photos > .secretary-photo .photo-slot,
+.part-one-photos > .interview-portrait .photo-slot { position: relative; height: 100%; min-height: 0; }
+.part-one-photos > .secretary-photo .photo-slot > img,
+.part-one-photos > .interview-portrait .photo-slot > img,
+.part-one-photos .introduction-photo .photo-slot > img {
+  position: absolute; bottom: 0; left: 50%; width: auto; max-width: none; height: 117%;
+  object-fit: contain; object-position: center bottom; transform: translateX(-50%); transform-origin: center bottom;
+}
+.candidate-interview.interview-room.interview-refined.part-one-photos > .interview-portrait {
+  height: auto; min-height: 0; max-height: 590px; aspect-ratio: .85; margin: 0 0 -24px;
+}
+.character-introduction.part-one-photos > .introduction-photo { padding: 0; overflow: hidden; }
+.character-introduction.part-one-photos .introduction-photo .photo-slot { position: relative; height: min(590px, calc(100dvh - 120px)); min-height: 0; }
+@media (max-width: 1000px) {
+  .prologue-scene.part-one-photos.intro-scene > .secretary-photo,
+  .recruitment-briefing.part-one-photos.intro-scene > .secretary-photo {
+    width: min(260px, 100%); height: 340px; margin: var(--space-4) auto -48px;
+  }
+  .candidate-interview.interview-room.interview-refined.part-one-photos > .interview-portrait {
+    width: min(260px, 100%); height: 340px; aspect-ratio: auto; margin: var(--space-4) auto -24px;
+  }
+}
+@media (max-width: 700px) {
+  .character-introduction.part-one-photos > .introduction-photo { height: 340px; min-height: 0; }
+  .character-introduction.part-one-photos .introduction-photo .photo-slot { height: 340px; }
+}

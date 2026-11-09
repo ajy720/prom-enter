@@ -25,3 +25,8 @@ export function savedMonthTraining(game: Pick<Game, 'event'>) {
   if (game.event.id !== 'p2_m01_training') return undefined;
   return game.event.actions.find(action => ['train_vocal', 'train_dance', 'train_visual', 'train_variety'].includes(action.id) && action.used);
 }
+
+export function canConfirmMonthPlan(game: Pick<Game, 'event' | 'history'>) {
+  return !!savedMonthTraining(game) && !!savedDormRule(game)
+    && ['dahyun', 'haram', 'yuna'].every(id => hasMemberDiscussion(game, id));
+}

@@ -47,7 +47,7 @@ export function InterviewRoom({ character, session, nickname, onUpdate, onBack, 
     }
   }
 
-  return <section className="interview-room candidate-interview interview-refined" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
+  return <section className="interview-room candidate-interview interview-refined part-one-photos" aria-label={`${character.name} 면담`} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <aside className="interview-info glass-panel"><p className="section-kicker">일대일 면담 · 대표실</p><h1>{character.name}</h1><p>{character.fullName} · {character.age}세</p><p className="interview-role">{character.role}</p>
       <span className={`interview-status status-${session.status}`}>{statusLabels[session.status]}</span>
       <p className="interview-count">나눈 이야기 <strong>{session.turnCount}</strong> / {AUTO_FINISH_TURNS}</p>

@@ -55,7 +55,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
 
   return <div ref={viewportRef} className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
-    <section className="interview-room month-one month-photo-stage" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
+    <section className="interview-room month-one month-photo-stage month-one-photos" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
       <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
 
