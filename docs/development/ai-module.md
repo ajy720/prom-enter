@@ -4,7 +4,7 @@
 
 이 문서는 실제 Prom::Enter 게임에 연결된 AI 모듈의 현재 구현과 계약을 설명합니다. 아래 다섯 영역의 구현은 게임 전체의 완성을 뜻하지 않습니다. 누락 기능·우선순위·완료 기준은 [AI 완성도 점검과 개발 순서](../planning/roadmap.md)를 참고하세요.
 
-provider의 `analyze` / `generate` 호출 계약을 사용합니다. 추가 상태 필드는 기본값으로 기존 저장과 턴 기록을 읽습니다.
+provider의 `analyze` / `generate` 호출 계약을 사용하며, 2개월차 센터 선택은 별도의 `evaluate_center` 평가를 호출합니다. 추가 상태 필드는 기본값으로 기존 저장과 턴 기록을 읽습니다.
 
 ## 1. 문맥과 입출력 자료형
 
@@ -14,6 +14,8 @@ provider의 `analyze` / `generate` 호출 계약을 사용합니다. 추가 상�
 build_context(state, history, query="") -> tuple[AnalysisContext, DialogueContext]
 provider.analyze(text, context: AnalysisContext) -> Analysis
 provider.generate(text, actor: DialogueContext, direction, facts, clarification) -> Dialogue
+provider.interpret_center_choice(context: dict) -> CenterChatInterpretation
+provider.evaluate_center(context: dict) -> CenterAssessment
 ```
 
 문맥은 `context.stats`와 같은 타입 접근과 기존 `context["stats"]` 접근을 지원합니다. 모델 요청에는 명시적으로 JSON으로 직렬화합니다.
@@ -33,6 +35,17 @@ provider.generate(text, actor: DialogueContext, direction, facts, clarification)
 `resolved_facts`는 현재 턴의 확정 사실을 `fact_0`, `fact_1`처럼 참조합니다. 다음 턴에서는 의미가 달라지므로 영속적인 증거 ID로 사용하지 않습니다.
 
 ## 2. 행동 해석과 사건별 평가
+
+### 2026-11-09 · 2개월차 센터 선택의 면담 근거 평가
+
+- 현재 센터 선택은 백하연과의 일반 채팅으로 진행한다. `interpret_center_choice(context) -> CenterChatInterpretation`(`center-choice-chat-1`)이 명시적 선택·이유 보충과 질문·인사·철회를 구분한다. 해석 문맥은 명단·미확정 후보·사용자-백하연 대화이며 다른 멤버의 개인 면담 원문을 넣지 않는다. 선택을 바꿀 때만 후보를 갱신하고 이유 속 다른 멤버 이름을 새 선택으로 처리하지 않는다.
+- 서버는 미확정 선택과 실제 이유 턴 ID를 보관한다. 후속 설명은 `rationale_turns`와 합친 `reason`으로 평가에 전달한다. `decision_dialogue`의 질문·백하연 발언은 사용자의 이유로 인용할 수 없다. 마지막 메시지만 따로 평가하거나 UI에서 기존 이유를 재입력시키지 않는다. 후보 변경·철회 시 이전 이유를 자동 승계하지 않으며, 기존 팝업 방식의 미완료 저장은 호환해서 읽는다.
+
+- `provider.evaluate_center(context) -> CenterAssessment`를 추가했다. `OpenAIProvider`는 `center_selection.txt`와 구조화 스키마를 사용한다. 게임 입력 분석·NPC 대사 생성과 별도 호출이며 프롬프트 버전은 `center-choice-1`이다. 이 평가는 선택한 멤버·이유와 2개월차 네 멤버의 실제 개인 면담 문답만 받는다. 다른 달·캐릭터 비밀·전체 페르소나·스탯 판정표를 넣지 않는다.
+- 검토 항목은 선택 멤버의 의사/강점/우려 이해, 다른 멤버·팀 관점, 선택 이유의 연결성이다. 각 항목은 `met/not_met/unclear`, 사용자 이유의 정확한 `reason_quote`, 멤버 답변의 `turn_id/member_id/quote` 근거를 반환한다. 특정 멤버나 합의라는 단어가 정답인 구조가 아니다.
+- 서버가 세 항목의 유일성·완전성, 인용한 실제 턴·화자·답변·사용자 이유를 검증한다. 선택 멤버 항목에는 본인, 팀 항목에는 다른 멤버의 답변 근거가 필요하다. 없는 발언·사용자 질문의 대체 인용·조작된 이유·근거 없는 달성은 502이며 결과를 저장하지 않는다. 재시도는 같은 요청을 사용한다.
+- 유효한 평가에서 전부 `met`면 성공, 명확한 `not_met`가 있으면 실패, 나머지는 확정 보류다. 보류는 백하연의 추가 설명 요청을 저장하고 스탯·현재 사건을 유지한다. 서버가 최종 성패·효과를 확정하며 모델이 직접 수치를 쓰지 않는다. 평가 원문과 근거는 `State.center_decision.assessment`에 보관하고 일반 화면에는 항목별 판정표를 공개하지 않는다.
+- `DemoProvider`는 실제 답변과 이유에서 제한된 한국어 표현을 대조하는 오프라인 대역이다. 의미를 일반적으로 이해하는 실제 AI로 보고하지 않는다. 모호한 이유는 보충을 요청하고 명시적인 면담 무시는 실패로 처리한다. 실제 provider 오류를 데모 평가로 대체하지 않는다. 유료 모델 호출·판정 품질 평가는 별도 요청 범위다.
 
 `backend/app/content/ai_rules.json`은 공통 평가(`support`, `promise`), 사건별 평가(`training_plan`, `consider_readiness`, `investigate_first`, `protect_member`), 행동 대상, 행동 완료로 인정할 기준을 정의합니다.
 
@@ -72,7 +85,7 @@ python3 scripts/compile_characters.py
 캐릭터 자료나 `ai_rules.json`을 바꿨다면 백엔드를 재시작해 새 데이터를 읽습니다.
 
 - 기존 슬롯 `a/b/c`를 각각 **이도/여울/사야**에 매핑했습니다. 저장 ID를 바꾸지 않고 실제 이름·기본 성격·말투를 연결합니다.
-- 비서 역할은 **백하연**에 연결합니다. 리안·도하·세인도 자료로 포함되지만 현재 웹 화면에는 두 화자(`newcomer`, `secretary`)만 등장합니다.
+- 비서 역할은 **백하연**에 연결합니다. 리안·도하·세인도 첫 달과 2개월차 개인 면담에서 각각 `dahyun/haram/yuna` 화자로 등장합니다.
 - 캐릭터 자료는 [원문 보존·외형 우선순위·저장 ID 호환](../../characters/README.md)을 따릅니다.
 - 기본 연기에는 이름·나이·직책 등이 담긴 `basic_profile`과 표면 성격·가치관·관계 표현 지침·말투를 제공합니다. 프로필의 초기 능력치·특수 능력 설명이 현재 게임 수치나 활동 실행 사실을 대신하지 않으며, 현재 턴 수치는 서버의 `stats`를 따릅니다.
 - 외모·취향은 질문과 관련될 때 공개 자료로 검색합니다.

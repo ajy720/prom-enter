@@ -49,6 +49,14 @@ def classify(text):
 class DemoProvider:
     name = 'demo'
 
+    def evaluate_center(self, context):
+        from app.ai.center_selection import demo_assessment
+        return demo_assessment(context)
+
+    def interpret_center_choice(self, context):
+        from app.ai.center_selection import demo_interpretation
+        return demo_interpretation(context)
+
     def analyze(self, text, context):
         text = text.strip()
         routing=offline_intent(text,context.get('conversation'))

@@ -33,9 +33,15 @@ export type Turn = {
   direction: {emotion: string; openness: string; instruction: string; secondary_emotion?: string | null; triggers?: string[]};
   facts: string[]; outcome: string; new_evidence: Evidence[];
   stat_delta: Partial<Stats>; image: string;
-  ai_trace?: {prompt_version: string; provider: string; analysis_calls?: number; generation_calls: number; phase: string; profile_id: string};
+  ai_trace?: {prompt_version: string; provider: string; analysis_calls?: number; evaluation_calls?: number; generation_calls: number; phase: string; profile_id: string};
 };
 export type Game = {
+  center_interviews?: {turn_limit: number; ready_for_decision: boolean; decision_prompt: string | null;
+    can_finish: boolean; missing_member_ids: string[]; finish_notice: string | null; selection_feedback: string | null;
+    pending_member_id?: string | null;
+    members: {character_id: string; name: string; turn_count: number; completed: boolean; completed_by: 'limit' | 'player' | null}[];
+  } | null;
+  center_selection?: {member_id: string; member_name: string; reason: string; outcome: 'success' | 'failure'; feedback: string; provider: string} | null;
   interview?: {turn_count: number; turn_limit: number; completed: boolean; completed_by: 'secretary' | 'player' | null; closing_message: string | null} | null;
   game_id: string; version: number; provider: string; character: Character;
   conversation: Conversation;
@@ -45,6 +51,7 @@ export type Game = {
   completed_events: Record<string, string>; ending: {id: string; title: string; description: string} | null; history: Turn[];
 };
 export type TurnInput = {
+  center_member_id?: string; center_reason?: string;
   stop_after_month_one?: boolean;
   request_id: string; state_version: number; input_type: 'chat' | 'action' | 'conversation';
   text: string; action_id: string | null; recipient_id?: string | null;

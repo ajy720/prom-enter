@@ -2,7 +2,7 @@
 from collections.abc import Iterator, Mapping
 from typing import Any, Literal, Protocol
 from pydantic import Field
-from app.models import Analysis, Dialogue, Direction, EventOpening, KnowledgeRecord, Model, Stats, SpeakerRole
+from app.models import Analysis, CenterAssessment, CenterChatInterpretation, Dialogue, Direction, EventOpening, KnowledgeRecord, Model, Stats, SpeakerRole
 
 
 class ContextModel(Model, Mapping[str, Any]):
@@ -138,3 +138,7 @@ class AIProvider(Protocol):
 
     def generate(self, text: str, actor: DialogueContext, direction: Direction,
                  facts: list[str], clarification: bool) -> Dialogue: ...
+
+    def evaluate_center(self, context: dict) -> CenterAssessment: ...
+
+    def interpret_center_choice(self, context: dict) -> CenterChatInterpretation: ...
