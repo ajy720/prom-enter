@@ -6,9 +6,9 @@ import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
 import { PendingResponse } from './PendingResponse';
 import { pendingFeedback } from './pendingFeedback';
-import { debutMembers, characterPortraits, sceneBackgrounds, newcomers } from './introContent';
+import { debutMembers, dialoguePhoto, sceneBackgrounds, newcomers } from './introContent';
 import { dormRules, monthQuestions, trainingOptions } from './monthOneContent';
-import { recruitedCandidateId, serverInterviewFrames } from './serverInterviewState';
+import { recruitedCandidateId, serverInterviewFrames, type InterviewFrame } from './serverInterviewState';
 import { canConfirmMonthPlan, hasMemberDiscussion, isMonthPlanChoice, monthPlanCompleted, savedDormRule, savedMonthTraining } from './serverMonthOneState';
 import type { Game, TurnInput } from './types';
 
@@ -31,7 +31,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
     ? turn.conversation?.mode === 'private' && turn.conversation.target_character_id === target?.id
     : !turn.conversation || turn.conversation.mode === 'public');
   const frames = serverInterviewFrames({ ...game, history: visibleHistory, event_openings: [] }).filter(frame => frame.id !== 'briefing');
-  const displayed = privateRoom && !visibleHistory.some(turn => turn.event_id === game.event.id && turn.messages.length)
+  const displayed: Omit<InterviewFrame, 'id'> = privateRoom && !visibleHistory.some(turn => turn.event_id === game.event.id && turn.messages.length)
     ? { speakerId: target?.id ?? '', name: target?.name ?? '대화 상대', text: '연습 소감과 필요한 도움에 대해 이야기를 나눠보세요.' } : frames.at(-1) ?? { speakerId: candidate.id, name: candidate.name, text: '' };
   const feedback = busy && pending ? pendingFeedback(game, pending) : null;
   const visibleSpeakerId = feedback?.speakerId ?? displayed.speakerId;
@@ -66,7 +66,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
       <button className="operation-button" disabled={locked} onClick={() => void openActivity('training')}><span>{training ? '집중 훈련 변경' : '집중 훈련 선택'}</span><span aria-hidden="true">→</span></button>
       <button className="operation-button" disabled={locked} onClick={() => void openActivity('rule')}><span>{rule ? '합숙 규칙 변경' : '합숙 규칙 선택'}</span><span aria-hidden="true">→</span></button><button className="quiet-button" disabled={busy || !!pending} onClick={onTitle}>← 시작 화면</button>
     </aside>
-    <div className="interview-portrait"><PhotoSlot src={characterPortraits[secretarySpeaking ? 'baek_hayeon' : portraitPerson.id]} name={secretarySpeaking ? '백하연' : portraitPerson.name}/></div>
+    <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(secretarySpeaking ? 'baek_hayeon' : portraitPerson.id, feedback?.speakerId ? undefined : displayed.expression)} name={secretarySpeaking ? '백하연' : portraitPerson.name}/></div>
     <div className="interview-dock">
       {!complete && <div className="month-people" aria-label="첫 달 대화 상대">{conversationTargets.map(person => <button key={person.id} aria-pressed={target?.id === person.id} disabled={locked} onClick={() => void onConversationChange(person.id)}>{person.name}<small>{person.role === 'newcomer' ? '신입' : hasMemberDiscussion(game, person.id) ? '면담 완료' : '면담 전'}</small></button>)}</div>}
       {(displayed.text || busy) && <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.speakerId ? feedback.name : displayed.name}</h2><div className="dialogue-tools"><span className="mode-label">{complete ? '1개월차 완료' : game.provider === 'demo' ? '1개월차 데모' : '1개월차 AI'}</span><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>

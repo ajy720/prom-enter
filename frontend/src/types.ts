@@ -5,6 +5,7 @@ export type Action = { id: string; label: string; hint: string; used: boolean };
 export type Evidence = { id: string; title: string; text: string };
 export type Memory = { event_id: string; kind: string; text: string; turn_id: string; character_id?: string | null; visibility?: 'shared' | 'character'; status?: 'recorded' | 'promised' | 'fulfilled' | 'broken'; action_id?: string | null };
 export type Assessment = {criterion_id: string; status: 'met' | 'not_met' | 'unclear'; quote: string; source_turn_id?: string | null};
+export type Expression = 'neutral' | 'excited' | 'angry' | 'happy' | 'sad' | 'surprised';
 export type SpeakerRole = 'newcomer' | 'secretary' | 'dahyun' | 'haram' | 'yuna';
 export type ConversationParticipant = {id: string; name: string; role: 'player' | SpeakerRole; portrait_url: string | null};
 export type Conversation = {
@@ -28,7 +29,7 @@ export type Turn = {
   kind?: 'dialogue' | 'conversation_change' | 'activity'; conversation?: Conversation;
   source_input?: string; previous_conversation?: Conversation;
   input_audience?: SpeakerRole[];
-  messages: {speaker_id: string; text: string; emotion: string; fact_ids?: string[]; knowledge_ids?: string[]; audience?: string[]}[];
+  messages: {speaker_id: string; text: string; emotion: string; expression?: Expression; fact_ids?: string[]; knowledge_ids?: string[]; audience?: string[]}[];
   analysis: Analysis;
   direction: {emotion: string; openness: string; instruction: string; secondary_emotion?: string | null; triggers?: string[]};
   facts: string[]; outcome: string; new_evidence: Evidence[];
