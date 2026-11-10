@@ -10,7 +10,7 @@ import { ServerMonthly } from './ServerMonthly';
 import { ServerPartTwo } from './ServerPartTwo';
 import { MonthTwoTransition } from './MonthTwoTransition';
 import { ContinuedPlay } from './ContinuedPlay';
-import { readPlaythrough } from './playthroughState';
+import { playthroughKey, readPlaythrough } from './playthroughState';
 import { interviewCandidateId, serverCandidates, storyGameKey } from './serverInterviewState';
 import type { CreateGameInput, Game, TurnInput, PromotionAllocation } from './types';
 
@@ -52,14 +52,15 @@ export default function App() {
   }, []);
 
   async function send(actionId?: string, retry?: TurnInput, question?: string): Promise<boolean> {
-    if (!game || requestInFlight.current || game.ending || (pending && !retry)) return false;
+    if (!game || requestInFlight.current || (pending && !retry)) return false;
+    if (game.ending && !(game.ending.id === 'part2_complete' && (retry?.action_id ?? actionId) === 'start_month_seven')) return false;
     if (retry) return submit(retry);
     const value = (question ?? text).trim();
     if (!actionId && !retry && !value) return false;
     // Preserve the payload on retry so the server can prevent duplicate turns.
     const input: TurnInput = retry ?? {
       request_id: crypto.randomUUID(), state_version: game.version,
-      input_type: actionId ? 'action' : 'chat', text: actionId ? '' : value,
+      input_type: actionId ? 'action' : 'chat', text: actionId ? question?.trim() ?? '' : value,
       action_id: actionId ?? null,
     };
     return submit({ ...input, ...(game.event.id === 'p2_m01_training' ? { stop_after_month_one: true } : {}) });
@@ -135,14 +136,15 @@ export default function App() {
     finally { requestInFlight.current = false; setBusy(false); }
   }
 
-  async function continueStory() {
+  async function continueStory(legacy = false) {
     const id = localStorage.getItem(storyGameKey);
     if (localStorage.getItem('prom-active-save') === 'intro' || !id) { openIntro(false); return; }
     if (requestInFlight.current) return;
     requestInFlight.current = true; setBusy(true); setError('');
     try {
-      const continued = readPlaythrough(localStorage, id);
-      if (continued?.stage === 'part3') {
+      if (legacy) {
+        const continued = readPlaythrough(localStorage, id);
+        if (!continued) throw new Error('이 브라우저에 데모 저장이 없습니다.');
         setGame(continued.source); setLocalResume(true); setPending(null); setText(''); setView('game');
         return;
       }
@@ -158,7 +160,11 @@ export default function App() {
   }
 
   if (view === 'intro') return <Prologue key={introRun.key} fresh={introRun.fresh} onTitle={() => setView('title')} onServerInterview={id => void enterInterview(id)} busy={busy} serverError={error}/>;
-  if (view === 'title') return <main className="app-shell">{error && <p className="error-banner" role="alert">{error}</p>}<TitleScreen onStart={() => openIntro(true)} onContinue={() => void continueStory()} busy={busy}/></main>;
+  if (view === 'title') {
+    const savedGameId = localStorage.getItem(storyGameKey);
+    const hasLegacy = savedGameId && localStorage.getItem(playthroughKey(savedGameId));
+    return <main className="app-shell">{error && <p className="error-banner" role="alert">{error}</p>}<TitleScreen onStart={() => openIntro(true)} onContinue={() => void continueStory()} onLegacy={hasLegacy ? () => void continueStory(true) : undefined} busy={busy}/></main>;
+  }
   if (!game) return null;
   if (localResume) return <ContinuedPlay key={game.game_id} source={game} onTitle={() => setView('title')}/>;
   const nickname = readIntroProgress()?.nickname ?? '';
@@ -170,9 +176,9 @@ export default function App() {
     {interviewing && interviewOpen ? <ServerInterviewRoom key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onBack={() => { rememberInterviewRoom(game.game_id,game.event.id,false); if (game.interview?.completed) void send('finish_interview'); }}/>
       : interviewing || game.event.id === 'p2_casting' || (game.event.id === 'p2_m01_training' && !!game.completed_events.p2_casting && !formationReviewed && !game.history.some(turn => turn.event_id === 'p2_m01_training')) ? <ServerCasting key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} nickname={nickname} onInterview={async id => { const person = serverCandidates.find(candidate => candidate.id === id); if (person && (person.eventId === game.event.id || await send('interview_' + person.slot))) rememberInterviewRoom(game.game_id,person.eventId,true); }} onSend={send} onBack={() => setView('title')} onProceed={() => setFormationReviewed(true)}/>
       : game.event.id === 'p2_m01_training' ? <ServerMonthOne key={game.game_id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')}/>
-      : game.event.id === 'p2_m03_rehearsal' ? <MonthTwoTransition key={game.game_id} game={game}><ServerPartTwo game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion} onPartThree={() => setLocalResume(true)}/></MonthTwoTransition>
-      : (game.event.month >= 2 && game.event.month <= 6) || game.event.id === 'p2_complete' ? <ServerPartTwo key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion} onPartThree={() => setLocalResume(true)}/>
-      : (game.event.month >= 2 && game.event.month <= 24) || !!game.ending || game.event.id === 'p2_complete' ? <ServerMonthly key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)}/>
+      : game.event.id === 'p2_m03_rehearsal' ? <MonthTwoTransition key={game.game_id} game={game}><ServerPartTwo game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion}/></MonthTwoTransition>
+      : (game.event.month >= 2 && game.event.month <= 6) || game.event.id === 'p2_complete' ? <ServerPartTwo key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion}/>
+      : (game.event.month >= 2 && game.event.month <= 24) || !!game.ending || game.event.id === 'p2_complete' ? <ServerMonthly key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)} onDecision={(action, value) => send(action, undefined, value)}/>
       : <p role="alert">이 사건은 아직 화면 연결이 필요합니다. 저장은 유지됩니다.</p>}
   </main>;
 }

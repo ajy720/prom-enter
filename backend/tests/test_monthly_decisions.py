@@ -131,7 +131,8 @@ def test_invalid_budget_never_advances_or_spends(session, allocation):
 def test_variety_chat_decision_without_mandatory_interviews(session,text,trained,outcome):
     client, _, game = at_month(session, 'p2_m06_variety')
     if trained:
-        game = seed(client, game, lambda state:state.training_history.append('variety'))
+        from app.game.member_abilities import grow
+        game = seed(client, game, lambda state: grow(state, 'variety'))
     result = send(client, game, text, key='variety-chat-once')
     assert result['event']['id'] == 'p2_complete'
     assert result['history'][-1]['outcome'] == outcome
@@ -146,3 +147,57 @@ def test_showcase_opening_interleaves_narration_and_real_speakers(session):
     opening = next(item for item in game['event_openings'] if item['event_id'] == game['event']['id'])
     assert [beat['character_id'] for beat in opening['beats']] == ['narrator',game['character']['profile_id'],'narrator','reporter','narrator','reporter','narrator','baek_hayeon']
     assert game['history'] == []
+
+
+def test_last_assessed_interview_crosses_threshold_and_is_committed_once(session):
+    client, _, game = at_month(session, 'p2_m02_center', teamwork=41)
+    for index, member in enumerate(game['center_interviews']['members']):
+        game = switch_month_room(client, game, member['character_id'])
+        for _ in range(7 if index == 3 else 8):
+            game = send(client, game, '포지션에 대한 생각을 들려줘')
+    text = '서로 의견을 듣고 함께 기준을 정하자'
+    result = send(client, game, text, key='last-assessed-interview')
+    turn = result['history'][-1]
+    assert turn['analysis']['assessments'][0]['criterion_id'] == 'mediate_team'
+    assert turn['month_completion']['teamwork'] == 44
+    assert turn['outcome'] == 'success'
+    assert result['stats']['teamwork'] == 52
+    assert send(client, game, text, key='last-assessed-interview') == result
+
+
+def test_interview_effect_cannot_be_farmed_with_new_requests(session):
+    client, _, game = at_month(session, 'p2_m03_rehearsal', fatigue=60)
+    game = send(client, game, '공개 질책을 중단해줘')
+    game = switch_month_room(client, game, 'dahyun')
+    game = send(client, game, '오늘 연습을 줄이고 쉬자')
+    assert game['stats']['fatigue'] == 55
+    game = switch_month_room(client, game, 'haram')
+    game = send(client, game, '오늘 연습을 줄이고 쉬자')
+    assert game['stats']['fatigue'] == 55
+    assert game['history'][-1]['stat_delta'] == {}
+
+
+def test_pending_training_choice_is_not_growth(session):
+    client, _, game = at_month(session, 'p2_m06_variety')
+    game = seed(client, game, lambda state: state.training_history.append('variety'))
+    result = send(client, game, 'accept_offer', action=True)
+    assert result['completed_events']['p2_m06_variety'] == 'failure'
+    assert result['ability_growth'] == []
+
+
+def test_legacy_training_growth_is_restored_from_completed_plan(session):
+    client, _, game = at_month(session, 'p2_m06_variety')
+
+    def legacy_save(state):
+        state.ability_growth = None
+        state.completed_events['p2_m01_training'] = 'success'
+        state.applied_effects.append('p2_m01_training:train_variety')
+
+    game = seed(client, game, legacy_save)
+    member_id = game['character']['profile_id']
+    assert game['ability_growth'] == [
+        {'member_id': member_id, 'skill': 'variety', 'event_id': 'p2_m01_training'},
+    ]
+    result = send(client, game, 'accept_offer', action=True)
+    assert result['completed_events']['p2_m06_variety'] == 'success'
+    assert result['member_abilities'][member_id]['variety'] == game['member_abilities'][member_id]['variety'] + 1

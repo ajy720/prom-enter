@@ -86,8 +86,15 @@ class DemoProvider:
             return Analysis(action_id='talk',needs_clarification=routing.needs_clarification,
                             reference_turn_id=None,assessments=[],conversation_change=routing)
         if context.get('conversation_only',False):
+            demo_examples = {
+                'support': '네 잘못이 아니야',
+                'mediate_team': '서로 의견을 듣고 함께 기준을 정하자',
+                'reduce_pressure': '오늘 연습을 줄이고 쉬자',
+            }
+            assessments = [Assessment(criterion_id=criterion, status='met', quote=text)
+                           for criterion in context['rubric'] if text == demo_examples.get(criterion)]
             return Analysis(action_id='talk',needs_clarification=False,reference_turn_id=None,
-                            assessments=[],utterance_kind=classify(text))
+                            assessments=assessments,utterance_kind=classify(text))
         actions = context.get('event',{}).get('actions',[])
         exact = next((a['id'] for a in actions if a['label'] == text), None)
         kind = 'command' if exact else classify(text)

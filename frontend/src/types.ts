@@ -41,7 +41,14 @@ export type Turn = {
   stat_delta: Partial<Stats>; image: string;
   ai_trace?: {prompt_version: string; provider: string; analysis_calls?: number; evaluation_calls?: number; generation_calls: number; phase: string; profile_id: string};
 };
+export type Ability = 'vocal' | 'dance' | 'visual' | 'variety';
 export type Game = {
+  member_abilities?: Record<string, Record<Ability, number>>;
+  ability_growth?: {member_id: string; skill: Ability; event_id: string}[];
+  monthly_interviews?: Record<string, number>;
+  comeback_center_id?: string | null;
+  award_speech?: string;
+  farewell?: string;
   promotion?: {track: 'A' | 'B'; budget_won: number; minimum_percent: {shortform: number; radio: number; fansign: number}} | null;
   showcase_awareness_start?: number | null;
   rehearsal?: {phase: 'reprimand' | 'interviews'} | null;

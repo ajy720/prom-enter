@@ -25,7 +25,7 @@ export function readIntroProgress(): IntroProgress | null {
   } catch { return null; }
 }
 
-export function TitleScreen({ onStart, onContinue, busy = false }: { onStart: () => void; onContinue: () => void; busy?: boolean }) {
+export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { onStart: () => void; onContinue: () => void; onLegacy?: () => void; busy?: boolean }) {
   const saved = readIntroProgress();
   return <section className="title-screen" aria-label="Prom::Enter 시작 화면">
     <TitleArtwork/>
@@ -37,6 +37,7 @@ export function TitleScreen({ onStart, onContinue, busy = false }: { onStart: ()
       <p className="title-description">당신의 선택으로 만나고, <br/>대화로 함께 만들어가는 이야기.</p>
       <div className="title-actions"><button className="primary-button" disabled={busy} onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
         {(saved || localStorage.getItem(storyGameKey)) && <button className="quiet-button" disabled={busy} onClick={onContinue}>{busy ? '불러오는 중…' : '이야기 이어하기'}</button>}
+        {onLegacy && <button className="quiet-button" disabled={busy} onClick={onLegacy}>이전 브라우저 데모 열기</button>}
       </div>
       <p className="title-footnote">STORY DEMO</p>
     </div>

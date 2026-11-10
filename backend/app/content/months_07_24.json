@@ -1,0 +1,539 @@
+[
+  {
+    "id": "p2_m07",
+    "month": 7,
+    "title": "흔들리는 마음",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "상담실",
+    "briefing": "신입을 향한 악플이 늘고 있습니다.",
+    "goal": "신입과 면담한 뒤 법적 대응과 SNS 방침을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "legal_pause",
+        "label": "법적 대응 · 개인 SNS 중단",
+        "hint": "법률 자문 비용 2천만 원"
+      },
+      {
+        "id": "legal_keep",
+        "label": "법적 대응 · SNS 유지",
+        "hint": "법률 자문 비용 2천만 원"
+      },
+      {
+        "id": "observe_pause",
+        "label": "경과 관찰 · 개인 SNS 중단",
+        "hint": ""
+      },
+      {
+        "id": "observe_keep",
+        "label": "경과 관찰 · SNS 유지",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m08",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m08",
+    "month": 8,
+    "title": "다시 숨을 고르는 시간",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "연습실",
+    "briefing": "컴백을 앞두고 컨디션을 점검합니다.",
+    "goal": "멤버들의 컨디션 관리 방법을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "vacation",
+        "label": "휴가 제공",
+        "hint": "피로 −25"
+      },
+      {
+        "id": "checkup",
+        "label": "건강검진",
+        "hint": "1천만 원 · 피로 −20"
+      },
+      {
+        "id": "skin",
+        "label": "피부과",
+        "hint": "500만 원 · 피로 −10"
+      },
+      {
+        "id": "massage",
+        "label": "마사지",
+        "hint": "800만 원 · 피로 −15"
+      }
+    ],
+    "next": "p2_m09",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m09",
+    "month": 9,
+    "title": "우리에게 온 광고",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "광고사가 신입 한 명을 모델로 지목했습니다.",
+    "goal": "광고 조건을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "ad_solo",
+        "label": "단독 광고 수락",
+        "hint": ""
+      },
+      {
+        "id": "ad_group",
+        "label": "전원 광고로 협상",
+        "hint": ""
+      },
+      {
+        "id": "ad_decline",
+        "label": "광고 거절",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m10",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m10",
+    "month": 10,
+    "title": "두 번째 컴백의 센터",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "연습실",
+    "briefing": "다음 곡의 센터를 정할 때입니다.",
+    "goal": "네 멤버 모두와 한 번 이상 면담한 뒤 센터를 선택하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "center_newcomer",
+        "label": "신입을 센터로",
+        "hint": ""
+      },
+      {
+        "id": "center_dahyun",
+        "label": "리안을 센터로",
+        "hint": ""
+      },
+      {
+        "id": "center_haram",
+        "label": "도하를 센터로",
+        "hint": ""
+      },
+      {
+        "id": "center_yuna",
+        "label": "세인을 센터로",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m11",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m11",
+    "month": 11,
+    "title": "무대 위에서 전할 말",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "연말 시상식의 신인상 후보가 되었습니다.",
+    "goal": "신입이 전할 수상 소감을 작성하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "save_speech",
+        "label": "수상 소감 확정",
+        "hint": "1~500자"
+      }
+    ],
+    "next": "p2_m12",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m12",
+    "month": 12,
+    "title": "첫해의 마지막 무대",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "시상식장",
+    "briefing": "신인상 발표와 스페셜 무대가 이어집니다.",
+    "goal": "시상식 결과를 확인하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "confirm_rookie_award",
+        "label": "시상식 결과 확인",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m13",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m13",
+    "month": 13,
+    "title": "소문 너머의 목소리",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "상담실",
+    "briefing": "신입의 과거를 둘러싼 주장이 SNS에서 퍼지고 있습니다.",
+    "goal": "기록과 증언을 조사하고 공식 대응을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "check_sns",
+        "label": "SNS 기록 확인",
+        "hint": "조사"
+      },
+      {
+        "id": "contact_hana",
+        "label": "친구 하나에게 연락",
+        "hint": "조사"
+      },
+      {
+        "id": "check_school",
+        "label": "학교 상담 기록 확인",
+        "hint": "조사"
+      },
+      {
+        "id": "protect_member",
+        "label": "조사 결과로 신입 보호",
+        "hint": "최종 결정"
+      },
+      {
+        "id": "publish_apology",
+        "label": "조사 없이 책임 인정",
+        "hint": "최종 결정"
+      }
+    ],
+    "next": "p2_m14",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m14",
+    "month": 14,
+    "title": "이미지를 다시 세우는 시간",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "논란 이후 광고사와 팬들이 팀의 다음 활동을 주시합니다.",
+    "goal": "계약과 이미지 회복 방향을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "rebuild_group",
+        "label": "팀 단위 계약·이미지 회복 콘텐츠 협상",
+        "hint": ""
+      },
+      {
+        "id": "rebuild_individual",
+        "label": "기존 멤버 단독 계약 협상",
+        "hint": ""
+      },
+      {
+        "id": "rebuild_content",
+        "label": "광고를 보류하고 팀 콘텐츠 제작",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m15",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m15",
+    "month": 15,
+    "title": "새로운 예능 제안",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "신입에게 예능 고정 출연 제안이 왔습니다.",
+    "goal": "고정 출연 또는 자체 콘텐츠를 선택하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "variety_regular",
+        "label": "예능 고정 출연",
+        "hint": ""
+      },
+      {
+        "id": "variety_content",
+        "label": "자체 콘텐츠에 집중",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m16",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m16",
+    "month": 16,
+    "title": "팬들이 만날 자리",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "팬미팅을 열어달라는 요청이 이어집니다.",
+    "goal": "좌석 규모와 티켓 가격을 선택하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "fanmeeting_1000_40000",
+        "label": "1,000석 · 40,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_1000_70000",
+        "label": "1,000석 · 70,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_1000_100000",
+        "label": "1,000석 · 100,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_5000_40000",
+        "label": "5,000석 · 40,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_5000_70000",
+        "label": "5,000석 · 70,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_5000_100000",
+        "label": "5,000석 · 100,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_15000_40000",
+        "label": "15,000석 · 40,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_15000_70000",
+        "label": "15,000석 · 70,000원",
+        "hint": ""
+      },
+      {
+        "id": "fanmeeting_15000_100000",
+        "label": "15,000석 · 100,000원",
+        "hint": ""
+      }
+    ],
+    "next": "p2_m17",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m17",
+    "month": 17,
+    "title": "쉴 틈 없는 스케줄",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "연습실",
+    "briefing": "외부 일정이 밀려 팀 연습 시간이 부족해졌습니다.",
+    "goal": "연습과 휴식을 어떻게 확보할지 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "schedule_rest",
+        "label": "겹치는 일정 거절 · 휴식일 확보",
+        "hint": "결정 즉시 피로 −20"
+      },
+      {
+        "id": "schedule_reduce",
+        "label": "필수 일정만 유지",
+        "hint": "결정 즉시 피로 −10"
+      },
+      {
+        "id": "schedule_keep",
+        "label": "전체 일정 유지",
+        "hint": "결정 즉시 피로 +5"
+      }
+    ],
+    "next": "p2_m18",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m18",
+    "month": 18,
+    "title": "해외 진출 제안",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "일본 유통사가 현지 방송과 쇼케이스를 제안했습니다.",
+    "goal": "유통사를 조사하고 비용 분담을 검토한 뒤 현지 활동 준비를 확정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "investigate_partner",
+        "label": "백하연에게 유통사 평판 조사 지시",
+        "hint": "사전 준비"
+      },
+      {
+        "id": "negotiate_costs",
+        "label": "쇼케이스 비용 분담 협상",
+        "hint": "사전 준비"
+      },
+      {
+        "id": "confirm_overseas",
+        "label": "현지 활동 준비 확정",
+        "hint": "최종 결정"
+      }
+    ],
+    "next": "p2_m19",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m19",
+    "month": 19,
+    "title": "현지 무대를 위한 준비",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "연습실",
+    "briefing": "현지어 곡과 무대 리허설을 준비합니다.",
+    "goal": "신입의 의견을 듣고 어학·안무·휴식 시간과 콘셉트를 정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "prepare_balanced",
+        "label": "어학·안무·휴식 균형 배정 · 팀 색 유지",
+        "hint": "피로 −10"
+      },
+      {
+        "id": "prepare_local",
+        "label": "현지어와 현지 콘셉트에 집중",
+        "hint": ""
+      },
+      {
+        "id": "prepare_stage",
+        "label": "안무와 무대 완성도에 집중",
+        "hint": "피로 +5"
+      }
+    ],
+    "next": "p2_m20",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m20",
+    "month": 20,
+    "title": "현지 쇼케이스와 루머",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "해외 공연장",
+    "briefing": "현지 공연과 방송을 마친 뒤 바이프발 의혹이 퍼지기 시작합니다.",
+    "goal": "출처를 확인하고 멤버와 면담한 뒤 대응을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "trace_rumor",
+        "label": "루머 출처 확인",
+        "hint": "사전 조사"
+      },
+      {
+        "id": "respond_facts",
+        "label": "확인한 사실 중심으로 해명",
+        "hint": "최종 결정"
+      },
+      {
+        "id": "respond_legal",
+        "label": "법적 대응",
+        "hint": "최종 결정"
+      },
+      {
+        "id": "respond_silent",
+        "label": "공식 대응 보류",
+        "hint": "최종 결정"
+      }
+    ],
+    "next": "p2_m21",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m21",
+    "month": 21,
+    "title": "첫 단독 콘서트",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "공연장",
+    "briefing": "귀국 후 첫 단독 콘서트 규모를 정합니다.",
+    "goal": "공연장, 티켓 가격, 연출 예산과 세트리스트를 선택하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "concert_small",
+        "label": "3천 석 · 7만 원 · 연출 3천만 원",
+        "hint": "대표곡 중심"
+      },
+      {
+        "id": "concert_medium",
+        "label": "1만 석 · 10만 원 · 연출 8천만 원",
+        "hint": "대표곡과 신곡 혼합"
+      },
+      {
+        "id": "concert_large",
+        "label": "3만 석 · 15만 원 · 연출 2억 원",
+        "hint": "특별 무대 포함"
+      }
+    ],
+    "next": "p2_m22",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m22",
+    "month": 22,
+    "title": "마지막 컴백",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "연습실",
+    "briefing": "계약 만료 전 마지막 앨범을 준비합니다.",
+    "goal": "타이틀 콘셉트와 제작·홍보·예비비 계획을 결정하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "comeback_balanced",
+        "label": "팀 색을 살린 타이틀 · 예비비 확보",
+        "hint": "제작 6천만 원 · 홍보 4천만 원"
+      },
+      {
+        "id": "comeback_global",
+        "label": "해외 시장 타이틀 · 홍보 집중",
+        "hint": "제작 5천만 원 · 홍보 1억 원"
+      },
+      {
+        "id": "comeback_music",
+        "label": "라이브 중심 타이틀 · 제작 집중",
+        "hint": "제작 1억 원 · 홍보 2천만 원"
+      }
+    ],
+    "next": "p2_m23",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m23",
+    "month": 23,
+    "title": "시상식과 계약 결산",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "시상식장",
+    "briefing": "계약 마지막 해의 시상식이 열립니다.",
+    "goal": "성과를 확인하고 멤버에게 마지막 인사를 남길 수 있습니다.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "year_end_review",
+        "label": "반기 결산 확정",
+        "hint": "인사 500자 이내, 선택 사항"
+      }
+    ],
+    "next": "p2_m24",
+    "outcomes": {}
+  },
+  {
+    "id": "p2_m24",
+    "month": 24,
+    "title": "우리의 다음 페이지",
+    "subtitle": "프로뮤 활동 기록",
+    "scene": "대표실",
+    "briefing": "24개월 계약 기간이 끝났습니다.",
+    "goal": "그동안 쌓아온 팀의 결말을 확인하세요.",
+    "resolver": "monthly",
+    "actions": [
+      {
+        "id": "contract_result",
+        "label": "계약 결말 확인",
+        "hint": ""
+      }
+    ],
+    "next": null,
+    "outcomes": {}
+  }
+]

@@ -161,6 +161,12 @@ class CenterChatInterpretation(Model):
     expression: Expression = "neutral"
 
 
+class AbilityGrowth(Model):
+    member_id: Literal['hyerin', 'seoyeon', 'jiwoo', 'dahyun', 'haram', 'yuna']
+    skill: Literal['vocal', 'dance', 'visual', 'variety']
+    event_id: str
+
+
 class State(Model):
     game_id: str
     character_id: str
@@ -170,6 +176,7 @@ class State(Model):
     stats: Stats = Field(default_factory=Stats)
     starting_funds_won: int = Field(default=300_000_000, ge=0)
     training_history: list[str] = Field(default_factory=list)
+    ability_growth: list[AbilityGrowth] | None = None
     evidence_ids: list[str] = Field(default_factory=list)
     applied_effects: list[str] = Field(default_factory=list)
     completed_events: dict[str, str] = Field(default_factory=dict)
@@ -186,6 +193,9 @@ class State(Model):
     center_decision: CenterDecision | None = None
     center_choice_draft: CenterChoiceDraft | None = None
     showcase_awareness_start: int | None = None
+    comeback_center_id: str | None = None
+    award_speech: str = ""
+    farewell: str = ""
 
     @model_validator(mode='after')
     def part2_starting_funds(self):

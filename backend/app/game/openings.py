@@ -6,10 +6,18 @@ from app.ai.profiles import DATA, character_profile
 from app.content import EVENTS
 from app.models import EventOpening, OpeningChoice, OpeningMessage, State
 from app.game.interviews import is_interview
-from app.game import rehearsal
+from app.game import rehearsal, member_abilities
 from app.game import monthly_decisions as monthly
 
 OPENINGS=json.loads((Path(__file__).resolve().parents[1]/'content/event_openings.json').read_text())
+
+
+def training_status(state):
+    if state.event_id == 'm06_variety':
+        return ('예능 훈련을 마친 기록이 있습니다.' if 'variety' in state.training_history
+                else '현재 기록에는 예능 훈련 이력이 없습니다.')
+    return ('신입의 예능 능력치가 오른 기록이 있습니다.' if member_abilities.trained(state, 'variety')
+            else '현재 기록에는 신입의 예능 성장 이력이 없습니다.')
 
 
 def make_opening(state: State, history: list[dict], *, after_turn_id: str | None = None) -> EventOpening:
@@ -23,8 +31,7 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
             'promotion_scene':('쇼케이스에서 서로를 감싸준 멤버들의 모습이 화제가 됐습니다. 음원과 첫 음악방송을 향한 기대 속에서 다음 활동을 준비합니다.'
                                if state.completed_events.get('p2_m04_showcase') == 'success' else
                                '쇼케이스의 실수 영상이 퍼지고 음원 반응도 주춤합니다. 멤버들은 다시 연습실에 모여 다음 무대를 준비합니다.'),
-            'training_status':'예능 훈련을 마친 기록이 있습니다.' if 'variety' in state.training_history
-                              else '현재 기록에는 예능 훈련 이력이 없습니다.'}
+            'training_status':training_status(state)}
     if after_turn_id is None and history:
         # Restore a missing arrival before the first user turn in this event.
         index=next((i for i,t in enumerate(history) if t['event_id']==state.event_id),len(history))
@@ -39,6 +46,17 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
     else:
         messages = ([OpeningMessage(character_id=character.id,name=character.name,text=f'안녕하세요. {character.name}입니다. 잘 부탁드립니다.')]
                     if is_interview(state.event_id) else [OpeningMessage(character_id=secretary.id,name=secretary.name,text=template['secretary'].format(**values))])
+    if state.event_id == 'p2_m07':
+        summary = ('첫 예능의 반응은 좋았지만 신입을 겨냥한 악플이 이어집니다.'
+                   if state.completed_events.get(monthly.VARIETY) == 'success' else
+                   '첫 예능 이후 신입을 겨냥한 악플이 늘었습니다.')
+        template = {**template, 'narration': summary}
+    if state.event_id == 'p2_m16':
+        previous = state.completed_events.get('p2_m15')
+        summary = {'success': '예능으로 신규 팬이 늘고 팬미팅 요청이 이어집니다.',
+                   'failure': '예능에서 말실수가 있었지만 팬들은 직접 만날 자리를 요청합니다.',
+                   'neutral': '자체 콘텐츠를 본 팬들이 오프라인 만남을 요청합니다.'}
+        template = {**template, 'narration': summary.get(previous, template['narration'])}
     beats = []
     def beat(person, name, text):
         return OpeningMessage(character_id=person, name=name, text=text)
@@ -77,7 +95,8 @@ def openings_for_view(state: State, history: list[dict]) -> list[EventOpening]:
     # stable IDs and chronological anchors. Saved turns and game results stay intact.
     openings = [make_opening(state.model_copy(update={'event_id': opening.event_id}), [],
                             after_turn_id=opening.after_turn_id).model_copy(update={'id': opening.id})
-                if opening.event_id.startswith('p2_m0') and not (opening.event_id == monthly.VARIETY and opening.beats) else opening for opening in state.event_openings]
+                if opening.event_id.startswith('p2_m0') and opening.month <= 6
+                and not (opening.event_id == monthly.VARIETY and opening.beats) else opening for opening in state.event_openings]
     if any(opening.event_id==state.event_id for opening in state.event_openings):
         return openings
     return [*openings,make_opening(state,history)]

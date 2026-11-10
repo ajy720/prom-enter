@@ -19,7 +19,7 @@ def validate_analysis(analysis: Analysis, text: str, context) -> Analysis:
             'promised_action_id':None,'conversation_change':intent,'needs_clarification':intent.needs_clarification,
             'clarification_question':question if intent.needs_clarification else None})
     specs = {c['id']:c for c in context.get('criteria',[])}
-    if not specs:
+    if not specs and not context.get('conversation_only'):
         specs = {k:{'scope':'current'} for k in ('support','promise')}
     if len({a.criterion_id for a in analysis.assessments}) != len(analysis.assessments):
         raise ValueError('Repeated criterion')
