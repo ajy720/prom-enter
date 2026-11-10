@@ -208,7 +208,7 @@
 @media (max-width: 900px) {
   .monthly-stage.month-two-photos { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
   .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) { width: min(340px, 100%); }
-  .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) .photo-slot { height: 300px; aspect-ratio: auto; }
+  .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) .photo-slot { height: var(--secretary-portrait-height, 300px); aspect-ratio: auto; }
 }
 @media (max-width: 700px) {
   .monthly-intro:is(.month-one-photos, .month-two-photos) { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
@@ -282,4 +282,23 @@
 }
 @media (max-width: 380px) {
   .center-month .center-member-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (min-width: 901px) {
+  .server-monthly-stage > .monthly-info { grid-area: 2 / 1; }
+  .server-monthly-stage > .monthly-portrait { grid-area: 2 / 2; }
+  .server-monthly-stage > .monthly-dock { grid-area: 2 / 3; }
+}
+
+@media (max-width: 900px) {
+  .server-monthly-stage { align-content: start; --secretary-portrait-height: 128px; }
+  .server-monthly-stage > .monthly-portrait { margin-bottom: 0; }
+  .server-monthly-stage > .monthly-portrait .photo-slot { height: 128px; }
+  .server-monthly-stage.is-summary > .monthly-dock { grid-row: 2; }
+  .server-monthly-stage > .monthly-dock {
+    padding: var(--space-4);
+    border-radius: var(--radius-panel);
+  }
+  .server-monthly-stage .monthly-dialogue-area .dialogue-content { min-height: 0; }
+  .server-monthly-stage.is-summary > .monthly-dock { padding: 0; }
 }

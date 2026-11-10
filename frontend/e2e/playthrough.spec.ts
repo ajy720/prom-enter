@@ -193,6 +193,21 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   await sixMonths(page,selected);
   await laterOpening(page);
   await expect(page.getByRole('button',{name:'이번 달 활동·결정 →',exact:true})).toBeDisabled();
+  const narrow = page.viewportSize()!.width <= 900;
+  if (narrow) {
+    const dock = (await page.locator('.monthly-dock').boundingBox())!;
+    const info = (await page.locator('.monthly-info').boundingBox())!;
+    expect(dock.y + dock.height).toBeLessThanOrEqual(info.y);
+  }
+  await shot(page,'month-seven');
+  const progress = page.getByRole('list', {name:'월별 진행'});
+  const currentMonth = progress.locator('[aria-current="step"]');
+  await expect(currentMonth).toContainText('7개월');
+  expect(await currentMonth.evaluate(row => {
+    const item = row.getBoundingClientRect();
+    const list = row.parentElement!.getBoundingClientRect();
+    return item.top >= list.top - 1 && item.bottom <= list.bottom + 1;
+  })).toBe(true);
   await monthlyInterview(page,selected);
   await monthlyDecision(page,/법적 대응 · 개인 SNS 중단/);
   await laterOpening(page);
@@ -215,6 +230,14 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   const awardsResult = page.getByRole('region',{name:'이번 달 결과',exact:true});
   await expect(awardsResult).toContainText('신인상 트로피를 받았습니다');
   await expect(awardsResult).toContainText(speech);
+  const topbarTitle = page.locator('.intro-topbar > span');
+  await expect(topbarTitle).toHaveText('첫해의 마지막 무대');
+  if (narrow) {
+    const result = (await awardsResult.boundingBox())!;
+    const portrait = (await page.locator('.monthly-portrait').boundingBox())!;
+    expect(result.y + result.height).toBeLessThanOrEqual(portrait.y);
+  }
+  await shot(page,'month-twelve-awards');
   const awards=await (await page.request.get(`/api/games/${id}`)).json();
   expect(awards.event.month).toBe(13);
   expect(awards.award_speech).toBe(speech);
@@ -222,6 +245,7 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   expect(awards.completed_events.p2_m12).toBe('success');
   expect(awards.stats.fans).toBe(100_000);
   await laterOpening(page);
+  await expect(topbarTitle).toHaveText('소문 너머의 목소리');
   for (const action of [/SNS 기록 확인/, /친구 하나에게 연락/]) {
     await monthlyDecision(page, action);
   }
