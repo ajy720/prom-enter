@@ -164,11 +164,10 @@ async function laterOpening(page:Page) {
   await intro.getByRole('button',{name:'이야기 시작하기 →',exact:true}).click();
 }
 
-async function monthlyDecision(page:Page, name:RegExp, speech?:string) {
+async function monthlyDecision(page:Page, name:RegExp) {
   await page.getByRole('button',{name:'이번 달 활동·결정 →',exact:true}).click();
   const dialog = page.locator('dialog[open]');
   await dialog.getByRole('button',{name}).click();
-  if(speech !== undefined) await dialog.getByRole('textbox',{name:'수상 소감',exact:true}).fill(speech);
   return serverAction(page,()=>dialog.getByRole('button',{name:'확정하기',exact:true}).click());
 }
 
@@ -201,7 +200,7 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   await monthlyDecision(page,/리안을 센터로/);
   await laterOpening(page);
   const speech='함께한 멤버와 팬 여러분 감사합니다.';
-  await monthlyDecision(page,/수상 소감 확정/,speech);
+  await serverChat(page, '이번 달 대화', `수상 소감 확정: ${speech}`);
   await laterOpening(page);
   await monthlyDecision(page,/시상식 결과 확인/);
   await resume(page);
@@ -218,10 +217,16 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   const investigation = await serverChat(page, '이번 달 대화', '학교 상담 기록을 확인해줘');
   expect(investigation.history.at(-1).analysis.action_id).toBe('check_school');
   await monthlyDecision(page, /조사 결과로 신입 보호/);
-  for (const action of [/팀 단위 계약/, /자체 콘텐츠에 집중/, /1,000석 · 40,000원/, /겹치는 일정 거절/]) {
+  for (const action of [/팀 단위 계약/, /자체 콘텐츠에 집중/]) {
     await laterOpening(page);
     await monthlyDecision(page, action);
   }
+  await laterOpening(page);
+  const unclear = await serverChat(page, '이번 달 대화', '팬미팅을 1천 석으로 진행해줘');
+  expect(unclear.history.at(-1).analysis.needs_clarification).toBe(true);
+  await serverChat(page, '이번 달 대화', '팬미팅은 1천 석, 4만 원으로 진행해줘');
+  await laterOpening(page);
+  await monthlyDecision(page, /겹치는 일정 거절/);
   await laterOpening(page);
   await serverChat(page, '이번 달 대화', '유통사 평판을 조사해줘');
   await monthlyDecision(page, /쇼케이스 비용 분담 협상/);
@@ -235,10 +240,14 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   await serverAction(page, () => page.getByRole('combobox',{name:'대화 상대',exact:true}).selectOption('baek_hayeon'));
   const response = await serverChat(page, '이번 달 대화', '확인한 사실 중심으로 해명해줘');
   expect(response.history.at(-1).analysis.action_id).toBe('respond_facts');
-  for (const action of [/3천 석/, /팀 색을 살린 타이틀/, /반기 결산 확정/, /계약 결말 확인/]) {
+  for (const action of [/3천 석/, /팀 색을 살린 타이틀/]) {
     await laterOpening(page);
     await monthlyDecision(page, action);
   }
+  await laterOpening(page);
+  await serverChat(page, '이번 달 대화', '마지막 인사: 함께해 줘서 고마워요.');
+  await laterOpening(page);
+  await serverChat(page, '이번 달 대화', '계약 결말을 보여줘');
   await expect(page.getByRole('region',{name:'계약 결말',exact:true})).toBeVisible();
   await resume(page);
   await expect(page.getByRole('region',{name:'계약 결말',exact:true})).toBeVisible();
@@ -246,6 +255,7 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   expect(saved.game_id).toBe(id);
   expect(saved.character.name).toBe(selected);
   expect(saved.event.month).toBe(24);
+  expect(saved.farewell).toBe('함께해 줘서 고마워요.');
   expect(saved.ending.id).toMatch(/^contract_/);
   expect(await page.evaluate(id=>localStorage.getItem(`prom-playthrough-v2:${id}`),id)).toBeNull();
   expect(creations).toBe(1); expect(new URL(page.url()).search).toBe(''); expect(errors).toEqual([]);

@@ -327,7 +327,7 @@ class TurnService:
         if analysis is None:
             analysis = Analysis(action_id=request.action_id, needs_clarification=False,
                                 reference_turn_id=None, assessments=[])
-        payload = '' if from_chat else request.text
+        payload = (analysis.action_text or '') if from_chat else request.text
         proposal = later_months.resolve(state, analysis.action_id, payload, history, request.request_id)
         updated = proposal.state
         if proposal.outcome in {'success', 'partial', 'failure'}:

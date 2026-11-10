@@ -21,7 +21,7 @@ export type EventOpening = {
 export type Analysis = {
   action_id: string; needs_clarification: boolean; reference_turn_id: string | null; assessments: Assessment[];
   utterance_kind?: 'command' | 'question' | 'proposal' | 'recollection' | 'negation' | 'conversation' | 'promise';
-  target_id?: string | null; clarification_question?: string | null; promised_action_id?: string | null;
+  target_id?: string | null; clarification_question?: string | null; promised_action_id?: string | null; action_text?: string | null;
   conversation_change?: {mode: 'public' | 'private' | null; target_character_id: string | null; quote: string; needs_clarification: boolean} | null;
 };
 export type Turn = {

@@ -41,6 +41,36 @@ PATTERNS = {
 }
 
 MONTHLY_PATTERNS = {
+    'vacation': r'휴가',
+    'checkup': r'(?:건강\s*)?검진',
+    'skin': r'피부과',
+    'massage': r'마사지',
+    'ad_solo': r'(?:단독|개인).{0,10}광고.{0,10}(?:수락|진행|받)',
+    'ad_group': r'(?:전원|단체|그룹).{0,10}광고',
+    'ad_decline': r'광고.{0,10}(?:거절|안 받)',
+    'center_newcomer': r'신입.{0,10}센터',
+    'center_dahyun': r'리안.{0,10}센터',
+    'center_haram': r'도하.{0,10}센터',
+    'center_yuna': r'세인.{0,10}센터',
+    'save_speech': r'수상\s*소감',
+    'confirm_rookie_award': r'(?:시상식|수상).{0,12}결과',
+    'rebuild_group': r'(?:팀 단위|단체|그룹).{0,10}계약',
+    'rebuild_individual': r'(?:단독|개인).{0,10}계약',
+    'rebuild_content': r'팀 콘텐츠',
+    'variety_regular': r'예능.{0,12}(?:고정|출연)',
+    'variety_content': r'자체 콘텐츠',
+    'schedule_rest': r'(?:휴식일|겹치는 일정.{0,8}거절)',
+    'schedule_reduce': r'필수 일정',
+    'schedule_keep': r'전체 일정',
+    'prepare_balanced': r'(?:어학.{0,10}안무.{0,10}휴식|균형 배정)',
+    'prepare_local': r'(?:현지어|현지 콘셉트).{0,20}(?:집중|위주)',
+    'prepare_stage': r'(?:안무|무대 완성도).{0,20}(?:집중|위주)',
+    'comeback_balanced': r'(?:팀 색|예비비)',
+    'comeback_global': r'(?:해외 시장|글로벌).{0,10}(?:타이틀|컴백)',
+    'comeback_music': r'(?:라이브|음악).{0,10}(?:타이틀|중심)',
+    'year_end_review': r'(?:마지막 인사|(?:반기|계약) 결산)',
+    'contract_result': r'(?:계약.{0,8})?결말',
+
     'protect_member': r'(?:조사 결과|확인한 (?:단서|사실)).{0,24}신입.{0,10}보호',
     'investigate_partner': r'(?:유통사|협력사).{0,18}(?:평판|실적|조사)',
     'negotiate_costs': r'(?:쇼케이스|공연)?\s*비용.{0,12}(?:분담|나눠|나누)',
@@ -50,6 +80,54 @@ MONTHLY_PATTERNS = {
     'respond_legal': r'법적 대응',
     'respond_silent': r'(?:공식 대응|공식 입장|공식 발표).{0,12}(?:보류|미루)',
 }
+
+
+# The offline provider uses representative expressions. The real provider reads
+# the same allowed choices and interprets natural phrasing through the prompt.
+AMOUNT_UNITS = {
+    '억': 100_000_000, '천만': 10_000_000, '백만': 1_000_000, '십만': 100_000,
+    '만': 10_000, '천': 1000, '백': 100, '십': 10, '': 1,
+}
+UNIT_PATTERN = '|'.join(unit for unit in AMOUNT_UNITS if unit)
+AMOUNT_PART = rf'(\d[\d,]*)\s*({UNIT_PATTERN})?'
+AMOUNT = rf'(?:\d[\d,]*\s*(?:{UNIT_PATTERN})\s*)*\d[\d,]*(?:\s*(?:{UNIT_PATTERN}))?'
+
+
+def monthly_amounts(text, suffix):
+    return tuple(
+        sum(int(number.replace(',', '')) * AMOUNT_UNITS[unit] for number, unit in re.findall(AMOUNT_PART, value))
+        for value in re.findall(rf'({AMOUNT})\s*{suffix}', text)
+    )
+
+
+def monthly_compound_choice(event, text):
+    if event['id'] == 'p2_m07':
+        responses = []
+        if re.search(r'법적 대응', text):
+            responses.append('legal')
+        if re.search(r'경과 관찰|지켜보', text):
+            responses.append('observe')
+        policies = []
+        if re.search(r'SNS.{0,12}(?:중단|멈)', text, re.I):
+            policies.append('pause')
+        if re.search(r'SNS.{0,12}(?:유지|계속)', text, re.I):
+            policies.append('keep')
+        if len(responses) == len(policies) == 1:
+            return f'{responses[0]}_{policies[0]}', None
+        if responses or policies:
+            return None, '법적 대응 여부와 SNS 중단 또는 유지 중 하나를 각각 정해주시겠어요?'
+    elif event['id'] in {'p2_m16', 'p2_m21'}:
+        seats = monthly_amounts(text, '석')
+        amounts = monthly_amounts(text, '원')
+        if not (seats or amounts or re.search(r'팬미팅|콘서트', text)):
+            return None, None
+        for action in event['actions']:
+            label = action['label']
+            if seats == monthly_amounts(label, '석') and amounts == monthly_amounts(label, '원'):
+                return action['id'], None
+        fields = '좌석 수와 티켓 가격' if event['id'] == 'p2_m16' else '좌석 수, 티켓 가격, 연출 예산'
+        return None, f'선택지에 있는 {fields}을 함께 알려주시겠어요?'
+    return None, None
 
 
 def classify(text):
@@ -92,6 +170,17 @@ class DemoProvider:
         if 'stop_reprimand' in context['allowed_actions'] and reprimand_stop_requested(text):
             return Analysis(action_id='stop_reprimand', needs_clarification=False, reference_turn_id=None,
                             assessments=[], utterance_kind='command')
+        event = context.get('event', {})
+        monthly = event.get('resolver') == 'monthly'
+        action_text = None
+        for action in ('save_speech', 'year_end_review'):
+            if action not in context['allowed_actions']:
+                continue
+            parts = re.split(r'[:：\n]', text, maxsplit=1)
+            if len(parts) == 2 and re.search(MONTHLY_PATTERNS[action], parts[0]):
+                text, action_text = (part.strip() for part in parts)
+                if (action_text[:1], action_text[-1:]) in {('"', '"'), ('“', '”')}:
+                    action_text = action_text[1:-1]
         routing=offline_intent(text,context.get('conversation'))
         if routing is not None:
             return Analysis(action_id='talk',needs_clarification=routing.needs_clarification,
@@ -106,22 +195,31 @@ class DemoProvider:
                            for criterion in context['rubric'] if text == demo_examples.get(criterion)]
             return Analysis(action_id='talk',needs_clarification=False,reference_turn_id=None,
                             assessments=assessments,utterance_kind=classify(text))
-        actions = context.get('event',{}).get('actions',[])
+        actions = event.get('actions', [])
         exact = next((a['id'] for a in actions if a['label'] == text), None)
-        monthly = context.get('event', {}).get('resolver') == 'monthly'
         kind = 'command' if exact else classify(text)
+        if action_text is not None and kind == 'conversation':
+            kind = 'command'
         patterns = {**PATTERNS, **MONTHLY_PATTERNS} if monthly else PATTERNS
         # Stop commands are handled only by the scene-specific check above.
         found = [key for key,pattern in patterns.items() if key != 'stop_reprimand' and re.search(pattern,text,re.I)]
         candidates = [key for key in found if key in context['allowed_actions']]
+        compound_question = None
         if monthly and not exact:
+            if 'center_newcomer' in context['allowed_actions']:
+                newcomer = re.escape(context['character']['name'])
+                if re.search(rf'{newcomer}.{{0,10}}센터', text) and 'center_newcomer' not in candidates:
+                    candidates.append('center_newcomer')
+            compound_choice, compound_question = monthly_compound_choice(event, text)
+            if compound_choice:
+                candidates.append(compound_choice)
             if re.search(r'번역|인용|라는\s*(?:말|문장|대사)|라고\s*(?:말했|했)', text):
                 candidates, kind = [], 'conversation'
             elif re.search(r'\b안\s+|지\s*않|하지\s*말고|할 필요.{0,4}없', text):
                 kind = 'negation'
-            elif re.search(r'볼까|어떨까|할지', text):
+            elif re.search(r'볼까|어떨까|할지|에 대해.{0,8}(?:설명|알려|말해)|뭔지|무엇인지|가능한지|어떻게', text):
                 kind = 'question'
-            elif kind == 'conversation' and re.search(r'해주세요|하세요|해라|하도록|확인해|검토해|조사해|보류해', text):
+            elif kind == 'conversation' and re.search(r'해주세요|하세요|해라|하도록|확인해|검토해|조사해|보류해|휴가.{0,8}줘', text):
                 kind = 'command'
         reference, clarification = None, False
         if '그 친구' in text:
@@ -132,6 +230,8 @@ class DemoProvider:
         action = exact or (candidates[0] if kind == 'command' and len(candidates) == 1 else 'talk')
         clarification |= (kind == 'command' and len(candidates)>1 and not exact) or bool(found and not candidates and kind == 'command')
         if monthly and candidates and kind == 'question' and re.search(r'할까|볼까|어떨까|할지', text):
+            clarification = True
+        if compound_question and kind in {'command', 'question'}:
             clarification = True
         clarification |= any(t in text for t in ('그걸','성공으로','스탯을'))
         criteria = context.get('rubric',{})
@@ -149,7 +249,8 @@ class DemoProvider:
         return Analysis(action_id='talk' if clarification else action, needs_clarification=clarification,
                         reference_turn_id=reference, assessments=assessments, utterance_kind=kind,
                         target_id=None, promised_action_id=promised,
-                        clarification_question='어떤 행동과 대상을 원하시는지 알려주시겠어요?' if clarification else None)
+                        action_text=action_text,
+                        clarification_question=(compound_question or '어떤 행동과 대상을 원하시는지 알려주시겠어요?') if clarification else None)
 
     def generate(self, text, actor, direction, facts, clarification):
         profile = actor['character']

@@ -22,8 +22,9 @@ def test_same_game_continues_from_checkpoint_to_end(session):
     assert game['event']['month'] == 7 and game['ending'] is None
     act(client, game, 'observe_pause', expected=422)
     game = switch_month_room(client, game, game['character']['profile_id'])
-    # Late chat can discuss a choice, but only a submitted button can execute it.
+    # Member interviews do not execute activity orders.
     game = send(client, game, '법적 대응 · 개인 SNS 중단')
+    assert game['history'][-1]['analysis']['action_id'] == 'talk'
     assert game['event']['month'] == 7
     assert game['monthly_interviews'][game['character']['profile_id']] == 1
     for action in ('legal_pause', 'vacation', 'ad_group'):
@@ -126,3 +127,101 @@ def test_rumor_chat_keeps_member_interviews_separate_from_orders(session):
     game = send(client, game, '확인한 사실 중심으로 해명해줘')
     assert game['completed_events']['p2_m20'] == 'success'
     assert game['event']['month'] == 21
+
+
+@pytest.mark.parametrize('month,utterance,action_id', [
+    (8, '멤버들에게 휴가를 줘', 'vacation'),
+    (9, '전원 광고로 협상해줘', 'ad_group'),
+    (12, '시상식 결과를 보여줘', 'confirm_rookie_award'),
+    (14, '팀 단위 계약으로 협상해줘', 'rebuild_group'),
+    (15, '자체 콘텐츠에 집중해줘', 'variety_content'),
+    (16, '팬미팅은 5천 석에 7만 원으로 진행해줘', 'fanmeeting_5000_70000'),
+    (17, '휴식일을 확보해줘', 'schedule_rest'),
+    (19, '어학·안무·휴식 균형 배정으로 진행해줘', 'prepare_balanced'),
+    (21, '콘서트는 1만 석, 티켓 10만 원, 연출은 8천만 원으로 진행해줘', 'concert_medium'),
+    (22, '라이브 중심 타이틀로 진행해줘', 'comeback_music'),
+    (24, '계약 결말을 보여줘', 'contract_result'),
+])
+def test_monthly_chat_executes_existing_choice(session, month, utterance, action_id):
+    client, _, game = at_month(session, f'p2_m{month:02}')
+    result = send(client, game, utterance)
+    assert result['history'][-1]['analysis']['action_id'] == action_id
+    assert result['history'][-1]['kind'] == 'activity'
+    assert result['history'][-1]['input'] == utterance
+    assert result['event']['month'] == min(month + 1, 24)
+
+
+def test_chat_keeps_interview_requirements_and_resolves_center_by_name(session):
+    client, _, game = at_month(session, 'p2_m07')
+    send(client, game, '법적 대응하고 개인 SNS는 중단해줘', status=422)
+    game = switch_month_room(client, game, game['character']['profile_id'])
+    game = send(client, game, '지금 어떤 마음인지 알려줘')
+    game = switch_month_room(client, game, 'baek_hayeon')
+    ambiguous = send(client, game, '법적 대응을 진행해줘')
+    assert ambiguous['history'][-1]['analysis']['needs_clarification']
+    game = send(client, ambiguous, '법적 대응하고 개인 SNS는 중단해줘')
+    assert game['history'][-1]['analysis']['action_id'] == 'legal_pause'
+
+    _, _, game = at_month(session, 'p2_m10')
+    for member in game['monthly_interviews']:
+        game = switch_month_room(client, game, member)
+        game = send(client, game, '센터에 대한 생각을 알려줘')
+    game = switch_month_room(client, game, None)
+    game = send(client, game, '리안을 센터로 정해줘')
+    assert game['comeback_center_id'] == 'dahyun'
+
+
+@pytest.mark.parametrize('month,utterance,field', [
+    (11, '수상 소감 확정', 'award_speech'),
+    (23, '마지막 인사를 남겨줘', 'farewell'),
+])
+def test_chat_copies_player_text_to_existing_saved_field(session, month, utterance, field):
+    client, _, game = at_month(session, f'p2_m{month:02}')
+    if month == 11:
+        missing = send(client, game, utterance)
+        assert missing['event']['month'] == 11
+        assert missing['history'][-1]['analysis']['needs_clarification']
+        game = missing
+    original = '함께 만든 무대였어요.\n진심으로 고맙습니다!'
+    result = send(client, game, f'{utterance}: {original}')
+    assert result[field] == original
+    assert result['history'][-1]['analysis']['action_text'] == original
+
+
+def test_chat_does_not_guess_fanmeeting_price(session):
+    client, _, game = at_month(session, 'p2_m16')
+    result = send(client, game, '팬미팅은 5천 석으로 진행해줘')
+    assert result['history'][-1]['analysis']['needs_clarification']
+    assert '티켓 가격' in result['history'][-1]['analysis']['clarification_question']
+    assert result['event']['month'] == 16 and result['stats'] == game['stats']
+
+
+
+def test_chat_does_not_confuse_concert_budget_units(session):
+    client, _, game = at_month(session, 'p2_m21')
+    result = send(client, game, '콘서트는 1만 석, 티켓 10만 원, 연출은 8천 원으로 진행해줘')
+    assert result['history'][-1]['analysis']['needs_clarification']
+    assert result['event']['month'] == 21 and result['stats'] == game['stats']
+
+
+def test_chat_rejects_model_written_award_speech(session, monkeypatch):
+    from app.models import Analysis
+
+    client, provider, game = at_month(session, 'p2_m11')
+
+    def invent_speech(text, context):
+        return Analysis(action_id='save_speech', needs_clarification=False, reference_turn_id=None,
+                        assessments=[], utterance_kind='command', action_text='새로 지어낸 문장입니다.')
+
+    monkeypatch.setattr(provider, 'analyze', invent_speech)
+    result = send(client, game, '수상 소감 확정: 고맙습니다.')
+    assert result['history'][-1]['analysis']['needs_clarification']
+    assert result['award_speech'] == '' and result['event']['month'] == 11
+
+
+
+def test_chat_can_ask_about_vacation_without_applying_it(session):
+    client, _, game = at_month(session, 'p2_m08')
+    result = send(client, game, '휴가에 대해 설명해줘')
+    assert result['history'][-1]['analysis']['action_id'] == 'talk'
+    assert result['event']['month'] == 8 and result['stats'] == game['stats']

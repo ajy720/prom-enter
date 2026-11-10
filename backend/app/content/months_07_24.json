@@ -8,6 +8,7 @@
     "briefing": "신입을 향한 악플이 늘고 있습니다.",
     "goal": "신입과 면담한 뒤 법적 대응과 SNS 방침을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "legal_pause",
@@ -42,6 +43,7 @@
     "briefing": "컴백을 앞두고 컨디션을 점검합니다.",
     "goal": "멤버들의 컨디션 관리 방법을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "vacation",
@@ -76,6 +78,7 @@
     "briefing": "광고사가 신입 한 명을 모델로 지목했습니다.",
     "goal": "광고 조건을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "ad_solo",
@@ -105,6 +108,7 @@
     "briefing": "다음 곡의 센터를 정할 때입니다.",
     "goal": "네 멤버 모두와 한 번 이상 면담한 뒤 센터를 선택하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "center_newcomer",
@@ -139,6 +143,7 @@
     "briefing": "연말 시상식의 신인상 후보가 되었습니다.",
     "goal": "신입이 전할 수상 소감을 작성하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "save_speech",
@@ -158,6 +163,7 @@
     "briefing": "신인상 발표와 스페셜 무대가 이어집니다.",
     "goal": "시상식 결과를 확인하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "confirm_rookie_award",
@@ -170,7 +176,6 @@
   },
   {
     "id": "p2_m13",
-    "chat_actions": true,
     "month": 13,
     "title": "소문 너머의 목소리",
     "subtitle": "프로뮤 활동 기록",
@@ -178,6 +183,7 @@
     "briefing": "신입의 과거를 둘러싼 주장이 SNS에서 퍼지고 있습니다.",
     "goal": "기록과 증언을 조사하고 공식 대응을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "check_sns",
@@ -217,6 +223,7 @@
     "briefing": "논란 이후 광고사와 팬들이 팀의 다음 활동을 주시합니다.",
     "goal": "계약과 이미지 회복 방향을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "rebuild_group",
@@ -246,6 +253,7 @@
     "briefing": "신입에게 예능 고정 출연 제안이 왔습니다.",
     "goal": "고정 출연 또는 자체 콘텐츠를 선택하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "variety_regular",
@@ -270,6 +278,7 @@
     "briefing": "팬미팅을 열어달라는 요청이 이어집니다.",
     "goal": "좌석 규모와 티켓 가격을 선택하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "fanmeeting_1000_40000",
@@ -329,6 +338,7 @@
     "briefing": "외부 일정이 밀려 팀 연습 시간이 부족해졌습니다.",
     "goal": "연습과 휴식을 어떻게 확보할지 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "schedule_rest",
@@ -351,7 +361,6 @@
   },
   {
     "id": "p2_m18",
-    "chat_actions": true,
     "month": 18,
     "title": "해외 진출 제안",
     "subtitle": "프로뮤 활동 기록",
@@ -359,6 +368,7 @@
     "briefing": "일본 유통사가 현지 방송과 쇼케이스를 제안했습니다.",
     "goal": "유통사를 조사하고 비용 분담을 검토한 뒤 현지 활동 준비를 확정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "investigate_partner",
@@ -388,6 +398,7 @@
     "briefing": "현지어 곡과 무대 리허설을 준비합니다.",
     "goal": "신입의 의견을 듣고 어학·안무·휴식 시간과 콘셉트를 정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "prepare_balanced",
@@ -410,7 +421,6 @@
   },
   {
     "id": "p2_m20",
-    "chat_actions": true,
     "month": 20,
     "title": "현지 쇼케이스와 루머",
     "subtitle": "프로뮤 활동 기록",
@@ -418,6 +428,7 @@
     "briefing": "현지 공연과 방송을 마친 뒤 바이프발 의혹이 퍼지기 시작합니다.",
     "goal": "출처를 확인하고 멤버와 면담한 뒤 대응을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "trace_rumor",
@@ -452,6 +463,7 @@
     "briefing": "귀국 후 첫 단독 콘서트 규모를 정합니다.",
     "goal": "공연장, 티켓 가격, 연출 예산과 세트리스트를 선택하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "concert_small",
@@ -481,6 +493,7 @@
     "briefing": "계약 만료 전 마지막 앨범을 준비합니다.",
     "goal": "타이틀 콘셉트와 제작·홍보·예비비 계획을 결정하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "comeback_balanced",
@@ -510,6 +523,7 @@
     "briefing": "계약 마지막 해의 시상식이 열립니다.",
     "goal": "성과를 확인하고 멤버에게 마지막 인사를 남길 수 있습니다.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "year_end_review",
@@ -529,6 +543,7 @@
     "briefing": "24개월 계약 기간이 끝났습니다.",
     "goal": "그동안 쌓아온 팀의 결말을 확인하세요.",
     "resolver": "monthly",
+    "chat_actions": true,
     "actions": [
       {
         "id": "contract_result",

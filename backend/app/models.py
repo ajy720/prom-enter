@@ -257,6 +257,7 @@ class Analysis(Model):
     clarification_question: str | None = Field(default=None, max_length=300)
     promised_action_id: str | None = None
     conversation_change: ConversationIntent | None = None
+    action_text: str | None = None
 
 
 class Direction(Model):
