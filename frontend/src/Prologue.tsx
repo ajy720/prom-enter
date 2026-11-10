@@ -7,6 +7,7 @@ import { InterviewHub } from './InterviewHub';
 import { ResourceStatus } from './ResourceStatus';
 import { MonthOne } from './MonthOne';
 import { storyGameKey } from './serverInterviewState';
+import { part4StorageKey } from './part4State';
 import { createMonthOneState, readMonthOneState, type MonthOneState } from './monthOneState';
 import { createInterviewState, readInterviewState, type InterviewState } from './interviewState';
 import { debutMembers, newcomers, titlePhotos, introScenes, characterPortraits, characterProfiles, sceneBackgrounds, type IntroCharacter } from './introContent';
@@ -38,6 +39,7 @@ export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { o
       <div className="title-actions"><button className="primary-button" disabled={busy} onClick={onStart}>게임 시작 <span aria-hidden="true">→</span></button>
         {(saved || localStorage.getItem(storyGameKey)) && <button className="quiet-button" disabled={busy} onClick={onContinue}>{busy ? '불러오는 중…' : '이야기 이어하기'}</button>}
         {onLegacy && <button className="quiet-button" disabled={busy} onClick={onLegacy}>이전 브라우저 데모 열기</button>}
+        {localStorage.getItem(storyGameKey)&&localStorage.getItem(part4StorageKey(localStorage.getItem(storyGameKey)))&&<button className="quiet-button" disabled={busy} onClick={()=>location.assign('/?part4Demo=1&game='+encodeURIComponent(localStorage.getItem(storyGameKey)!))}>Part 4 데모 이어하기</button>}
       </div>
       <p className="title-footnote">STORY DEMO</p>
     </div>

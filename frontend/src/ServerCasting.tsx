@@ -31,7 +31,7 @@ export function ServerCasting({ game, busy, pending, nickname, onInterview, onSe
 
   const records = <Modal open={!!recordCandidate} title={`${recordCharacter?.name ?? ''} 면담 기록`} className="records-modal" onClose={() => setRecordsId(null)}><h2>{recordCharacter?.name} 면담 기록</h2><div className="interview-history">{recordFrames.filter(frame => frame.text).map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>)}</div></Modal>;
 
-  if (recruited && showResult) return <RecruitmentResult character={recruited} nickname={nickname} step={step}
+  if (recruited && showResult) return <RecruitmentResult character={recruited} nickname={nickname} step={step} goalScope={game.game_id}
     onAdvance={() => setStep(value => Math.min(4, value + 1))} onPrevious={() => setStep(value => Math.max(0, value - 1))}
     onProceed={() => { localStorage.setItem('prom-recruitment-step:' + game.game_id, '4'); onProceed(); }} onRecords={() => setShowResult(false)}/>;
 

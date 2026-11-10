@@ -1,11 +1,13 @@
 import { createSixMonthContinuation, restoreSixMonthDemo, type SixMonthSave } from './sixMonthDemoState.ts';
 import { createPart3, restorePart3, type Part3Save } from './part3State.ts';
 import type { Game } from './types.ts';
+import { createPart4, restorePart4, type Part4Save } from './part4State.ts';
+import { readGameGoal } from './gameGoal.ts';
 
 // Local continuation of one server game. Never sent to /api or used on API failure.
 export type Playthrough = {
   schema: 1; gameId: string; revision: number; source: Game;
-  stage: 'six' | 'part3'; six: SixMonthSave | null; part3: Part3Save | null;
+  stage: 'six' | 'part3' | 'part4'; six: SixMonthSave | null; part3: Part3Save | null; part4?: Part4Save | null;
 };
 type Storage = Pick<globalThis.Storage, 'getItem' | 'setItem'>;
 export const playthroughKey = (id: string) => `prom-playthrough-v2:${id}`;
@@ -23,7 +25,7 @@ export function readPlaythrough(storage: Storage, gameId: string): Playthrough |
   if (!raw) return null;
   const value = JSON.parse(raw) as Playthrough;
   if (value.schema !== 1 || value.gameId !== gameId || value.source?.game_id !== gameId || !value.source.event || !value.source.character || !value.source.stats || !Array.isArray(value.source.history) || !Number.isInteger(value.revision) || value.revision < 0
-    || !['six','part3'].includes(value.stage)) throw new Error('이야기 저장을 읽을 수 없습니다. 기존 저장은 보존했습니다.');
+    || !['six','part3','part4'].includes(value.stage)) throw new Error('이야기 저장을 읽을 수 없습니다. 기존 저장은 보존했습니다.');
   if (value.six) {
     value.six = restoreSixMonthDemo(JSON.stringify(value.six));
     if (value.six?.playthroughId !== gameId || value.six.game.game_id !== gameId) throw new Error('다른 플레이의 월별 저장입니다.');
@@ -32,7 +34,11 @@ export function readPlaythrough(storage: Storage, gameId: string): Playthrough |
     value.part3 = restorePart3(JSON.stringify(value.part3));
     if (value.part3?.sourceId !== gameId) throw new Error('다른 플레이의 Part 3 저장입니다.');
   }
-  if ((value.stage === 'six' && (!value.six || value.part3)) || (value.stage === 'part3' && !value.part3)) throw new Error('플레이 구간을 읽을 수 없습니다.');
+  if (value.part4) {
+    value.part4 = restorePart4(JSON.stringify(value.part4));
+    if(value.part4?.sourceId!==gameId) throw new Error('다른 플레이의 Part 4 저장입니다.');
+  }
+  if ((value.stage === 'six' && (!value.six || value.part3 || value.part4)) || (value.stage === 'part3' && (!value.part3 || value.part4)) || (value.stage === 'part4' && (!value.part4 || value.part3?.phase!=='complete'))) throw new Error('플레이 구간을 읽을 수 없습니다.');
   return value;
 }
 export function savePlaythrough(storage: Storage, next: Playthrough, expected: number | null): Playthrough {
@@ -46,4 +52,8 @@ export function savePlaythrough(storage: Storage, next: Playthrough, expected: n
 export function beginPart3(original: Playthrough): Playthrough {
   if (original.stage !== 'six' || original.six?.phase !== 'complete') throw new Error('6개월차 결산을 마친 뒤 진행해주세요.');
   return {...original, stage:'part3', part3:createPart3(original.six)};
+}
+export function beginPart4(original: Playthrough): Playthrough {
+  if(original.stage!=='part3'||original.part3?.phase!=='complete') throw new Error('12개월차 결산을 마친 뒤 진행해주세요.');
+  return {...original,stage:'part4',part4:createPart4(original.part3,readGameGoal(original.gameId))};
 }

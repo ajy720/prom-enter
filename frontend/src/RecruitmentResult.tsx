@@ -3,6 +3,7 @@ import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { TeamStatus } from './TeamStatus';
 import { ResourceStatus } from './ResourceStatus';
+import { gameGoalKey, gameGoals, readGameGoal, type GameGoal } from './gameGoal';
 import { debutMembers, characterPortraits, sceneBackgrounds, type IntroCharacter } from './introContent';
 
 // The recruitment announcement uses original half-body photos and profile 2.
@@ -21,11 +22,21 @@ const recruitmentBackgrounds: Record<string, string> = {
   dahyun: '#f4f0fb', haram: '#f2eff8', yuna: '#f3f0f9',
 };
 
-export function RecruitmentResult({ character, nickname, step, onAdvance, onPrevious, onProceed, onRecords }: {
+export function RecruitmentResult({ character, nickname, step, onAdvance, onPrevious, onProceed, onRecords, goalScope = 'intro' }: {
   character: IntroCharacter; nickname: string; step: number;
+  goalScope?: string;
   onAdvance: () => void; onPrevious: () => void; onProceed: () => void; onRecords: () => void;
 }) {
   const [announcementOpen, setAnnouncementOpen] = useState(step === 0);
+  const [choosingGoal, setChoosingGoal] = useState(false);
+  const [goal, setGoal] = useState<GameGoal | null>(() => { try { return readGameGoal(goalScope); } catch { return null; } });
+  const [goalError, setGoalError] = useState('');
+  function confirmGoal() {
+    if (!goal) return;
+    try { localStorage.setItem(gameGoalKey(goalScope), goal); }
+    catch { setGoalError('목표를 저장하지 못했습니다. 저장소를 확인한 뒤 다시 시도해주세요.'); return; }
+    onAdvance(); onProceed();
+  }
   const members = [...debutMembers, character];
   const briefing = [
     { title: '프로뮤, 네 사람의 시작', text: `${nickname ? nickname + ' ' : ''}대표님, 저는 대표님의 선택을 믿습니다.\n${members.map(member => member.name).join('·')}. 이제 네 사람은 Prom::Enter의 신인 걸그룹 Promyou, 프로뮤로 관리하겠습니다.` },
@@ -47,13 +58,15 @@ export function RecruitmentResult({ character, nickname, step, onAdvance, onPrev
     <Modal open={announcementOpen} title="프로뮤 최종 영입 확정" className="recruitment-announcement-modal" onClose={() => setAnnouncementOpen(false)}>{announcement}</Modal>
   </section>;
 
-  const current = briefing[Math.min(step, 3) - 1];
+  const current = choosingGoal ? { title: '2년 뒤, 우리가 서 있을 무대', text: '대표님, 프로뮤가 어떤 그룹으로 기억되길 바라시나요? 선택하신 목표를 마지막 앨범까지 이어가겠습니다.' } : briefing[Math.min(step, 3) - 1];
   return <section className="intro-scene intro-office recruitment-briefing part-one-photos" aria-label={current.title} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
     <aside className="formation-status glass-panel"><p className="section-kicker">PROMYOU · 팀 상태 안내</p><h2>함께할 네 사람</h2><p>{members.map(member => member.name).join(' · ')}</p><TeamStatus/></aside>
     <div className="secretary-photo"><PhotoSlot src={characterPortraits.baek_hayeon} name="백하연" caption="대표 비서실장 · 반신 사진 자리"/></div>
     <div className="intro-dialogue-dock"><section className="dialogue-box"><header className="dialogue-header"><h2>백하연</h2><span className="mode-label">{current.title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{current.text}</p></div>
-      <div className="intro-navigation"><button className="quiet-button" onClick={onPrevious}>← 이전</button><span>{Math.min(step, 3)} / 3</span><button className="primary-button" onClick={step >= 3 ? () => { onAdvance(); onProceed(); } : onAdvance}>{step >= 3 ? '목표 확인 · 첫 합숙 시작' : '다음'} →</button></div>
+      {choosingGoal && <fieldset className="game-goal-options"><legend>프로뮤의 2년 차 목표</legend>{gameGoals.map(item => <label key={item.id}><input type="radio" name="game-goal" value={item.id} checked={goal === item.id} onChange={() => setGoal(item.id)}/><span><strong>{item.label}</strong><small>{item.description}</small></span></label>)}</fieldset>}
+      {goalError && <p className="error-banner" role="alert">{goalError}</p>}
+      <div className="intro-navigation"><button className="quiet-button" onClick={choosingGoal ? () => setChoosingGoal(false) : onPrevious}>← 이전</button><span>{choosingGoal ? '4 / 4' : `${Math.min(step, 3)} / 4`}</span><button className="primary-button" disabled={choosingGoal && !goal} onClick={choosingGoal ? confirmGoal : step >= 3 ? () => setChoosingGoal(true) : onAdvance}>{choosingGoal ? '목표 확정 · 첫 합숙 시작' : step >= 3 ? '2년 차 목표 선택' : '다음'} →</button></div>
     </section></div>
   </section>;
 }

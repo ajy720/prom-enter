@@ -1,4 +1,5 @@
 import { createPart3, part3SaveKey, part3SourceKey } from './part3State';
+import { part4ServerSourceKey } from './part4State';
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Modal } from './Modal';
 import { CenterInterview, CenterMonthSidebar, centerInterviewDialogue } from './CenterInterview';
@@ -99,6 +100,11 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
     } catch (cause) { setPart3Error(cause instanceof Error ? cause.message : 'Part 3 준비에 실패했습니다.'); }
   }
   const [part3Error, setPart3Error] = useState('');
+  function openPartFourDemo() {
+    try {sessionStorage.setItem(part4ServerSourceKey,JSON.stringify(game));location.assign('/?part4Demo=1&from=server');}
+    catch {setPart3Error('12개월차 결과를 전달하지 못했습니다. 저장소를 확인한 뒤 다시 시도해주세요.');}
+  }
+  const part4Entry=game.event.month===13&&!!game.completed_events.p2_m12&&!game.history.some(t=>t.event_id===game.event.id)?<div className="part4-demo-entry"><p>13~24개월차는 별도의 프런트 데모로도 이어갈 수 있습니다. 현재 신입·스텟을 이어받아 브라우저에 저장합니다.</p><button className="quiet-button" disabled={busy||!!pending} onClick={openPartFourDemo}>Part 4 프런트 데모로 이어가기 →</button>{part3Error&&<p role="alert">{part3Error}</p>}</div>:null;
 
   async function openActions() {
     if (!serverMonth && privateRoom && !await onConversationChange('public')) return;
@@ -112,9 +118,9 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
   }
 
   const topbar = renderTopbar?.(sceneTitle);
-  if (showOpening) return <>{topbar}<MonthlyOpening game={game} phase={phase} onNext={advance} disabled={locked}/></>;
+  if (showOpening) return <>{topbar}{part4Entry}<MonthlyOpening game={game} phase={phase} onNext={advance} disabled={locked}/></>;
 
-  return <>{topbar}<section className={centerLayout ? "interview-room month-one month-photo-stage month-one-photos center-month" : `monthly-stage month-two-photos server-monthly-stage${showingResult || completeScene ? ' is-summary' : ''}`} aria-label={showingResult ? `${sceneTitle} 결과` : completeScene ? '활동 결산' : `${game.event.month}개월차 ${sceneTitle}`} style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
+  return <>{topbar}{part4Entry}<section className={centerLayout ? "interview-room month-one month-photo-stage month-one-photos center-month" : `monthly-stage month-two-photos server-monthly-stage${showingResult || completeScene ? ' is-summary' : ''}`} aria-label={showingResult ? `${sceneTitle} 결과` : completeScene ? '활동 결산' : `${game.event.month}개월차 ${sceneTitle}`} style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     {centerLayout ? <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div> : <header className="monthly-heading"><div><p className="section-kicker">PROMYOU · {showingResult ? '이번 달의 기록' : completeScene ? prototypeScene ? '첫 여섯 달의 기록' : '계약의 마지막 기록' : `${game.event.month}개월차 · ${game.event.scene}`}</p><h1>{sceneTitle}</h1></div><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></header>}
     {centerLayout && <CenterMonthSidebar game={game} onTitle={onTitle} onRecords={() => setMenu('records')} disabled={busy || !!pending}/>}
     <div className={centerLayout ? "interview-portrait" : "monthly-portrait"}><PhotoSlot {...dialoguePhoto(portraitId, expression)} name={portraitName}/></div>
