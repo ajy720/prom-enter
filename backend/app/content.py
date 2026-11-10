@@ -28,4 +28,7 @@ for slot, character in CHARACTERS.items():
 
 def public_event(event_id: str):
     event = EVENTS[event_id]
-    return {k: event[k] for k in ("id", "month", "title", "subtitle", "scene", "briefing", "goal", "actions")}
+    result = {k: event[k] for k in ("id", "month", "title", "subtitle", "scene", "briefing", "goal", "actions")}
+    if event.get("chat_actions"):
+        result["chat_actions"] = True
+    return result

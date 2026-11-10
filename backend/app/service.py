@@ -189,6 +189,9 @@ class TurnService:
                     'recipient_id':None,'conversation_mode':intent.mode,'target_character_id':intent.target_character_id})
                 return self._change_conversation(owner,state,command,fingerprint,
                     source_text=text,source_analysis=analysis,source_room=room)
+            if (later_months.is_event(state.event_id) and analysis.action_id != 'talk'
+                    and not analysis.needs_clarification):
+                return self._later_month_turn(owner, state, request, fingerprint, history, analysis=analysis, room=room)
             if room.mode == 'private' and not secretary_decision:
                 # Private chats exchange information; event actions still require
                 # the shared gameplay path and must not execute by side effect.
@@ -319,18 +322,27 @@ class TurnService:
             return self._center_turn(owner, state, updated, request, fingerprint, message, outcome=outcome)
         return self._center_turn(owner, state, updated, request, fingerprint, message)
 
-    def _later_month_turn(self, owner, state, request, fingerprint, history):
-        proposal = later_months.resolve(state, request.action_id, request.text, history, request.request_id)
+    def _later_month_turn(self, owner, state, request, fingerprint, history, *, analysis=None, room=None):
+        from_chat = analysis is not None
+        if analysis is None:
+            analysis = Analysis(action_id=request.action_id, needs_clarification=False,
+                                reference_turn_id=None, assessments=[])
+        payload = '' if from_chat else request.text
+        proposal = later_months.resolve(state, analysis.action_id, payload, history, request.request_id)
         updated = proposal.state
         if proposal.outcome in {'success', 'partial', 'failure'}:
             advance_mood(state, updated, proposal.outcome)
         if updated.event_id != state.event_id:
             ensure_opening(updated, history, after_turn_id=request.request_id)
         updated.version += 1
-        label = next(a['label'] for a in EVENTS[state.event_id]['actions'] if a['id'] == request.action_id)
+        label = next(a['label'] for a in EVENTS[state.event_id]['actions'] if a['id'] == analysis.action_id)
         public_room = make_conversation(state)
-        listeners = roles_for(state, public_room)
+        room = room or public_room
+        listeners = roles_for(state, room)
         facts = proposal.facts
+        if from_chat:
+            record_report(updated, request.text.strip(), room.participant_ids,
+                          event_id=state.event_id, turn_id=request.request_id)
         record_resolution(updated, facts, proposal.new_evidence, public_room.participant_ids,
                           event_id=state.event_id, turn_id=request.request_id)
         messages = [Message(speaker_id='secretary', text=' '.join(facts), emotion='neutral', audience=['secretary']).model_dump()]
@@ -338,17 +350,16 @@ class TurnService:
             messages.append(Message(speaker_id='newcomer', text=state.award_speech, emotion='hopeful',
                                     expression='happy', audience=listeners).model_dump())
         turn = {'id': request.request_id, 'event_id': state.event_id, 'event_title': EVENTS[state.event_id]['title'],
-                'kind': 'activity', 'input_type': 'action', 'input': request.text.strip() or label,
-                'conversation': conversation_view(state, public_room), 'input_audience': listeners,
+                'kind': 'activity', 'input_type': request.input_type, 'input': request.text.strip() or label,
+                'conversation': conversation_view(state, room), 'input_audience': listeners,
                 'messages': messages, 'facts': facts, 'outcome': proposal.outcome, 'new_evidence': proposal.new_evidence,
-                'analysis': Analysis(action_id=request.action_id, needs_clarification=False, reference_turn_id=None,
-                                     assessments=[]).model_dump(),
+                'analysis': analysis.model_dump(),
                 'direction': character_direction(updated, proposal.outcome).model_dump(),
                 'stat_delta': {key: value - previous for key, previous in state.stats.model_dump().items()
                                if (value := getattr(updated.stats, key)) != previous},
                 'image': '/portraits/hopeful.svg',
-                'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': 'system', 'analysis_calls': 0,
-                             'generation_calls': 0, 'phase': 'monthly_activity', 'profile_id': canonical(state.character_id)}}
+                'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': self.provider.name if from_chat else 'system',
+                             'analysis_calls': int(from_chat), 'generation_calls': 0, 'phase': 'monthly_activity', 'profile_id': canonical(state.character_id)}}
         committed = self.repository.commit(updated, owner, state.version, request.request_id, fingerprint, turn)
         return {'turn': committed, 'game': self.view(self.repository.get(state.game_id, owner))}
 

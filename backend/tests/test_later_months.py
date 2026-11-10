@@ -75,3 +75,54 @@ def test_fanmeeting_choice_validates_size_price_and_reuses_saved_outcome(session
     assert result['turn']['stat_delta'] == {'funds_won': -100_000_000}
     assert result['game']['event']['month'] == 17
     assert act(client, game, 'fanmeeting_15000_100000', request_id='large-fanmeeting') == result
+
+
+def test_investigation_chat_reuses_button_effect_and_original_request(session):
+    client, _, game = at_month(session, 'p2_m13')
+    game = switch_month_room(client, game, 'baek_hayeon')
+    question = send(client, game, '학교 기록을 확인해볼까?')
+    assert question['history'][-1]['analysis']['needs_clarification']
+    assert question['evidence'] == []
+    multiple = send(client, question, '학교 기록을 확인하고 친구 하나에게 연락해줘')
+    assert multiple['history'][-1]['analysis']['needs_clarification']
+    assert multiple['evidence'] == []
+
+    negated = send(client, multiple, '학교 기록 확인은 안 해줘도 돼')
+    assert negated['history'][-1]['analysis']['action_id'] == 'talk'
+    assert negated['evidence'] == []
+
+    text = '학교 상담 기록을 확인해줘'
+    result = send(client, negated, text, key='investigate-from-chat')
+    turn = result['history'][-1]
+    assert turn['input'] == text and turn['input_type'] == 'chat'
+    assert turn['conversation']['target_character_id'] == 'baek_hayeon'
+    assert turn['analysis']['action_id'] == 'check_school'
+    assert [evidence['id'] for evidence in result['evidence']] == ['part2_school_record']
+    assert send(client, negated, text, key='investigate-from-chat') == result
+    act(client, result, 'check_school', expected=422)
+
+
+def test_overseas_chat_separates_preparation_from_final_decision(session):
+    client, _, game = at_month(session, 'p2_m18', fatigue=20, funds_won=200_000_000)
+    game = send(client, game, '유통사 평판을 조사해줘')
+    assert game['history'][-1]['analysis']['action_id'] == 'investigate_partner'
+    game = send(client, game, '쇼케이스 비용 분담을 협상해줘')
+    assert game['history'][-1]['analysis']['action_id'] == 'negotiate_costs'
+    assert game['event']['month'] == 18 and game['stats']['funds_won'] == 200_000_000
+    game = send(client, game, '현지 활동 준비를 확정해줘')
+    assert game['completed_events']['p2_m18'] == 'success'
+    assert game['event']['month'] == 19 and game['stats']['funds_won'] == 100_000_000
+
+
+def test_rumor_chat_keeps_member_interviews_separate_from_orders(session):
+    client, _, game = at_month(session, 'p2_m20')
+    game = switch_month_room(client, game, 'dahyun')
+    game = send(client, game, '확인한 사실 중심으로 해명해줘')
+    assert game['event']['month'] == 20
+    assert game['history'][-1]['analysis']['action_id'] == 'talk'
+    game = switch_month_room(client, game, None)
+    game = send(client, game, '루머 출처를 확인해줘')
+    assert game['history'][-1]['analysis']['action_id'] == 'trace_rumor'
+    game = send(client, game, '확인한 사실 중심으로 해명해줘')
+    assert game['completed_events']['p2_m20'] == 'success'
+    assert game['event']['month'] == 21

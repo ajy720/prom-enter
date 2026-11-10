@@ -212,22 +212,29 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   expect(awards.comeback_center_id).toBe('dahyun');
   expect(awards.completed_events.p2_m12).toMatch(/success|failure/);
   await laterOpening(page);
-  for (const action of [/SNS 기록 확인/, /친구 하나에게 연락/, /학교 상담 기록 확인/, /조사 결과로 신입 보호/]) {
+  for (const action of [/SNS 기록 확인/, /친구 하나에게 연락/]) {
     await monthlyDecision(page, action);
   }
+  const investigation = await serverChat(page, '이번 달 대화', '학교 상담 기록을 확인해줘');
+  expect(investigation.history.at(-1).analysis.action_id).toBe('check_school');
+  await monthlyDecision(page, /조사 결과로 신입 보호/);
   for (const action of [/팀 단위 계약/, /자체 콘텐츠에 집중/, /1,000석 · 40,000원/, /겹치는 일정 거절/]) {
     await laterOpening(page);
     await monthlyDecision(page, action);
   }
   await laterOpening(page);
-  for (const action of [/유통사 평판 조사/, /쇼케이스 비용 분담 협상/, /현지 활동 준비 확정/]) await monthlyDecision(page, action);
+  await serverChat(page, '이번 달 대화', '유통사 평판을 조사해줘');
+  await monthlyDecision(page, /쇼케이스 비용 분담 협상/);
+  await serverChat(page, '이번 달 대화', '현지 활동 준비를 확정해줘');
   await laterOpening(page);
   await monthlyDecision(page, /어학·안무·휴식 균형/);
   await laterOpening(page);
   await monthlyDecision(page, /루머 출처 확인/);
   await serverAction(page, () => page.getByRole('combobox',{name:'대화 상대',exact:true}).selectOption('dahyun'));
   await serverChat(page, '이번 달 대화', '현지 무대가 어땠는지 이야기해줘.');
-  await monthlyDecision(page, /확인한 사실 중심으로 해명/);
+  await serverAction(page, () => page.getByRole('combobox',{name:'대화 상대',exact:true}).selectOption('baek_hayeon'));
+  const response = await serverChat(page, '이번 달 대화', '확인한 사실 중심으로 해명해줘');
+  expect(response.history.at(-1).analysis.action_id).toBe('respond_facts');
   for (const action of [/3천 석/, /팀 색을 살린 타이틀/, /반기 결산 확정/, /계약 결말 확인/]) {
     await laterOpening(page);
     await monthlyDecision(page, action);

@@ -45,7 +45,8 @@ def validate_analysis(analysis: Analysis, text: str, context) -> Analysis:
             raise ValueError('Promised action has no promise evidence')
     if analysis.needs_clarification:
         return analysis.model_copy(update={'action_id':'talk','target_id':None,'assessments':[], 'promised_action_id':None})
-    if analysis.utterance_kind in {'question','proposal','recollection','negation','promise'}:
+    if (context.get('event', {}).get('resolver') == 'monthly' and analysis.utterance_kind != 'command'
+            or analysis.utterance_kind in {'question','proposal','recollection','negation','promise'}):
         return analysis.model_copy(update={'action_id':'talk','target_id':None})
     return analysis.model_copy(update={'target_id':targets.get(analysis.action_id)})
 

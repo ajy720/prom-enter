@@ -40,6 +40,17 @@ PATTERNS = {
     'finish_game':r'결말.{0,8}(?:확인|보여)',
 }
 
+MONTHLY_PATTERNS = {
+    'protect_member': r'(?:조사 결과|확인한 (?:단서|사실)).{0,24}신입.{0,10}보호',
+    'investigate_partner': r'(?:유통사|협력사).{0,18}(?:평판|실적|조사)',
+    'negotiate_costs': r'(?:쇼케이스|공연)?\s*비용.{0,12}(?:분담|나눠|나누)',
+    'confirm_overseas': r'(?:현지|해외) 활동.{0,12}(?:확정|진행)',
+    'trace_rumor': r'(?:루머|소문|의혹).{0,12}(?:출처|유포 경로)',
+    'respond_facts': r'(?:사실|팩트).{0,12}(?:해명|설명|공개)',
+    'respond_legal': r'법적 대응',
+    'respond_silent': r'(?:공식 대응|공식 입장|공식 발표).{0,12}(?:보류|미루)',
+}
+
 
 def classify(text):
     if re.search(r'지난|예전|했었|했잖|했지',text): return 'recollection'
@@ -97,11 +108,21 @@ class DemoProvider:
                             assessments=assessments,utterance_kind=classify(text))
         actions = context.get('event',{}).get('actions',[])
         exact = next((a['id'] for a in actions if a['label'] == text), None)
+        monthly = context.get('event', {}).get('resolver') == 'monthly'
         kind = 'command' if exact else classify(text)
-        # Stop commands are handled only by the scene-specific check above;
-        # a rejected negative/quoted phrase must not fall through as an action.
-        found = [key for key,pattern in PATTERNS.items() if key != 'stop_reprimand' and re.search(pattern,text,re.I)]
+        patterns = {**PATTERNS, **MONTHLY_PATTERNS} if monthly else PATTERNS
+        # Stop commands are handled only by the scene-specific check above.
+        found = [key for key,pattern in patterns.items() if key != 'stop_reprimand' and re.search(pattern,text,re.I)]
         candidates = [key for key in found if key in context['allowed_actions']]
+        if monthly and not exact:
+            if re.search(r'번역|인용|라는\s*(?:말|문장|대사)|라고\s*(?:말했|했)', text):
+                candidates, kind = [], 'conversation'
+            elif re.search(r'\b안\s+|지\s*않|하지\s*말고|할 필요.{0,4}없', text):
+                kind = 'negation'
+            elif re.search(r'볼까|어떨까|할지', text):
+                kind = 'question'
+            elif kind == 'conversation' and re.search(r'해주세요|하세요|해라|하도록|확인해|검토해|조사해|보류해', text):
+                kind = 'command'
         reference, clarification = None, False
         if '그 친구' in text:
             references = [t for t in context.get('related_turns',[]) + context.get('recent_turns',[]) if t['action_id'] == 'contact_hana']
@@ -110,6 +131,8 @@ class DemoProvider:
             else: clarification=True
         action = exact or (candidates[0] if kind == 'command' and len(candidates) == 1 else 'talk')
         clarification |= (kind == 'command' and len(candidates)>1 and not exact) or bool(found and not candidates and kind == 'command')
+        if monthly and candidates and kind == 'question' and re.search(r'할까|볼까|어떨까|할지', text):
+            clarification = True
         clarification |= any(t in text for t in ('그걸','성공으로','스탯을'))
         criteria = context.get('rubric',{})
         assessments=[]

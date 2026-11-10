@@ -170,6 +170,7 @@
   },
   {
     "id": "p2_m13",
+    "chat_actions": true,
     "month": 13,
     "title": "소문 너머의 목소리",
     "subtitle": "프로뮤 활동 기록",
@@ -350,6 +351,7 @@
   },
   {
     "id": "p2_m18",
+    "chat_actions": true,
     "month": 18,
     "title": "해외 진출 제안",
     "subtitle": "프로뮤 활동 기록",
@@ -408,6 +410,7 @@
   },
   {
     "id": "p2_m20",
+    "chat_actions": true,
     "month": 20,
     "title": "현지 쇼케이스와 루머",
     "subtitle": "프로뮤 활동 기록",

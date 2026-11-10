@@ -62,7 +62,7 @@ export type Game = {
   game_id: string; version: number; provider: string; character: Character;
   conversation: Conversation;
   event_openings: EventOpening[];
-  event: {id: string; month: number; title: string; subtitle: string; scene: string; briefing: string; goal: string; actions: Action[]};
+  event: {id: string; month: number; title: string; subtitle: string; scene: string; briefing: string; goal: string; actions: Action[]; chat_actions?: boolean};
   stats: Stats; training_history: string[]; evidence: Evidence[]; memories: Memory[];
   completed_events: Record<string, string>; ending: {id: string; title: string; description: string} | null; history: Turn[];
 };
