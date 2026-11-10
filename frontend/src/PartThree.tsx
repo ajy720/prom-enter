@@ -10,6 +10,7 @@ import { restoreSixMonthDemo, sixMonthSaveKey, type SixMonthSave } from './sixMo
 import { advancePart3, careOptions, createPart3, part3Count, part3Guidance, part3Intro, part3Members, part3Missing, part3Result, part3SaveKey, part3SourceKey, part3Titles, restorePart3 } from './part3State';
 import type { Part3Command, Part3Save } from './part3State';
 import type { Game, Stats } from './types';
+import { part4SourceKey } from './part4State';
 import './part3.css';
 
 const labels: Record<keyof Stats, string> = { teamwork: '팀워크', fatigue: '피로도', trust: '신입 신뢰', awareness: '인지도', fans: '팬 수', funds_won: '자금' };
@@ -24,7 +25,7 @@ function fromServer() {
   if (!raw) throw new Error('6개월차 결과를 찾을 수 없습니다. 기존 플레이의 결산 화면에서 다시 이어주세요.');
   return createPart3({ game: JSON.parse(raw) as Game });
 }
-export type PartThreeSession = { initial: Part3Save; source: Game; six: SixMonthSave | null; onChange: (save: Part3Save) => void; onTitle: () => void };
+export type PartThreeSession = { initial: Part3Save; source: Game; six: SixMonthSave | null; onChange: (save: Part3Save) => void; onTitle: () => void; onPartFour?: () => void };
 export default function PartThree({ session }: { session?: PartThreeSession } = {}) {
   const viewport = useSceneViewport();
   const initial = useRef<{ save: Part3Save; error: string; blocked: boolean } | null>(null);
@@ -75,6 +76,11 @@ export default function PartThree({ session }: { session?: PartThreeSession } = 
     catch(e) {setError(e instanceof Error ? e.message : '초안을 저장하지 못했습니다.');}
   }
   function title(event: {preventDefault: () => void}) { if(session) {event.preventDefault(); session.onTitle();} }
+  function continuePartFour() {
+    if (session?.onPartFour) { session.onPartFour(); return; }
+    try { sessionStorage.setItem(part4SourceKey, JSON.stringify(current.current)); location.assign('/?part4Demo=1&from=part3'); }
+    catch { setError('12개월차 결과를 전달하지 못했습니다. 저장소를 확인한 뒤 다시 시도해주세요.'); }
+  }
   function run(command: Part3Command) {
     if (blocked) return false;
     try { const next = advancePart3(current.current, command); if(command.type === 'next' || command.type === 'decide') next.draft = {}; else if(command.type === 'chat' || command.type === 'target') next.draft = {...next.draft,text:''}; commit(next); return true; }
@@ -119,7 +125,7 @@ export default function PartThree({ session }: { session?: PartThreeSession } = 
       {!narration && !['ending','complete'].includes(save.phase) && <div className="interview-portrait"><PhotoSlot src={characterPortraits[line.speaker]} name={line.name}/></div>}
       <div className="interview-dock">
         {save.phase === 'ending' ? <section className="part3-completion"><p className="section-kicker">ENDING</p><h2>잊혀진 그룹</h2><p>반복된 어려움 속에서 그룹은 끝내 다시 일어설 기회를 얻지 못했다. 2~7개월차의 모든 사건이 실패 또는 거절로 끝나며, 멤버들은 무대에서 내려와 각자의 길을 준비했다.</p><p>한때 함께 꿈꾸었던 무대는 기록 속에 남았다.</p><button className="quiet-button" onClick={() => setModal('records')}>함께한 기록 보기</button><a className="primary-button" href="/" onClick={title}>시작 화면으로</a></section>
-        : save.phase === 'complete' ? <section className="part3-completion"><p className="section-kicker">PART 3 COMPLETE</p><h2>우리의 첫해를 마치며</h2><p>{save.results[12] === 'success' ? '신인상 트로피와 함께 첫해의 활동을 마쳤습니다.' : '아쉬움과 다음 무대를 향한 약속을 남기며 첫해의 활동을 마쳤습니다.'}</p><p>13개월차 이후의 이야기는 이번 프론트 구현 범위에 포함되지 않습니다.</p><button className="quiet-button" onClick={() => setModal('records')}>지난 반기 기록 보기</button><a className="primary-button" href="/" onClick={title}>시작 화면으로</a></section>
+        : save.phase === 'complete' ? <section className="part3-completion"><p className="section-kicker">PART 3 COMPLETE</p><h2>우리의 첫해를 마치며</h2><p>{save.results[12] === 'success' ? '신인상 트로피와 함께 첫해의 활동을 마쳤습니다.' : '아쉬움과 다음 무대를 향한 약속을 남기며 첫해의 활동을 마쳤습니다.'}</p><p>이제 13~24개월차의 이야기로 이어집니다. 현재 신입과 스텟, 지난 기록을 그대로 이어갑니다.</p><button className="primary-button" onClick={continuePartFour}>13개월차 · Part 4 시작 →</button><button className="quiet-button" onClick={() => setModal('records')}>지난 반기 기록 보기</button><a className="primary-button" href="/" onClick={title}>시작 화면으로</a></section>
         : <>
           {interviews && month === 10 && <nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{members.map(m => <button key={m.id} aria-pressed={save.target === m.id} onClick={() => { if (run({ type: 'target', id: m.id })) setText(''); }}><strong>{m.name}</strong><small>{part3Count(save,m.id)}/8회 · {part3Count(save,m.id) ? '면담함' : '면담 전'}</small></button>)}</nav>}
           <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><span className="mode-label">{save.phase === 'result' ? outcomeLabel : '프런트 데모'}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{line.text}</p></div></section>

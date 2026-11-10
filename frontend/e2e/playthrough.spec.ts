@@ -52,7 +52,9 @@ async function cast(page:Page, selected:string) {
   await page.locator('dialog[open]').getByRole('button',{name:/다음 이야기로/}).click();
   await page.locator('.intro-navigation').getByRole('button',{name:/다음/}).click();
   await page.locator('.intro-navigation').getByRole('button',{name:/다음/}).click();
-  await page.getByRole('button',{name:/목표 확인 · 첫 합숙 시작/}).click();
+  await page.getByRole('button',{name:/2년 차 목표 선택/}).click();
+  await page.getByRole('radio',{name:/국민 그룹/}).check();
+  await page.getByRole('button',{name:/목표 확정 · 첫 합숙 시작/}).click();
 }
 async function opening(page:Page) {
   for(let i=0;i<16;i++) {

@@ -1,0 +1,56 @@
+[
+  {
+    "character": "이도",
+    "source_filename": "이도_과거논란.png",
+    "provided_on": "2026-11-10",
+    "sha256": "57b7f94f9724e4609cee86f7f9ba4b9f0c8bb942ec54b3f1d5d1230b390125a3",
+    "file": "ido/past-rumor.png",
+    "width": 1199,
+    "height": 1312
+  },
+  {
+    "character": "이도",
+    "source_filename": "이도_댓글창.png",
+    "provided_on": "2026-11-10",
+    "sha256": "f51f9b938c4d97cf590d2ddeeb51bb107d602ace7a9aa9dc89553548adb8d887",
+    "file": "ido/rumor-comments.png",
+    "width": 940,
+    "height": 1672
+  },
+  {
+    "character": "여울",
+    "source_filename": "여울_과거논란.png",
+    "provided_on": "2026-11-10",
+    "sha256": "94806e1fb2b58bdd92ee7589c52e78416b0450c1b8bb32b2115080817441a239",
+    "file": "yeoul/past-rumor.png",
+    "width": 1199,
+    "height": 1312
+  },
+  {
+    "character": "여울",
+    "source_filename": "여울_댓글창.png",
+    "provided_on": "2026-11-10",
+    "sha256": "cf56b0bdb3e6fc18e945bb9d63e8016be0d326a608f843ddbca1e2fe9e40bfbc",
+    "file": "yeoul/rumor-comments.png",
+    "width": 940,
+    "height": 1672
+  },
+  {
+    "character": "사야",
+    "source_filename": "사야_과거논란.png",
+    "provided_on": "2026-11-10",
+    "sha256": "6b1182ef24a4af556101fcb87184a1422c4093f028a28e7dcc0b71e8dd97d2c7",
+    "file": "saya/past-rumor.png",
+    "width": 1199,
+    "height": 1312
+  },
+  {
+    "character": "사야",
+    "source_filename": "사야_댓글창.png",
+    "provided_on": "2026-11-10",
+    "sha256": "01d6df3eb3c066f496ddbf2926063ba3506c80be283f59bb3060dd9d8fad10d6",
+    "file": "saya/rumor-comments.png",
+    "width": 940,
+    "height": 1672
+  }
+]

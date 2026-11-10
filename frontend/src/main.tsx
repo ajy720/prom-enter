@@ -5,9 +5,11 @@ import PartThree from './PartThree';
 import './style.css';
 import './design-system.css';
 import './part2.css';
+import './part4.css';
 
 const params = new URLSearchParams(location.search);
-const Root = params.get('part3Demo') === '1' ? PartThree
+const Root = params.get('part4Demo') === '1' ? React.lazy(() => import('./PartFour'))
+  : params.get('part3Demo') === '1' ? PartThree
   : import.meta.env.DEV && params.get('sixMonthDemo') === '1' ? React.lazy(() => import('./SixMonthDemo'))
   : import.meta.env.DEV && params.get('monthlyFixture') === '1' ? React.lazy(() => import('./DevMonthly')) : App;
 

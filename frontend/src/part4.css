@@ -1,0 +1,43 @@
+/* Shared interview and narration geometry comes from Part 3 and NarrationScene. */
+.game-goal-options { border: 0; padding: 0; margin: 20px 0; min-width: 0; }
+.game-goal-options legend { font-weight: 600; margin-bottom: 12px; }
+.game-goal-options label { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.game-goal-options label:has(input:checked) { color: var(--mauve-dark, #775c65); }
+.game-goal-options input { accent-color: var(--mauve); margin-top: 5px; }
+.game-goal-options span { display: grid; gap: 4px; }
+.game-goal-options small { line-height: 1.6; color: var(--ink-soft); }
+.part4-stage .month-tasks p { color: var(--white); line-height: 1.7; }
+.part4-stage .month-tasks > .operation-button { margin-top: 16px; }
+.part4-stage .dialogue-content p, .part4-ending-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.part4-stage .part4-evidence { border-top: 1px solid var(--border); padding-top: 12px; }
+.part4-stage .part4-evidence h3 { font-size: 16px; margin: 0 0 8px; }
+.part4-stage .part4-evidence p { margin: 0; line-height: 1.8; }
+.part4-budget label { display: grid; gap: 8px; margin: 12px 0; }
+.part4-budget input { width: 100%; box-sizing: border-box; min-width: 0; padding: 12px; font: inherit; border: 1px solid var(--border); border-radius: 6px; background: var(--white); color: var(--ink); }
+.part4-budget p { font-size: 14px; line-height: 1.8; overflow-wrap: anywhere; }
+.part4-confirm-values > div { border-top: 1px solid var(--border); padding: 12px 0; }
+.part4-confirm-values dt { font-size: 13px; color: var(--ink-soft); margin-bottom: 4px; }
+.part4-confirm-values dd { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.part4-deltas { color: var(--ink); margin: 0; }
+.part4-result-label { color: var(--ink); font-weight: 600; margin-bottom: 0; }
+.part4-social-scene { padding: 32px 24px; display: grid; justify-items: center; gap: 24px; background-size: cover; background-position: center; }
+.part4-social-scene > header { width: min(760px, 100%); color: white; text-shadow: 0 1px 4px #222; }
+.part4-social-scene h1 { font-size: clamp(24px, 3vw, 36px); margin: 8px 0 0; }
+.part4-social-scene figure { margin: 0; max-width: 680px; width: 100%; }
+.part4-social-scene img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.part4-social-scene figcaption { background: white; border-radius: 6px; padding: 12px; margin-top: 8px; font-size: 13px; line-height: 1.7; }
+.part4-whiteout { position: fixed; inset: 0; z-index: 100; display: grid; place-content: center; background: white; animation: part4-fade-white 0.8s ease-out both; }
+.part4-whiteout p { color: var(--ink-soft); }
+.part4-demo-entry { padding: 16px 24px; background: var(--surface-tint); border-bottom: 1px solid var(--border); }
+.part4-demo-entry p { margin: 0 0 8px; line-height: 1.7; }
+@keyframes part4-fade-white { from { opacity: 0; } to { opacity: 1; } }
+@media (min-width: 1001px) {
+  /* Long decision forms keep the same portrait scale near the dialogue's start.
+     The lower image edge remains clipped at the viewport boundary. */
+  .part-four .part4-stage.month-one-photos.month-photo-stage.interview-room > .interview-portrait {
+    position: sticky; inset: auto; top: 0; align-self: start; height: calc(100dvh - 108px);
+    min-height: 480px; max-height: none; aspect-ratio: auto; margin: 0; overflow: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) { .part4-whiteout { animation: none; } }
+@media (max-width: 600px) { .part4-social-scene { padding: 24px 12px; } }
