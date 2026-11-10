@@ -16,10 +16,10 @@ def validate_analysis(analysis: Analysis, text: str, context) -> Analysis:
         intent=validate_intent(analysis.conversation_change,text,routing)
         question=PRIVATE_ONLY if analysis.conversation_change.mode=='public' and not routing['supports_public'] else CLARIFY_TARGET
         return analysis.model_copy(update={'action_id':'talk','target_id':None,'assessments':[],
-            'promised_action_id':None,'conversation_change':intent,'needs_clarification':intent.needs_clarification,
+            'promised_action_id':None,'action_text':None,'conversation_change':intent,'needs_clarification':intent.needs_clarification,
             'clarification_question':question if intent.needs_clarification else None})
     specs = {c['id']:c for c in context.get('criteria',[])}
-    if not specs:
+    if not specs and not context.get('conversation_only'):
         specs = {k:{'scope':'current'} for k in ('support','promise')}
     if len({a.criterion_id for a in analysis.assessments}) != len(analysis.assessments):
         raise ValueError('Repeated criterion')
@@ -44,10 +44,21 @@ def validate_analysis(analysis: Analysis, text: str, context) -> Analysis:
         if not any(a.criterion_id == 'promise' and a.status == 'met' for a in analysis.assessments):
             raise ValueError('Promised action has no promise evidence')
     if analysis.needs_clarification:
-        return analysis.model_copy(update={'action_id':'talk','target_id':None,'assessments':[], 'promised_action_id':None})
-    if analysis.utterance_kind in {'question','proposal','recollection','negation','promise'}:
-        return analysis.model_copy(update={'action_id':'talk','target_id':None})
-    return analysis.model_copy(update={'target_id':targets.get(analysis.action_id)})
+        return analysis.model_copy(update={'action_id':'talk','target_id':None,'assessments':[], 'promised_action_id':None, 'action_text':None})
+    if (context.get('event', {}).get('resolver') == 'monthly' and analysis.utterance_kind != 'command'
+            or analysis.utterance_kind in {'question','proposal','recollection','negation','promise'}):
+        return analysis.model_copy(update={'action_id':'talk','target_id':None,'action_text':None})
+
+    action_text = None
+    if context.get('event', {}).get('resolver') == 'monthly' and analysis.action_id in {'save_speech', 'year_end_review'}:
+        action_text = (analysis.action_text or '').strip()
+        if (len(action_text) > 500 or (action_text and action_text not in text)
+                or (analysis.action_id == 'save_speech' and not action_text)):
+            label = '수상 소감' if analysis.action_id == 'save_speech' else '마지막 인사'
+            return analysis.model_copy(update={'action_id': 'talk', 'target_id': None, 'action_text': None,
+                                               'needs_clarification': True,
+                                               'clarification_question': f'{label}에 넣을 문장을 500자 이내로 알려주시겠어요?'})
+    return analysis.model_copy(update={'target_id':targets.get(analysis.action_id), 'action_text':action_text or None})
 
 
 def validate_dialogue(dialogue: Dialogue, actor) -> Dialogue:

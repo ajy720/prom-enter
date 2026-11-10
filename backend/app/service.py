@@ -7,13 +7,13 @@ from app.ai.demo import MONTH_ONE_COMPLETION_MESSAGE
 from app.ai.rules import action_target
 from app.ai.knowledge import canonical, record_dialogue, record_report, record_resolution
 from app.content import CHARACTERS, CONTENT, EVENTS, EVIDENCE, public_event
-from app.game.engine import character_direction, resolve_turn
+from app.game.engine import Proposal, character_direction, resolve_turn
 from app.game.conversation import conversation_view, current_conversation, make_conversation, roles_for
 from app.game.openings import ensure_opening, openings_for_view
 from app.models import Analysis, Dialogue, GameError, Message, State, TurnRequest
 from app.game.interviews import LIMIT, CLOSING, is_interview, progress, turn_count
 from app.game import center_interviews as center
-from app.game import rehearsal
+from app.game import rehearsal, interview_effects, later_months, member_abilities
 from app.game import monthly_decisions as monthly
 
 
@@ -25,7 +25,7 @@ class TurnService:
         if character_id not in CHARACTERS:
             raise GameError("캐릭터를 선택해주세요.", 422)
         state = State(game_id=str(uuid.uuid4()), character_id='a' if scenario == 'part2' else character_id,
-                      event_id='p2_interview_a' if scenario == 'part2' else 'm01_training')
+                      ability_growth=[], event_id='p2_interview_a' if scenario == 'part2' else 'm01_training')
         state.conversation = make_conversation(state)
         ensure_opening(state,[])
         self.repository.create(state, owner)
@@ -59,6 +59,12 @@ class TurnService:
             'rehearsal': {'phase': rehearsal.phase(state)} if state.event_id == rehearsal.EVENT else None,
             'center_selection':state.center_decision.model_dump(exclude={'assessment'}) if state.center_decision else None,
             "stats": state.stats.model_dump(), "training_history": state.training_history,
+            "monthly_interviews": later_months.interview_counts(state, history, later_months.required_members(state)),
+            "comeback_center_id": state.comeback_center_id,
+            "award_speech": state.award_speech,
+            "farewell": state.farewell,
+            "member_abilities": member_abilities.scores(state),
+            "ability_growth": [item.model_dump() for item in member_abilities.gains(state)],
             "evidence": [EVIDENCE[e] for e in state.evidence_ids],
             "memories": [m.model_dump() for m in state.memories if m.visibility == "shared"],
             "completed_events": state.completed_events,
@@ -82,7 +88,9 @@ class TurnService:
             raise GameError("최신 상태와 맞지 않습니다. 플레이를 다시 불러와주세요.", 409)
         if state.content_version != CONTENT["version"]:
             raise GameError("콘텐츠 버전이 변경됐습니다.", 409)
-        if state.ending_id:
+        start_later = (later_months.can_resume(state) and request.input_type == 'action'
+                       and request.action_id == later_months.START)
+        if state.ending_id and not start_later:
             raise GameError('종료된 플레이입니다. 새 플레이를 시작해주세요.',409)
         if (request.center_member_id is not None or request.center_reason is not None) and not (
                 state.event_id == center.EVENT and request.input_type == 'action' and request.action_id == 'select_center'):
@@ -103,6 +111,10 @@ class TurnService:
         ensure_opening(state,history)
         if request.promotion_allocation is not None and not (state.event_id == monthly.PROMOTION and request.input_type == 'action' and request.action_id == 'allocate_promotion' and not request.text.strip()):
             raise GameError('홍보 배분은 5개월차 예산 확정 요청에서만 사용할 수 있습니다.', 422)
+        if request.input_type == 'action' and (start_later or later_months.is_event(state.event_id)):
+            if any((request.recipient_id, request.conversation_mode, request.target_character_id)):
+                raise GameError('활동과 대화 상대 변경을 따로 요청해주세요.', 422)
+            return self._later_month_turn(owner, state, request, fingerprint, history)
         if request.input_type == 'action' and request.action_id == 'allocate_promotion':
             proposal = monthly.allocate(state, request.promotion_allocation)
             return self._promotion_turn(owner, state, request, fingerprint, proposal)
@@ -118,6 +130,10 @@ class TurnService:
             if request.input_type != 'chat':
                 raise GameError('1:1 대화 대상은 자유 대화에서만 지정할 수 있습니다.',422)
             room = make_conversation(state,'private',request.recipient_id)
+        required = later_months.required_members(state)
+        if request.input_type == 'chat' and room.target_character_id in required:
+            if later_months.interview_counts(state, history, required)[room.target_character_id] >= center.LIMIT:
+                raise GameError('이 멤버의 면담 기회 8회를 모두 사용했습니다.', 409)
         if state.event_id == 'p2_m01_training':
             member = next((person for person in member_progress['members'] if person['character_id'] == room.target_character_id), None)
             if request.input_type == 'chat' and member and member['completed']:
@@ -173,16 +189,25 @@ class TurnService:
                     'recipient_id':None,'conversation_mode':intent.mode,'target_character_id':intent.target_character_id})
                 return self._change_conversation(owner,state,command,fingerprint,
                     source_text=text,source_analysis=analysis,source_room=room)
+            if (later_months.is_event(state.event_id) and analysis.action_id != 'talk'
+                    and not analysis.needs_clarification):
+                return self._later_month_turn(owner, state, request, fingerprint, history, analysis=analysis, room=room)
             if room.mode == 'private' and not secretary_decision:
                 # Private chats exchange information; event actions still require
                 # the shared gameplay path and must not execute by side effect.
                 analysis = analysis.model_copy(update={'action_id':'talk','target_id':None,
-                                                       'assessments':[],'promised_action_id':None})
+                                                       'promised_action_id':None})
         if request.stop_after_month_one and state.event_id == 'p2_m01_training' and analysis.action_id in {'finish_event','skip_training'}:
             analysis = analysis.model_copy(update={'action_id':'confirm_month_plan','target_id':None})
         if state.event_id == 'p2_m01_training' and analysis.action_id == 'confirm_month_plan' and not member_progress['can_finish']:
             raise GameError('신입을 포함한 모든 멤버와 최소 한 번 면담해주세요.', 422)
-        proposal = resolve_turn(state, analysis, request.request_id)
+        resolution_analysis = analysis.model_copy(update={'assessments': []}) if room.mode == 'private' and not secretary_decision else analysis
+        if later_months.is_event(state.event_id):
+            proposal = Proposal(state.model_copy(deep=True), [], 'pending', [])
+        else:
+            proposal = resolve_turn(state, resolution_analysis, request.request_id)
+        if request.input_type == 'chat' and room.mode == 'private':
+            interview_effects.apply(state, proposal, analysis, room.target_character_id)
         auto_closed = is_interview(state.event_id) and request.input_type == 'chat' and interview_count + 1 >= LIMIT and proposal.state.event_id == state.event_id
         if auto_closed:
             proposal.state.completed_events[state.event_id] = 'success'
@@ -296,6 +321,47 @@ class TurnService:
             outcome, message = center.finish(updated)
             return self._center_turn(owner, state, updated, request, fingerprint, message, outcome=outcome)
         return self._center_turn(owner, state, updated, request, fingerprint, message)
+
+    def _later_month_turn(self, owner, state, request, fingerprint, history, *, analysis=None, room=None):
+        from_chat = analysis is not None
+        if analysis is None:
+            analysis = Analysis(action_id=request.action_id, needs_clarification=False,
+                                reference_turn_id=None, assessments=[])
+        payload = (analysis.action_text or '') if from_chat else request.text
+        proposal = later_months.resolve(state, analysis.action_id, payload, history, request.request_id)
+        updated = proposal.state
+        if proposal.outcome in {'success', 'partial', 'failure'}:
+            advance_mood(state, updated, proposal.outcome)
+        if updated.event_id != state.event_id:
+            ensure_opening(updated, history, after_turn_id=request.request_id)
+        updated.version += 1
+        label = next(a['label'] for a in EVENTS[state.event_id]['actions'] if a['id'] == analysis.action_id)
+        public_room = make_conversation(state)
+        room = room or public_room
+        listeners = roles_for(state, room)
+        facts = proposal.facts
+        if from_chat:
+            record_report(updated, request.text.strip(), room.participant_ids,
+                          event_id=state.event_id, turn_id=request.request_id)
+        record_resolution(updated, facts, proposal.new_evidence, public_room.participant_ids,
+                          event_id=state.event_id, turn_id=request.request_id)
+        messages = [Message(speaker_id='secretary', text=' '.join(facts), emotion='neutral', audience=['secretary']).model_dump()]
+        if state.event_id == 'p2_m12' and proposal.outcome == 'success' and state.award_speech:
+            messages.append(Message(speaker_id='newcomer', text=state.award_speech, emotion='hopeful',
+                                    expression='happy', audience=listeners).model_dump())
+        turn = {'id': request.request_id, 'event_id': state.event_id, 'event_title': EVENTS[state.event_id]['title'],
+                'kind': 'activity', 'input_type': request.input_type, 'input': request.text.strip() or label,
+                'conversation': conversation_view(state, room), 'input_audience': listeners,
+                'messages': messages, 'facts': facts, 'outcome': proposal.outcome, 'new_evidence': proposal.new_evidence,
+                'analysis': analysis.model_dump(),
+                'direction': character_direction(updated, proposal.outcome).model_dump(),
+                'stat_delta': {key: value - previous for key, previous in state.stats.model_dump().items()
+                               if (value := getattr(updated.stats, key)) != previous},
+                'image': '/portraits/hopeful.svg',
+                'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': self.provider.name if from_chat else 'system',
+                             'analysis_calls': int(from_chat), 'generation_calls': 0, 'phase': 'monthly_activity', 'profile_id': canonical(state.character_id)}}
+        committed = self.repository.commit(updated, owner, state.version, request.request_id, fingerprint, turn)
+        return {'turn': committed, 'game': self.view(self.repository.get(state.game_id, owner))}
 
     def _promotion_turn(self, owner, state, request, fingerprint, proposal):
         updated = proposal.state

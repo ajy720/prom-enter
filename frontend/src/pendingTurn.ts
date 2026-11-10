@@ -17,7 +17,9 @@ export function restorePending(storage: TurnStorage, game: Pick<Game, 'game_id' 
     const raw = storage.getItem(key(game.game_id));
     if (!raw) return null;
     const input = JSON.parse(raw) as TurnInput;
-    if (!game.ending && input && typeof input.request_id === 'string' && input.request_id.length >= 8
+    const continuingCheckpoint = game.ending?.id === 'part2_complete'
+      && input?.input_type === 'action' && input.action_id === 'start_month_seven';
+    if ((!game.ending || continuingCheckpoint) && input && typeof input.request_id === 'string' && input.request_id.length >= 8
       && ['chat', 'action', 'conversation'].includes(input.input_type) && typeof input.text === 'string'
       && (input.action_id === null || typeof input.action_id === 'string')
       && input.state_version === game.version && !game.history.some(turn => turn.id === input.request_id)) return input;

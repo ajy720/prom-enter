@@ -603,3 +603,10 @@ Vite 개발 서버에서만 다음 경로를 사용한다(예시는 기본 포�
 - 서버 통신 실패와 5xx는 원본 요청을 유지해 재시도하고 409는 재조회한다. 서버 오류로 로컬 구간을 생성하지 않는다. 로컬 저장은 revision 확인·쓰기 성공 후 반영하며, 실패·다른 화면의 진행·손상은 오류로 표시하고 저장을 덮어쓰지 않는다. 후보 면담 대화방/목록 위치도 새로고침 후 복원한다.
 - 호환: 기존 서버 3~6개월에 이미 대화 기록이 있으면 해당 서버 월을 재시작하지 않고 기존 경로로 마친 뒤 `p2_complete`에서 Part 3로 이어간다. 이전 독립 데모의 전역 키는 보존하며 다른 플레이와 자동 혼합하지 않는다. 웹 담당은 `App`, `ContinuedPlay`, `playthroughState`, `MonthTwoTransition`, 두 월별 화면·상태 모듈 및 스타일을 함께 적용한다. 서버 배포 순서 변경·이관은 필요 없다.
 - 확인 범위: 프로덕션 빌드·프런트 상태 테스트 102개·관련 백엔드 pytest 55개. PC·모바일 에뮬레이션의 실제 서버(키 없는 demo provider) 후보 면담·1~2개월과 로컬 3~12개월 전체 전환, 새로고침·이어하기·중복 요청·오류·재시도·성공·실패 샘플을 구분해 검증한다. 실제 유료 AI·휴대전화 실기기·3~12개월 서버 동기화는 미검증/미구현이다. 4·5개월 임시 결과 판정은 기존 미확정 상태를 유지한다.
+
+## 2026-11-10 · 면담 효과와 7~24개월 서버 플레이
+
+- 6개월 결산의 `start_month_seven`을 기존 `POST /games/{id}/turns`에 `input_type: "action"`으로 전송한다. 기존 `part2_complete` 시연 종료 저장도 같은 ID로 이어진다. 시작 화면의 이전 브라우저 데모 메뉴에서 로컬 기록을 열 수 있다.
+- 7개월 이후 화면은 서버의 `event.actions`, `completed_events`, `turn.stat_delta`와 `outcome`을 읽는다. `monthly_interviews`의 키는 필수 대상 프로필 ID, 값은 저장된 대화 수다. 7·10개월 필수 대상은 각 1~8회이며 1:1 대화는 기존 `conversation`·`chat` 요청을 쓴다.
+- `save_speech`와 `year_end_review`만 버튼 요청의 `text`를 사용한다. 소감 1~500자, 마지막 인사는 0~500자다. 서버 응답의 `award_speech`, `farewell`, `comeback_center_id`, `member_abilities`, `ability_growth`로 복원한다. 초기 프로필 점수와 실제 성장 이력은 별도로 보존한다.
+- 7개월 이후 월별 버튼은 서버 규칙을 실행한다. 7~24개월차는 `event.chat_actions: true`를 제공하며 공개 대화와 백하연 1:1의 명확한 지시도 같은 규칙을 실행한다. 이때 `input_type: "chat"`과 원문을 유지하고 `kind: "activity"` 및 판독한 `analysis.action_id`를 저장한다. 채팅에서 수상 소감과 마지막 인사는 현재 발화의 원문을 `analysis.action_text`로 전달하고 기존 필드에 저장한다. 1~3개월 면담 효과는 기존 `game.stats`와 `turn.stat_delta`로 응답하며 2·3개월 자동 종료 직전 발화에도 적용된다. [수치와 임시 결정](monthly-server-rules.md)

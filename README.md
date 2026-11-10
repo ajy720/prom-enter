@@ -9,10 +9,10 @@ React·TypeScript와 FastAPI·SQLite를 사용합니다. AI는 입력 해석과 
 현재 플레이 경로는 다음과 같습니다.
 
 - **브라우저 데모**: 도입 → 후보별 면담 → 최종 영입 → 팀 결성 안내 → 첫 달 계획. 브라우저에 저장하며 서버 게임 상태와 자동으로 합치지 않습니다.
-- **서버 연결 프로토타입**: 시작 화면에서 ‘후보 면담 시작’을 선택하면 이도·여울·사야 면담 → 한 명 선발 → 1~6개월차 → 시연 결과 확인으로 진행합니다. 데모 또는 실제 AI를 연결할 수 있습니다.
+- **서버 플레이**: 이도·여울·사야 면담과 한 명 선발부터 1~24개월차 활동과 계약 엔딩까지 같은 서버 저장에서 이어갑니다. 면담은 데모 또는 실제 AI를 연결할 수 있습니다.
 - **기존 축약 데모**: 서버 플레이에서 연습생을 선택해 1·6·13·24개월차와 임시 엔딩을 확인합니다.
 
-서버 프로토타입의 규칙·판정은 [Part 1–2 연결 범위](docs/development/part2-prototype.md), 브라우저 데모는 [면담](docs/development/interview-demo.md)과 [첫 달 계획](docs/development/month-one-demo.md)을 참고하세요. 전체 24개월차 사건·기존 멤버의 실제 대화 참여·인물별 관계 변화는 개발 중입니다.
+서버 판정과 후반부 수치는 [월별 서버 규칙](docs/development/monthly-server-rules.md), 브라우저 데모는 [면담](docs/development/interview-demo.md)과 [첫 달 계획](docs/development/month-one-demo.md)을 참고하세요.
 
 완성까지 남은 기능과 우선순위는 [개발 계획](docs/planning/roadmap.md)에서 확인하세요.
 

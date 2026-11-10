@@ -55,11 +55,11 @@ function Sequence({game, lines, storageKey, onDone, disabled, title, footer, onT
   </Scene>;
 }
 
-export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, onConversationChange, onAllocate, onTitle, onPartThree}: {
+export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, onConversationChange, onAllocate, onTitle}: {
   game: Game; busy: boolean; pending: TurnInput | null; text: string;
   onTextChange: (value: string) => void; onSend: (actionId?: string) => Promise<boolean>;
   onConversationChange: (target: string) => Promise<boolean>; onAllocate: (allocation: PromotionAllocation) => Promise<boolean>;
-  onTitle: () => void; onPartThree: () => void;
+  onTitle: () => void;
 }) {
   const locked = busy || !!pending;
   const month = game.event.month;
@@ -112,7 +112,7 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
   } else if (stopped && !stopRead) {
     content = <Sequence key={stopKey} {...shared} lines={messageLines(game,stopped)} storageKey={stopKey} disabled={locked} title="질책 중단 후 대화" onDone={() => acknowledge(stopKey, () => setStopRead(true))}/>;
   } else if (complete) {
-    content = <Scene {...shared} line={{speakerId:'baek_hayeon',name:'백하연',text:''}}><section className="dialogue-box"><header className="dialogue-header"><h2>백하연</h2></header><div className="dialogue-content"><p>대표님, 첫 여섯 달의 활동을 마쳤습니다. 활동 결과와 대화 기록을 정리했습니다.</p><p>다음 반기에도 멤버들의 활동을 함께 준비해주세요.</p></div></section><button className="primary-button" disabled={locked} onClick={onPartThree}>7개월차로 →</button></Scene>;
+    content = <Scene {...shared} line={{speakerId:'baek_hayeon',name:'백하연',text:''}}><section className="dialogue-box"><header className="dialogue-header"><h2>백하연</h2></header><div className="dialogue-content"><p>대표님, 첫 여섯 달의 활동을 마쳤습니다. 활동 결과와 대화 기록을 정리했습니다.</p><p>다음 반기에도 멤버들의 활동을 함께 준비해주세요.</p></div></section><button className="primary-button" disabled={locked} onClick={() => void onSend('start_month_seven')}>7개월차로 →</button></Scene>;
   } else {
     content = <Scene {...shared} line={line}>
       {status && <nav className="month-people center-people center-member-tabs" aria-label={`${month}개월차 면담 상대`}>{status.members.map(person => <button key={person.character_id} disabled={locked} aria-pressed={targetId === person.character_id} onClick={() => void onConversationChange(person.character_id)}><strong>{person.name}</strong><small>{person.turn_count}/{status.turn_limit}회{person.completed ? ' · 완료' : ''}</small></button>)}</nav>}

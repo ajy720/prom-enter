@@ -1,6 +1,6 @@
 """Part 1–2 prototype: existing actors, explicit decisions, converging monthly events."""
 from app.content import EVENTS
-from app.game import rehearsal
+from app.game import rehearsal, member_abilities
 from app.game import monthly_decisions as monthly
 from app.models import GameError, Memory
 from app.ai.memory import remember, fulfill_promises
@@ -109,10 +109,14 @@ def resolve_part2(original, analysis, turn_id):
         outcome = 'success' if prepared else 'failure'
         apply_delta(state, {'teamwork': 5} if prepared else {'teamwork': -5, 'fatigue': 10})
         facts.append('확정한 첫 달 계획의 활동 결과를 한 번 반영합니다. 기존 훈련 비용과 피로도는 다시 적용하지 않습니다.')
+        if skill := member_abilities.selected_training(state):
+            member_abilities.grow(state, skill)
     elif action == 'finish_event':
         if not any(k.startswith(state.event_id+':train_') or k == state.event_id+':rest' for k in state.applied_effects):
             raise GameError('훈련이나 휴식을 먼저 배정하거나 준비 없이 마무리를 선택해주세요.', 422)
         outcome = 'success'
+        if skill := member_abilities.selected_training(state):
+            member_abilities.grow(state, skill)
         apply_delta(state, {'teamwork': 5})
     elif action == 'skip_training':
         outcome = 'failure'
@@ -133,8 +137,11 @@ def resolve_part2(original, analysis, turn_id):
                     else {'teamwork': -10, 'awareness': 2, 'fatigue': 15, 'trust': -3})
         state.stats.fans = 3000 if outcome == 'success' else 1000
     elif action in {'accept_offer','recommend_other'}:
-        outcome = 'success' if action == 'recommend_other' or 'variety' in state.training_history else 'failure'
+        outcome = 'success' if action == 'recommend_other' or member_abilities.trained(state, 'variety') else 'failure'
         apply_delta(state, event['outcomes'][outcome])
+        if outcome == 'success' and action == 'accept_offer':
+            member_abilities.grow(state, 'variety')
+            facts.append('신입이 예능 경험을 쌓아 예능 능력치가 1 올랐습니다.')
     elif action == 'finish_prototype':
         state.ending_id = 'part2_complete'
         outcome = 'ending'

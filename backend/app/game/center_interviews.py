@@ -33,6 +33,9 @@ def finish(state):
     else:
         delta = {'teamwork': 5} if success else {'teamwork': -10, 'fatigue': 15}
     apply_delta(state, delta)
+    if month == 3 and success:
+        from app.game.member_abilities import grow
+        grow(state, 'dance')
     state.center_choice_draft = None
     state.completed_events[event_id] = outcome
     state.event_id = EVENTS[event_id]['next']
@@ -40,6 +43,7 @@ def finish(state):
     message = (f'대표님, {month}개월차 면담을 마쳤습니다. 판정 시 팀워크는 {judged_teamwork}입니다. '
                + ('서로의 의견을 모아 팀의 방향을 정리했습니다. 이번 달은 성공입니다.' if outcome == 'success'
                   else '서로의 의견 차이가 남았습니다. 이번 달은 실패입니다.')
+               + (' 신입의 댄스 능력치가 1 올랐습니다.' if month == 3 and success else '')
                + f' 결과 수치 변화를 반영했습니다. 다음 {month + 1}개월차 이야기를 확인해주세요.')
     return outcome, message
 

@@ -10,6 +10,7 @@ from app.game.engine import character_direction
 from app.game.conversation import current_conversation, people, roles_for
 from app.ai.routing import routing_context
 from app.game.openings import openings_for_view
+from app.game import interview_effects
 
 
 def participant_history(state: State, history: list[dict], roles: list[str]) -> list[dict]:
@@ -26,15 +27,23 @@ def build_context(state: State, history: list[dict], query: str = '', *, convers
     event = {**event, 'actions': rehearsal.actions_for(state, event['actions'])}
     character = character_profile(state.character_id)
     criteria = criteria_for(state.event_id)
-    actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions']]
+    actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions'] if a['id'] != 'start_month_seven']
     room=conversation or current_conversation(state)
     roles=roles_for(state,room)
     # Months 4–6 are operational conversations with the secretary. Decisions
     # remain available whether that secretary-only room is public or private.
-    private=room.mode=='private' and not (state.event_id in {'p2_m04_showcase','p2_m05_promotion','p2_m06_variety'} and roles == ['secretary'])
+    secretary_actions = roles == ['secretary'] and (
+        event.get('chat_actions') or state.event_id in {'p2_m04_showcase', 'p2_m05_promotion', 'p2_m06_variety'}
+    )
+    private = room.mode == 'private' and not secretary_actions
     history = participant_history(state, history, roles)
+    if event['resolver'] == 'monthly':
+        if not event.get('chat_actions'):
+            actions = []
+        criteria = []
     if private:
-        actions=[]; criteria=[]
+        actions=[]
+        criteria = interview_effects.criteria_for(state, room.target_character_id)
         character=character_profile(room.target_character_id)
     recent = recent_turns(history,audience=roles)
     routing=routing_context(room.target_character_id,list(people(state).values()),recent)
