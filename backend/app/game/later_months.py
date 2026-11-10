@@ -127,7 +127,7 @@ def resolve(original, action, text, history, turn_id):
         state.comeback_center_id = profile_id(state.character_id) if member == 'newcomer' else member
         success = stats.teamwork >= 60 or member != 'newcomer'
         outcome = 'success' if success else 'failure'
-        delta = ({'teamwork': 8, 'awareness': 10, 'fans': 10_000, 'fatigue': 5} if success
+        delta = ({'teamwork': 8, 'awareness': 10, 'fans': 22_000, 'fatigue': 5} if success
                  else {'teamwork': -10, 'awareness': 3, 'fans': 3_000, 'fatigue': 10})
     elif month == 11:
         state.award_speech = text

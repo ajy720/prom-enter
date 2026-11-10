@@ -37,7 +37,7 @@
 - 2개월 종료 행동은 `finish_center_interviews`, 3개월은 `mediate_rehearsal`이다. 최소 면담 미충족 시 같은 월에서 백하연 안내만 반환한다. `turn.month_completion.month`는 `2 | 3`; 3개월에는 판정 당시 `fatigue`, `fatigue_max_exclusive=60`도 포함한다. `teamwork`는 결과 보상 적용 전 수치다. 최종 수치·보상은 `game.stats`, `turn.stat_delta`만 표시한다.
 - 3개월 중단 턴은 세인·신입이 실제 provider 생성 경로로 답한다. 프런트는 이 답변들을 순서대로 읽은 뒤 면담을 표시한다. demo provider는 명시적인 고정 응답이며 유료 AI 품질 검증이 아니다.
 - 4개월은 `encourage_newcomer`, `apologize_on_stage`, `respond_press`, `request_member_support` 중 하나를 실행하면 결과와 다음 월을 함께 저장한다. 이전 `hold_showcase` 경로와 기사 대응 필수 조건은 제거했다. `game.showcase_awareness_start`는 4개월 진입 시 인지도이며 서버 상태에 저장한다. 비용은 4개월 결정 턴에서 한 번만 차감한다.
-- 4~6개월 대화 상대는 백하연만 제공하며 필수 면담·8회 제한이 없다. 5개월에는 `game.promotion = {track:'A'|'B', budget_won, minimum_percent:{shortform,radio,fansign}}`가 반환된다. 금액 확정은 아래 요청으로만 처리하고, 대화만으로 배분을 확정하지 않는다.
+- 4~6개월 대화 상대는 백하연만 제공하며 필수 면담·8회 제한이 없다. 5개월에는 `game.promotion = {track:'A'|'B', budget_won, minimum_percent:{shortform,radio,fansign}}`가 반환된다. 채팅은 홍보 계획을 상의하는 용도다. 화면에서 예산 배분 창을 안내하고, 금액 확정은 아래 요청으로 처리한다.
 
 ```json
 {

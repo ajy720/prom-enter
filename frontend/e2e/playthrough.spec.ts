@@ -135,6 +135,11 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   await serverAction(page,()=>page.locator('dialog[open]').getByRole('button',{name:'대응 확정',exact:true}).click());
   await opening(page);
   await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.png/);
+  const discussion = await serverChat(page, '백하연과 대화', '홍보 예산 배분 확정');
+  expect(discussion.event.id).toBe('p2_m05_promotion');
+  expect(discussion.history.at(-1).analysis.action_id).toBe('talk');
+  expect(discussion.history.at(-1).stat_delta).toEqual({});
+  await expect(page.getByText('홍보 계획은 채팅에서 상의하고, 금액은 예산 배분 창에서 확정하세요.')).toBeVisible();
   await page.getByRole('button',{name:/홍보 예산 배분하기/}).click();
   const budget=page.locator('dialog[open]');
   const total=failure?10000000:40000000;
@@ -200,16 +205,22 @@ test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·
   await monthlyDecision(page,/리안을 센터로/);
   await laterOpening(page);
   const speech='함께한 멤버와 팬 여러분 감사합니다.';
-  await serverChat(page, '이번 달 대화', `수상 소감 확정: ${speech}`);
+  const beforeAwards = await serverChat(page, '이번 달 대화', `수상 소감 확정: ${speech}`);
+  expect(beforeAwards.event.month).toBe(12);
+  expect(beforeAwards.stats.fans).toBe(50_000);
+  expect(beforeAwards.stats.awareness).toBeGreaterThanOrEqual(40);
   await laterOpening(page);
   await monthlyDecision(page,/시상식 결과 확인/);
   await resume(page);
-  await expect(page.getByRole('region',{name:'이번 달 결과',exact:true})).toBeVisible();
+  const awardsResult = page.getByRole('region',{name:'이번 달 결과',exact:true});
+  await expect(awardsResult).toContainText('신인상 트로피를 받았습니다');
+  await expect(awardsResult).toContainText(speech);
   const awards=await (await page.request.get(`/api/games/${id}`)).json();
   expect(awards.event.month).toBe(13);
   expect(awards.award_speech).toBe(speech);
   expect(awards.comeback_center_id).toBe('dahyun');
-  expect(awards.completed_events.p2_m12).toMatch(/success|failure/);
+  expect(awards.completed_events.p2_m12).toBe('success');
+  expect(awards.stats.fans).toBe(100_000);
   await laterOpening(page);
   for (const action of [/SNS 기록 확인/, /친구 하나에게 연락/]) {
     await monthlyDecision(page, action);

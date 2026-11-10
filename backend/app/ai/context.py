@@ -27,7 +27,9 @@ def build_context(state: State, history: list[dict], query: str = '', *, convers
     event = {**event, 'actions': rehearsal.actions_for(state, event['actions'])}
     character = character_profile(state.character_id)
     criteria = criteria_for(state.event_id)
-    actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions'] if a['id'] != 'start_month_seven']
+    # These actions require explicit UI confirmation or a structured payload.
+    actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions']
+               if a['id'] not in {'start_month_seven', 'allocate_promotion'}]
     room=conversation or current_conversation(state)
     roles=roles_for(state,room)
     # Months 4–6 are operational conversations with the secretary. Decisions
