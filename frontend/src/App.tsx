@@ -170,15 +170,21 @@ export default function App() {
   const nickname = readIntroProgress()?.nickname ?? '';
   const interviewing = !!interviewCandidateId(game.event.id);
 
-  return <main ref={viewportRef} className="app-shell is-playing">
-    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy || !!pending} onClick={() => setView('title')}>prom::enter.</button><span>{game.event.title}</span><button className="quiet-button" disabled={busy || !!pending} onClick={() => setView('title')}>시작 화면</button></header>
+  const partTwo = game.event.month >= 2 && game.event.month <= 6 || game.event.id === 'p2_complete';
+  const monthly = !partTwo && ((game.event.month >= 7 && game.event.month <= 24) || !!game.ending);
+  const renderTopbar = (title: string) => <>
+    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy || !!pending} onClick={() => setView('title')}>prom::enter.</button><span>{title}</span><button className="quiet-button" disabled={busy || !!pending} onClick={() => setView('title')}>시작 화면</button></header>
     {error && <div className="error-banner" role="alert"><span>{error}</span>{pending && <button disabled={busy} onClick={() => void send(undefined, pending)}>같은 요청 재시도</button>}<button disabled={busy} onClick={() => window.location.reload()}>다시 불러오기</button></div>}
+  </>;
+
+  return <main ref={viewportRef} className="app-shell is-playing">
+    {!monthly && renderTopbar(game.event.title)}
     {interviewing && interviewOpen ? <ServerInterviewRoom key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onBack={() => { rememberInterviewRoom(game.game_id,game.event.id,false); if (game.interview?.completed) void send('finish_interview'); }}/>
       : interviewing || game.event.id === 'p2_casting' || (game.event.id === 'p2_m01_training' && !!game.completed_events.p2_casting && !formationReviewed && !game.history.some(turn => turn.event_id === 'p2_m01_training')) ? <ServerCasting key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} nickname={nickname} onInterview={async id => { const person = serverCandidates.find(candidate => candidate.id === id); if (person && (person.eventId === game.event.id || await send('interview_' + person.slot))) rememberInterviewRoom(game.game_id,person.eventId,true); }} onSend={send} onBack={() => setView('title')} onProceed={() => setFormationReviewed(true)}/>
       : game.event.id === 'p2_m01_training' ? <ServerMonthOne key={game.game_id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')}/>
       : game.event.id === 'p2_m03_rehearsal' ? <MonthTwoTransition key={game.game_id} game={game}><ServerPartTwo game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion}/></MonthTwoTransition>
-      : (game.event.month >= 2 && game.event.month <= 6) || game.event.id === 'p2_complete' ? <ServerPartTwo key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion}/>
-      : (game.event.month >= 2 && game.event.month <= 24) || !!game.ending || game.event.id === 'p2_complete' ? <ServerMonthly key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)} onDecision={(action, value) => send(action, undefined, value)}/>
+      : partTwo ? <ServerPartTwo key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onAllocate={allocatePromotion}/>
+      : monthly ? <ServerMonthly renderTopbar={renderTopbar} key={game.game_id + game.event.id} game={game} busy={busy} pending={pending} text={text} onTextChange={setText} onSend={send} onConversationChange={changeConversation} onTitle={() => setView('title')} onNewGame={() => openIntro(true)} onDecision={(action, value) => send(action, undefined, value)}/>
       : <p role="alert">이 사건은 아직 화면 연결이 필요합니다. 저장은 유지됩니다.</p>}
   </main>;
 }

@@ -1,5 +1,5 @@
 import { createPart3, part3SaveKey, part3SourceKey } from './part3State';
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { Modal } from './Modal';
 import { CenterInterview, CenterMonthSidebar, centerInterviewDialogue } from './CenterInterview';
 import { MonthlyOpening, useMonthlyOpening } from './MonthlyOpening';
@@ -24,16 +24,17 @@ function Deltas({ turn }: { turn: Turn }) {
   return <dl className="monthly-deltas" aria-label="선택으로 바뀐 수치">{Object.entries(turn.stat_delta).map(([key, value]) => <div key={key}><dt>{statLabels[key as keyof Stats]}</dt><dd>{value! > 0 ? '+' : ''}{formatStat(key, value!)}</dd></div>)}</dl>;
 }
 
-export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend, onConversationChange, onTitle, onNewGame, onDecision }: {
+export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend, onConversationChange, onTitle, onNewGame, onDecision, renderTopbar }: {
   game: Game; busy: boolean; pending: TurnInput | null; text: string;
   onTextChange: (value: string) => void; onSend: (actionId?: string) => Promise<boolean>;
   onDecision?: (action: string, value: string) => Promise<boolean>;
+  renderTopbar?: (title: string) => ReactNode;
   onConversationChange: (target: string) => Promise<boolean>; onTitle: () => void; onNewGame: () => void;
 }) {
   const [menu, setMenu] = useState<'actions' | 'records' | 'confirm' | null>(null);
   const [selected, setSelected] = useState<Action | null>(null);
   const [decisionText, setDecisionText] = useState('');
-  const opening = useMonthlyOpening(game);
+  const { phase, advance } = useMonthlyOpening(game);
   const boundary = monthlyBoundary(game);
   const resultKey = boundary ? `prom-part2-result:${game.game_id}:${boundary.id}` : '';
   const [resultRead, setResultRead] = useState(() => !boundary || localStorage.getItem(resultKey) === 'read');
@@ -43,6 +44,19 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
   const completeScene = prototypeScene || !!game.ending;
   const centerScene = game.event.id === 'p2_m02_center';
   const centerLayout = centerScene && !showingResult;
+  const showOpening = !showingResult && !completeScene && phase !== 'play';
+  const sceneTitle = showingResult ? boundary.event_title
+    : completeScene ? game.ending?.title ?? '우리의 첫 여섯 달' : game.event.title;
+  const activePeriodId = showingResult ? boundary.event_id : game.event.id;
+  const progressRef = useRef<HTMLOListElement>(null);
+
+  useLayoutEffect(() => {
+    const list = progressRef.current;
+    const active = list?.querySelector('[aria-current="step"]');
+    if (list && active) {
+      list.scrollTop += active.getBoundingClientRect().top - list.getBoundingClientRect().top;
+    }
+  }, [activePeriodId, showOpening]);
   const fansAvailable = !!game.completed_events.p2_m04_showcase;
   const privateRoom = game.conversation.mode === 'private';
   const serverMonth = game.event.id.startsWith('p2_m') && game.event.month >= 7;
@@ -97,12 +111,12 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  if (!showingResult && !completeScene && opening.phase !== 'play') return <MonthlyOpening game={game} phase={opening.phase} onNext={opening.advance} disabled={locked}/>;
+  const topbar = renderTopbar?.(sceneTitle);
+  if (showOpening) return <>{topbar}<MonthlyOpening game={game} phase={phase} onNext={advance} disabled={locked}/></>;
 
-  return <section className={centerLayout ? "interview-room month-one month-photo-stage month-one-photos center-month" : "monthly-stage month-two-photos"} aria-label={showingResult ? `${boundary.event_title} 결과` : completeScene ? '활동 결산' : `${game.event.month}개월차 ${game.event.title}`} style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
-    {centerLayout ? <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div> : <header className="monthly-heading"><div><p className="section-kicker">PROMYOU · {showingResult ? '이번 달의 기록' : completeScene ? prototypeScene ? '첫 여섯 달의 기록' : '계약의 마지막 기록' : `${game.event.month}개월차 · ${game.event.scene}`}</p><h1>{showingResult ? boundary.event_title : completeScene ? game.ending?.title ?? '우리의 첫 여섯 달' : game.event.title}</h1></div><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></header>}
-
-    {centerLayout ? <CenterMonthSidebar game={game} onTitle={onTitle} onRecords={() => setMenu('records')} disabled={busy || !!pending}/> : <aside className="monthly-info"><h2>프로뮤의 현재</h2><dl className="monthly-stats">{(['teamwork', 'fatigue', 'trust', 'awareness', 'fans'] as const).map(key => <div key={key}><dt>{statLabels[key]}</dt><dd>{key === 'fans' ? fansAvailable ? `${game.stats.fans.toLocaleString()}명` : '-' : <>{game.stats[key].toLocaleString()}<small> / 100</small></>}</dd></div>)}</dl><ol className="monthly-progress" aria-label="월별 진행">{monthlyPeriods(game).map(month => <li key={month.id} aria-current={!showingResult && game.event.id === month.id ? 'step' : undefined}><span>{month.month}개월 · {month.title}</span><small>{game.completed_events[month.id] ? outcomes[game.completed_events[month.id]] : game.event.id === month.id ? '진행 중' : '예정'}</small></li>)}</ol><button className="text-button" onClick={() => setMenu('records')}>이번 달 면담 기록</button></aside>}
+  return <>{topbar}<section className={centerLayout ? "interview-room month-one month-photo-stage month-one-photos center-month" : `monthly-stage month-two-photos server-monthly-stage${showingResult || completeScene ? ' is-summary' : ''}`} aria-label={showingResult ? `${sceneTitle} 결과` : completeScene ? '활동 결산' : `${game.event.month}개월차 ${sceneTitle}`} style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
+    {centerLayout ? <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div> : <header className="monthly-heading"><div><p className="section-kicker">PROMYOU · {showingResult ? '이번 달의 기록' : completeScene ? prototypeScene ? '첫 여섯 달의 기록' : '계약의 마지막 기록' : `${game.event.month}개월차 · ${game.event.scene}`}</p><h1>{sceneTitle}</h1></div><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></header>}
+    {centerLayout && <CenterMonthSidebar game={game} onTitle={onTitle} onRecords={() => setMenu('records')} disabled={busy || !!pending}/>}
     <div className={centerLayout ? "interview-portrait" : "monthly-portrait"}><PhotoSlot {...dialoguePhoto(portraitId, expression)} name={portraitName}/></div>
     <div className={centerLayout ? "interview-dock" : "monthly-dock"}>
       {showingResult ? <section className="monthly-result" aria-label="이번 달 결과"><p className="section-kicker">{outcomes[boundary.outcome] ?? '결과'}</p><h2>{boundary.event_title} · 결과</h2>{boundary.messages.map((message, index) => <p key={index}><strong>{boundary.conversation?.participants.find(person => person.role === message.speaker_id || person.id === message.speaker_id)?.name ?? (message.speaker_id === 'secretary' ? '백하연' : game.character.name)}</strong>　{message.text}</p>)}<Deltas turn={boundary}/>{!Object.keys(boundary.stat_delta).length && <p>이번 결정으로 바뀐 수치는 없습니다.</p>}<p className="monthly-note">{game.provider === 'fixture' ? '개발용 fixture에만 보관된 결과입니다.' : '결과와 다음 장면이 서버에 저장되었습니다.'}</p><button className="primary-button" disabled={busy || !!pending} onClick={continueReading}>{completeScene ? '결산 보기' : `${game.event.month}개월차 이야기 보기`} →</button></section>
@@ -124,13 +138,29 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
         <div className="monthly-conversation"><label>대화 상대<select aria-label="대화 상대" value={privateRoom ? target?.id ?? '' : 'public'} disabled={locked} onChange={event => void onConversationChange(event.target.value)}><option value="public">함께 대화</option>{game.conversation.available_targets.map(person => <option key={person.id} value={person.id}>{person.name} · 1:1</option>)}</select></label><button className="text-button" onClick={() => setMenu('records')}>대화 기록</button></div>
         <div className="monthly-dialogue-area"><section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.name ?? displayed.name}</h2><span className="mode-label">{game.provider === 'fixture' ? '개발용 대화 예시' : game.provider === 'demo' ? '데모 대화' : 'AI 대화'}</span></header><div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{!feedback && <p>{displayed.text}</p>}{feedback && <PendingResponse feedback={feedback}/>}</div><DialogueNavigation index={reading.index} count={frames.length} onPrevious={reading.previous} onNext={reading.next} onLatest={reading.latest} disabled={locked}/></section>
           {game.event.chat_actions && (!privateRoom || target?.role === 'secretary') && <p className="monthly-note">{game.event.month === 11 ? '채팅에 “수상 소감 확정: 소감 내용”을 입력할 수 있습니다.' : game.event.month === 23 ? '채팅에 “마지막 인사: 인사 내용”을 입력하거나 결산을 지시할 수 있습니다.' : '이번 달 활동은 채팅으로 한 가지씩 지시할 수 있습니다.'}</p>}
-          <ChatComposer id="part2-message" label="이번 달 대화" text={text} placeholder={privateRoom ? `${target?.name}에게 이야기하기` : '멤버와 백 실장에게 이야기하기'} disabled={locked || reading.reviewing || roomAtLimit} onTextChange={onTextChange} onSend={() => onSend()} suggestions={monthlyQuestions[game.event.month] ?? ['지금 가장 걱정되는 점을 듣고 싶어.', '백 실장, 이번 달 준비 상황을 알려줘.']}/>
+          <ChatComposer id="part2-message" label="이번 달 대화" text={text} placeholder={privateRoom ? `${target?.name}에게 이야기하기` : '함께 이야기하기'} disabled={locked || reading.reviewing || roomAtLimit} onTextChange={onTextChange} onSend={() => onSend()} suggestions={monthlyQuestions[game.event.month] ?? ['지금 가장 걱정되는 점을 듣고 싶어.', '백 실장, 이번 달 준비 상황을 알려줘.']}/>
         </div>
         {last?.event_id === game.event.id && !busy && Object.keys(last.stat_delta).length > 0 && <Deltas turn={last}/>}
         {serverMonth && last?.event_id === game.event.id && last.kind === 'activity' && privateRoom && <p className="monthly-note">{last.facts.join(' ')}</p>}
         <div className="monthly-buttons"><button className="primary-button" disabled={locked || reading.reviewing || missingInterviews} onClick={() => void openActions()}>이번 달 활동·결정 →</button>{missingInterviews && <span className="monthly-note">필수 면담을 한 번씩 마친 뒤 결정할 수 있습니다.</span>}{privateRoom && !serverMonth && <span className="monthly-note">결정할 때 함께 대화로 돌아갑니다.</span>}</div>
       </>}
     </div>
+    {!centerLayout && <aside className="monthly-info">
+      <h2>프로뮤의 현재</h2>
+      <dl className="monthly-stats">
+        {(['teamwork', 'fatigue', 'trust', 'awareness', 'fans'] as const).map(key => <div key={key}>
+          <dt>{statLabels[key]}</dt>
+          <dd>{key === 'fans' ? fansAvailable ? `${game.stats.fans.toLocaleString()}명` : '-' : <>{game.stats[key].toLocaleString()}<small> / 100</small></>}</dd>
+        </div>)}
+      </dl>
+      <ol ref={progressRef} className="monthly-progress" aria-label="월별 진행">
+        {monthlyPeriods(game).map(month => <li key={month.id} aria-current={activePeriodId === month.id ? 'step' : undefined}>
+          <span>{month.month}개월 · {month.title}</span>
+          <small>{game.completed_events[month.id] ? outcomes[game.completed_events[month.id]] : game.event.id === month.id ? '진행 중' : '예정'}</small>
+        </li>)}
+      </ol>
+      <button className="text-button" onClick={() => setMenu('records')}>이번 달 면담 기록</button>
+    </aside>}
     <Modal open={menu === 'actions'} title="이번 달 활동과 결정" className="month-modal" onClose={() => setMenu(current => current === 'actions' ? null : current)}><h2>{game.event.title}</h2><p>활동은 한 번씩 반영됩니다. 최종 결정을 확정하면 결과를 저장하고 다음 장면으로 이어집니다.</p><div className="month-options">{game.event.actions.map(action => <button key={action.id} disabled={locked || action.used} onClick={() => { setSelected(action); setMenu('confirm'); }}><strong>{action.label}{action.used ? ' · 반영 완료' : ''}</strong><span>{action.hint}</span></button>)}</div></Modal>
     <Modal open={menu === 'confirm' && !!selected} title="활동·결정 확인" className="month-modal" onClose={() => setMenu(current => current === 'confirm' ? null : current)}><p className="section-kicker">대표님의 결정</p><h2>{selected?.label}</h2><p>{selected?.hint}</p>{decisionInput && <label>{decisionInput}<textarea rows={4} maxLength={500} value={decisionText} onChange={event => setDecisionText(event.target.value)}/></label>}<p>현재 상태와 준비 내용을 바탕으로 결과가 정해집니다. 확정한 선택은 되돌릴 수 없습니다.</p><div className="monthly-buttons"><button className="quiet-button" disabled={locked} onClick={() => setMenu('actions')}>다시 선택</button><button className="primary-button" disabled={locked || (!serverMonth && privateRoom) || !!selected?.used || (selected?.id === 'save_speech' && !decisionText.trim())} onClick={async () => {
       if (!selected) return;
@@ -139,5 +169,5 @@ export function ServerMonthly({ game, busy, pending, text, onTextChange, onSend,
       else await onSend(selected.id);
     }}>확정하기</button></div></Modal>
     <Modal open={menu === 'records'} title={`${game.event.month}개월차 면담 기록`} className="records-modal" onClose={() => setMenu(current => current === 'records' ? null : current)}>{menu === 'records' && <MonthlyInterviewRecords key={game.game_id + ':' + game.event.month} game={game}/>}</Modal>
-  </section>;
+  </section></>;
 }
