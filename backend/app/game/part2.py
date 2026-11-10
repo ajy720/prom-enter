@@ -1,6 +1,7 @@
 """Part 1–2 prototype: existing actors, explicit decisions, converging monthly events."""
 from app.content import EVENTS
 from app.game import rehearsal
+from app.game import monthly_decisions as monthly
 from app.models import GameError, Memory
 from app.ai.memory import remember, fulfill_promises
 
@@ -42,7 +43,7 @@ def resolve_part2(original, analysis, turn_id):
 
     if action == 'talk':
         # Interviews have no numerical reward and no hidden topic-completion gate.
-        if event['month'] > 0 and state.event_id != 'p2_complete':
+        if event['month'] == 1:
             for item in analysis.assessments:
                 if item.status != 'met':
                     continue
@@ -119,39 +120,20 @@ def resolve_part2(original, analysis, turn_id):
     elif action == rehearsal.STOP:
         state.conversation = make_conversation(state, 'private', state.character_id)
         facts.append('공개 질책을 중단했습니다. 세인의 질책은 끝났으며 신입과 기존 멤버의 개별 면담을 시작합니다. 수치는 바뀌지 않았습니다.')
-    elif action in {'mediate_rehearsal','continue_rehearsal'}:
-        if action == 'mediate_rehearsal':
-            apply_delta(state, {'teamwork': 5, 'fatigue': -10})
-        outcome = 'success' if state.stats.fatigue < 60 and state.stats.teamwork >= 40 else 'failure'
-        if outcome == 'failure':
-            apply_delta(state, {'teamwork': -10, 'fatigue': 15})
-    elif action == 'respond_press':
-        facts.append('기사 대응을 지시했습니다. 쇼케이스의 이슈 대응 준비가 완료됐습니다.')
-    elif action == 'hold_showcase':
-        funded = state.stats.funds_won >= 150_000_000
-        ready = state.event_id+':respond_press' in state.applied_effects
-        outcome = 'success' if funded and ready and state.stats.teamwork >= 40 and state.stats.trust >= 38 else 'failure'
-        if funded:
-            apply_delta(state, {'funds_won': -150_000_000})
-        else:
-            facts.append('쇼케이스 자금이 부족해 비용 없이 실패로 진행합니다.')
+    elif state.event_id == monthly.SHOWCASE and action in monthly.SHOWCASE_CHOICES:
+        baseline = state.showcase_awareness_start
+        if baseline is None:
+            baseline = state.stats.awareness
+            state.showcase_awareness_start = baseline
+        apply_delta(state, monthly.SHOWCASE_CHOICES[action])
+        outcome = 'success' if state.stats.teamwork >= 40 and state.stats.trust >= 40 and baseline - state.stats.awareness <= 5 else 'failure'
+        apply_delta(state, {'funds_won': -150_000_000})
+        facts.append('선택 효과를 반영해 판정했습니다. 쇼케이스 비용 1.5억 원을 차감했습니다.')
         apply_delta(state, {'teamwork': 10, 'awareness': 8, 'fatigue': -5} if outcome == 'success'
                     else {'teamwork': -10, 'awareness': 2, 'fatigue': 15, 'trust': -3})
         state.stats.fans = 3000 if outcome == 'success' else 1000
-    elif action in {'promote_standard','promote_lowcost','skip_promotion'}:
-        cost = {'promote_standard':40_000_000,'promote_lowcost':10_000_000,'skip_promotion':0}[action]
-        if state.stats.funds_won < cost:
-            raise GameError('홍보 자금이 부족합니다. 저예산 홍보나 홍보 생략을 선택해주세요.', 422)
-        apply_delta(state, {'funds_won': -cost})
-        outcome = 'failure' if action == 'skip_promotion' else 'success'
-        debut_success = state.completed_events.get('p2_m04_showcase') == 'success'
-        if outcome == 'success':
-            apply_delta(state, {'awareness':10 if debut_success else 5, 'fans':10000 if debut_success else 3000,
-                                'funds_won':80_000_000 if debut_success else 0})
-        else:
-            apply_delta(state, {'awareness':-3})
-    elif action in {'accept_offer','recommend_other','decline_offer'}:
-        outcome = 'neutral' if action == 'decline_offer' else ('success' if action == 'recommend_other' or 'variety' in state.training_history else 'failure')
+    elif action in {'accept_offer','recommend_other'}:
+        outcome = 'success' if action == 'recommend_other' or 'variety' in state.training_history else 'failure'
         apply_delta(state, event['outcomes'][outcome])
     elif action == 'finish_prototype':
         state.ending_id = 'part2_complete'

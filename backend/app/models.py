@@ -118,6 +118,7 @@ class EventOpening(Model):
     messages: list[OpeningMessage]
     goal: str
     choices: list[OpeningChoice]
+    beats: list[OpeningMessage] = Field(default_factory=list)
 
 
 class CenterEvidence(Model):
@@ -184,6 +185,7 @@ class State(Model):
     event_openings: list[EventOpening] = Field(default_factory=list)
     center_decision: CenterDecision | None = None
     center_choice_draft: CenterChoiceDraft | None = None
+    showcase_awareness_start: int | None = None
 
     @model_validator(mode='after')
     def part2_starting_funds(self):
@@ -200,6 +202,12 @@ class CreateGame(Model):
     scenario: Literal['demo', 'part2'] = 'demo'
 
 
+class PromotionAllocation(Model):
+    shortform_won: int = Field(ge=0, strict=True)
+    radio_won: int = Field(ge=0, strict=True)
+    fansign_won: int = Field(ge=0, strict=True)
+
+
 class TurnRequest(Model):
     request_id: str = Field(min_length=8, max_length=100)
     state_version: int = Field(ge=0)
@@ -212,6 +220,7 @@ class TurnRequest(Model):
     stop_after_month_one: bool = False
     center_member_id: str | None = Field(default=None, max_length=40)
     center_reason: str | None = Field(default=None, max_length=2000)
+    promotion_allocation: PromotionAllocation | None = None
 
 
 class Assessment(Model):

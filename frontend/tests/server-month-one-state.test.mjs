@@ -2,10 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { canConfirmMonthPlan, hasMemberDiscussion, isMonthPlanChoice, monthPlanCompleted, savedDormRule, savedMonthTraining } from '../src/serverMonthOneState.ts';
 
-test('첫 달 계획은 서버가 저장한 훈련·규칙·기존 세 멤버 면담을 모두 갖춰야 확인할 수 있다', () => {
+test('첫 달 계획은 서버가 저장한 훈련·규칙·신입 포함 네 멤버 면담을 모두 갖춰야 확인할 수 있다', () => {
   const game = {
+    character: {id:'a',profile_id:'hyerin'},
     event: { id: 'p2_m01_training', actions: [{ id: 'train_dance', used: true }, { id: 'rule_buddy', used: true }, { id: 'confirm_month_plan', used: false }] },
-    history: ['dahyun', 'haram', 'yuna'].flatMap(member => [1, 2, 3].map(n => ({
+    history: ['hyerin','dahyun', 'haram', 'yuna'].flatMap(member => [1].map(n => ({
       id: `${member}-${n}`, event_id: 'p2_m01_training', input_type: 'chat', kind: 'dialogue',
       conversation: { mode: 'private', target_character_id: member }, messages: [{ speaker_id: member, text: '함께 연습해요.' }],
     }))),
@@ -15,8 +16,8 @@ test('첫 달 계획은 서버가 저장한 훈련·규칙·기존 세 멤버 �
   for (const id of ['train_dance', 'rule_buddy']) {
     assert.equal(canConfirmMonthPlan({ ...game, event: { ...game.event, actions: game.event.actions.map(a => a.id === id ? { ...a, used: false } : a) } }), false);
   }
-  for (const member of ['dahyun', 'haram', 'yuna']) {
-    assert.equal(canConfirmMonthPlan({ ...game, history: game.history.filter(t => t.id !== `${member}-3`) }), false);
+  for (const member of ['hyerin','dahyun', 'haram', 'yuna']) {
+    assert.equal(canConfirmMonthPlan({ ...game, history: game.history.filter(t => t.id !== `${member}-1`) }), false);
   }
   assert.equal(canConfirmMonthPlan({ ...game, history: [] }), false);
   assert.equal(canConfirmMonthPlan({ ...game, event: { ...game.event, id: 'p2_m02_center' } }), false);
@@ -49,15 +50,15 @@ test('합숙 규칙은 서버가 저장한 첫 달의 선택만 복원한다', (
   assert.equal(savedDormRule({ event: { id: 'p2_m01_training', actions: [{ id: 'rule_buddy', used: false }] } }), undefined);
 });
 
-test('각 멤버와 성공한 대화 3회를 저장해야 면담이 완료된다', () => {
-  for (const member of ['dahyun', 'haram', 'yuna']) {
+test('각 멤버의 첫 성공한 대화부터 면담 완료로 인정한다', () => {
+  for (const member of ['hyerin','dahyun', 'haram', 'yuna']) {
     const turn = { event_id: 'p2_m01_training', kind: 'dialogue', input_type: 'chat', conversation: { mode: 'private', target_character_id: member }, messages: [{ speaker_id: member, text: '함께 연습해요.' }] };
     const history = [1, 2, 3].map(id => ({ ...turn, id: `${member}-${id}` }));
-    assert.equal(hasMemberDiscussion({ history: history.slice(0, 1) }, member), false);
-    assert.equal(hasMemberDiscussion({ history: history.slice(0, 2) }, member), false);
+    assert.equal(hasMemberDiscussion({ history: history.slice(0, 1) }, member), true);
+    assert.equal(hasMemberDiscussion({ history: history.slice(0, 2) }, member), true);
     assert.equal(hasMemberDiscussion({ history }, member), true);
     assert.equal(hasMemberDiscussion(JSON.parse(JSON.stringify({ history })), member), true);
-    assert.equal(hasMemberDiscussion({ history: Array(3).fill(history[0]) }, member), false);
+    assert.equal(hasMemberDiscussion({ history: Array(3).fill(history[0]) }, member), true);
     for (const invalid of [
       { kind: 'conversation_change' }, { input_type: 'action' }, { event_id: 'p2_m02_center' },
       { conversation: { mode: 'public' } }, { messages: [{ speaker_id: 'secretary' }] },

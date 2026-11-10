@@ -1,4 +1,40 @@
 /* Monthly play extends the approved white/pink dialogue and operation controls. */
+.monthly-intro.narration-scene { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: clamp(32px, 8vh, 96px); min-height: calc(100dvh - 72px); padding: clamp(24px, 5vw, 72px); box-sizing: border-box; background-size: cover; background-position: center; }
+.narration-scene > header, .monthly-intro.narration-scene .monthly-intro-copy { width: min(100%, 1000px); max-width: 1000px; margin: 0 auto; padding: 0; }
+.narration-scene > header { color: white; text-shadow: 0 1px 3px rgb(0 0 0 / 75%); }
+.narration-scene > header .section-kicker { color: white; }
+.narration-scene .monthly-buttons > :is(.text-button, span) { color: white; text-shadow: 0 1px 3px rgb(0 0 0 / 75%); }
+.monthly-intro.narration-scene .dialogue-box { background: white; border-radius: 10px; padding: 24px; box-shadow: none; }
+.narration-scene .dialogue-header { border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+.narration-scene .dialogue-header h2 { margin: 0; font-size: 18px; }
+.narration-scene .dialogue-content { min-height: 0; max-height: none; overflow: visible; padding: 24px 0 4px; }
+.narration-scene .monthly-buttons, .narration-scene .intro-navigation { justify-content: flex-end; margin-top: 24px; }
+.narration-scene .monthly-intro-copy > :is(p,dl) { background: white; padding: 16px 24px; border-radius: 10px; }
+@media (max-width: 700px) {
+  .monthly-intro.narration-scene { padding: 24px 16px; gap: 32px; }
+  .monthly-intro.narration-scene .dialogue-box { padding: 20px; }
+}
+.server-part-two { background-size: cover; background-position: center; }
+.server-part-two > .interview-info .monthly-stats { margin: 16px 0; }
+.server-part-two > .interview-info .monthly-stats :is(dt, dd) { color: white; }
+.server-part-two > .interview-info > .text-button { display: block; color: white; }
+.server-part-two .center-member-tabs { margin-bottom: 16px; }
+.server-part-two .center-member-tabs button { min-width: 0; }
+.server-part-two .monthly-buttons { align-items: center; flex-wrap: wrap; }
+.server-part-two .month-options { margin-top: 16px; }
+.server-part-two.is-narration::before { background: none; }
+.promotion-allocation { display: grid; gap: 16px; margin-block: 24px; }
+.promotion-allocation label { display: grid; gap: 8px; }
+.promotion-allocation input { width: 100%; min-width: 0; box-sizing: border-box; padding: 12px; border: 1px solid var(--mauve); border-radius: 6px; font: inherit; }
+@media (max-width: 1000px) {
+  .server-part-two > .scene-resource-status { position: static; grid-row: 1; grid-column: 1 / -1; justify-self: end; }
+  .interview-room.server-part-two > .interview-info { grid-row: 2; }
+  .interview-room.candidate-interview.server-part-two > .interview-portrait { grid-row: 3; }
+  .interview-room.server-part-two > .interview-dock { grid-row: 4; }
+  .server-part-two .monthly-stats { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+  .server-part-two .monthly-stats > div { gap: 8px; }
+  .server-part-two.is-narration > .interview-dock { grid-row: 3; }
+}
 :is(.month-one-photos, .month-two-photos) { position: relative; isolation: isolate; }
 :is(.month-one-photos, .month-two-photos)::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--scene-dim); pointer-events: none; }
 :is(.month-one-photos, .month-two-photos) .monthly-portrait img,

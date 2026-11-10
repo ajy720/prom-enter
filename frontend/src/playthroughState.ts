@@ -8,7 +8,7 @@ export type Playthrough = {
   stage: 'six' | 'part3'; six: SixMonthSave | null; part3: Part3Save | null;
 };
 type Storage = Pick<globalThis.Storage, 'getItem' | 'setItem'>;
-export const playthroughKey = (id: string) => `prom-playthrough-v1:${id}`;
+export const playthroughKey = (id: string) => `prom-playthrough-v2:${id}`;
 export function canContinueLocally(game: Game) {
   return game.event.id === 'p2_complete' || (game.event.id === 'p2_m03_rehearsal' && !game.history.some(t => t.event_id === game.event.id));
 }

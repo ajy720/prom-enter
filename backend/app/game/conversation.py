@@ -10,6 +10,8 @@ def people(state: State) -> dict[str, str]:
     available = {'newcomer':profile_id(state.character_id), 'secretary':DATA['secretary_id']}
     if is_interview(state.event_id):
         return {'newcomer':available['newcomer']}
+    if state.event_id in {'p2_m04_showcase', 'p2_m05_promotion', 'p2_m06_variety'}:
+        return {'secretary': DATA['secretary_id']}
     if state.event_id in {'p2_m01_training', 'p2_m02_center', rehearsal.EVENT}:
         available.update({person:person for person in ('dahyun','haram','yuna')})
     return available
@@ -24,7 +26,7 @@ def make_conversation(state: State, mode: str = 'public', target: str | None = N
         participants = ['player',target]
     elif mode == 'public' and target is None:
         # Keep existing public rooms compatible. Established members join only 1:1.
-        participants = ['player',available['newcomer']] + ([available['secretary']] if 'secretary' in available else [])
+        participants = ['player'] + ([available['newcomer']] if 'newcomer' in available else []) + ([available['secretary']] if 'secretary' in available else [])
         if state.event_id == rehearsal.EVENT and rehearsal.phase(state) == 'reprimand':
             participants.append('yuna')
     else:

@@ -16,6 +16,7 @@ export type EventOpening = {
   id: string; event_id: string; after_turn_id: string | null; month: number; title: string; scene: string;
   narration: string; messages: {character_id: string; name: string; text: string}[];
   goal: string; choices: {id: string; label: string}[];
+  beats?: {character_id: string; name: string; text: string}[];
 };
 export type Analysis = {
   action_id: string; needs_clarification: boolean; reference_turn_id: string | null; assessments: Assessment[];
@@ -24,7 +25,10 @@ export type Analysis = {
   conversation_change?: {mode: 'public' | 'private' | null; target_character_id: string | null; quote: string; needs_clarification: boolean} | null;
 };
 export type Turn = {
-  month_completion?: {month: 2; reason: 'manual' | 'limit'; teamwork: number; teamwork_min: number} | null;
+  month_completion?: {month: 2 | 3; reason: 'manual' | 'limit'; teamwork: number; teamwork_min: number; fatigue?: number; fatigue_max_exclusive?: number} | null;
+  result_narration?: string | null;
+  promotion_allocation?: PromotionAllocation;
+  promotion_track?: 'A' | 'B';
   input_type?: 'chat' | 'action' | 'conversation'; interview_closed?: boolean;
   id: string; input: string; event_id: string; event_title: string;
   kind?: 'dialogue' | 'conversation_change' | 'activity'; conversation?: Conversation;
@@ -38,6 +42,8 @@ export type Turn = {
   ai_trace?: {prompt_version: string; provider: string; analysis_calls?: number; evaluation_calls?: number; generation_calls: number; phase: string; profile_id: string};
 };
 export type Game = {
+  promotion?: {track: 'A' | 'B'; budget_won: number; minimum_percent: {shortform: number; radio: number; fansign: number}} | null;
+  showcase_awareness_start?: number | null;
   rehearsal?: {phase: 'reprimand' | 'interviews'} | null;
   center_interviews?: {turn_limit: number; success_teamwork_min?: number; ready_for_decision: boolean; decision_prompt: string | null;
     can_finish: boolean; missing_member_ids: string[]; finish_notice: string | null; selection_feedback: string | null;
@@ -54,9 +60,11 @@ export type Game = {
   completed_events: Record<string, string>; ending: {id: string; title: string; description: string} | null; history: Turn[];
 };
 export type TurnInput = {
+  promotion_allocation?: PromotionAllocation;
   center_member_id?: string; center_reason?: string;
   stop_after_month_one?: boolean;
   request_id: string; state_version: number; input_type: 'chat' | 'action' | 'conversation';
   text: string; action_id: string | null; recipient_id?: string | null;
   conversation_mode?: 'public' | 'private'; target_character_id?: string | null;
 };
+export type PromotionAllocation = {shortform_won: number; radio_won: number; fansign_won: number};

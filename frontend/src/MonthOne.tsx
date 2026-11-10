@@ -1,3 +1,4 @@
+import { NarrationScene } from './NarrationScene';
 import { useSceneViewport } from './useSceneViewport';
 import { useState } from 'react';
 import { Modal } from './Modal';
@@ -5,11 +6,10 @@ import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
 import { useDialogueHistory } from './DialogueNavigation';
 import { TeamStatus } from './TeamStatus';
-import { ResourceStatus } from './ResourceStatus';
 import { debutMembers, characterPortraits, sceneBackgrounds, type IntroCharacter } from './introContent';
 import type { CandidateId } from './interviewState';
 import { dormRules, monthQuestions, monthReply, trainingOptions } from './monthOneContent';
-import { canFinishMonth, finishMonth, hasDiscussion, memberIds, recordMonthTurn, type MonthOneState, type MonthSpeaker } from './monthOneState';
+import { canFinishMonth, finishMonth, hasDiscussion, memberIds, monthDialogueCount, recordMonthTurn, type MonthOneState, type MonthSpeaker } from './monthOneState';
 
 export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCasting }: {
   candidate: IntroCharacter; nickname: string; state: MonthOneState;
@@ -25,7 +25,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   const messages = state.conversations[speaker];
   const training = trainingOptions.find(option => option.id === state.training);
   const rule = dormRules.find(option => option.id === state.rule);
-  const talked = memberIds.filter(id => hasDiscussion(state, id)).length;
+  const talked = ([...memberIds,'newcomer'] as MonthSpeaker[]).filter(id => hasDiscussion(state,id)).length;
   const scenes = [
     { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `프로뮤의 첫 합숙이 시작됐습니다.\n${candidate.name}, 리안, 도하, 세인. 서로 다른 시간을 지나온 네 사람이 같은 숙소에서 하루를 시작합니다. 익숙해지기까지는 조금 시간이 필요할 것 같습니다.` },
     { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 신입은 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
@@ -51,16 +51,15 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
       ...monthReply(speaker, candidate.id as CandidateId, question, !!current.training) }));
     setText('');
   }
-  const summary = <dl className="month-summary"><div><dt>합류 멤버</dt><dd>{candidate.name}</dd></div><div><dt>집중 훈련</dt><dd>{training?.label ?? '미지정'}</dd></div><div><dt>기존 멤버 면담</dt><dd>{talked} / 3명</dd></div><div><dt>합숙 규칙</dt><dd>{rule?.label ?? '미지정'}</dd></div></dl>;
+  const summary = <dl className="month-summary"><div><dt>합류 멤버</dt><dd>{candidate.name}</dd></div><div><dt>집중 훈련</dt><dd>{training?.label ?? '미지정'}</dd></div><div><dt>멤버 면담</dt><dd>{talked} / 4명</dd></div><div><dt>합숙 규칙</dt><dd>{rule?.label ?? '미지정'}</dd></div></dl>;
 
   return <div ref={viewportRef} className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
-    <section className="interview-room month-one month-photo-stage month-one-photos" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
-    <div className="scene-resource-status"><ResourceStatus compact/></div>
+    {introductory && displayed.speaker === '이야기' ? <NarrationScene title="어색한 첫 합숙" location="1개월차 · 연습실" background={sceneBackgrounds.practice} text={displayed.text}><div className="intro-navigation"><button className="primary-button" onClick={() => history.reviewing ? history.next() : onUpdate(current => ({...current,scene:current.scene+1}))}>다음 →</button></div></NarrationScene> : <section className="interview-room month-one month-photo-stage month-one-photos" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
       <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
 
         <TeamStatus/>
-        <ol className="month-checklist"><li>{state.training ? '✓' : '○'} 집중 훈련 {training?.label ?? '선택'}</li><li>{talked === 3 ? '✓' : '○'} 기존 멤버 면담 {talked}/3</li><li>{state.rule ? '✓' : '○'} 합숙 규칙 정하기</li></ol>
+        <ol className="month-checklist"><li>{state.training ? '✓' : '○'} 집중 훈련 {training?.label ?? '선택'}</li><li>{talked === 4 ? '✓' : '○'} 멤버 면담 {talked}/4</li><li>{state.rule ? '✓' : '○'} 합숙 규칙 정하기</li></ol>
         {!introductory && !state.completed && <><button className="operation-button" onClick={() => setMenu('training')}><span>집중 훈련 {training ? '변경' : '선택'}</span><span aria-hidden="true">→</span></button><button className="operation-button" onClick={() => setMenu('rule')}><span>합숙 규칙 {rule ? '변경' : '선택'}</span><span aria-hidden="true">→</span></button></>}
       </aside>
       <div className="interview-portrait"><PhotoSlot src={displayed.portrait} name={displayed.photoName} caption="반신 사진 자리"/></div>
@@ -72,12 +71,12 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
             : null}
         </section>
         {!introductory && (state.completed ? <section className="glass-panel month-finished"><p className="section-kicker">1개월차 계획 확정</p><h2>프로뮤의 첫걸음을 준비했어요.</h2>{summary}<p>선택과 대화 기록이 이 브라우저에 저장되었습니다. 실제 훈련 결과·신뢰도·성공/실패 판정은 서버 연결 후 반영합니다.</p><div className="month-actions"><button className="quiet-button" onClick={openRecords}>멤버별 대화 기록 보기</button><span className="upcoming-feature">2개월차 준비 중</span></div></section> : <>
-          <ChatComposer id="month-message" label="첫 합숙 대화" text={text} placeholder={`${person.name}에게 이야기하기`} onTextChange={setText} onSend={() => send(text)} suggestions={monthQuestions}/>
-          <div className="month-actions"><p>{canFinishMonth(state) ? '필요한 준비를 마쳤어요. 확인 후 이번 달 계획을 확정해주세요.' : '훈련 1개·기존 멤버 3명과 대화·합숙 규칙을 정해주세요.'}</p><button className="primary-button" disabled={!canFinishMonth(state)} onClick={() => setMenu('confirm')}>첫 달 계획 확인 →</button></div>
+          <ChatComposer id="month-message" label="첫 합숙 대화" disabled={monthDialogueCount(state,speaker) >= 8} text={text} placeholder={`${person.name}에게 이야기하기`} onTextChange={setText} onSend={() => send(text)} suggestions={monthQuestions}/>
+          <div className="month-actions"><p>{canFinishMonth(state) ? '필요한 준비를 마쳤어요. 확인 후 이번 달 계획을 확정해주세요.' : '훈련·합숙 규칙과 신입 포함 네 멤버 면담을 완료해주세요. 멤버별 최소 1회, 최대 8회입니다.'}</p><button className="primary-button" disabled={!canFinishMonth(state)} onClick={() => setMenu('confirm')}>첫 달 계획 확인 →</button></div>
           <p className="dock-caption">준비된 주제에 답하는 데모입니다. 실제 AI와 게임 수치 판정은 아직 연결하지 않았어요.</p>
         </>)}
       </div>
-    </section>
+    </section>}
     <Modal open={menu === 'training'} title="집중 훈련 선택" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">이번 달 집중 분야 · 하나 선택</p><h2>{candidate.name}의 첫 트레이닝</h2><p>트레이닝에는 자금이 필요합니다. 현재는 계획을 정하는 단계로 비용이 차감되지 않습니다.</p><p>지금 가장 필요한 기초를 골라주세요. 계획 확정 전까지 바꿀 수 있어요.</p><div className="month-options">{trainingOptions.map(option => <button key={option.id} aria-pressed={state.training === option.id} disabled={state.completed} onClick={() => { onUpdate(current => ({ ...current, training: option.id })); setMenu(null); }}><strong>{option.label}</strong><span>{option.description}</span></button>)}</div></Modal>
     <Modal open={menu === 'rule'} title="합숙 규칙 선택" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">함께 지낼 약속</p><h2>어떤 규칙부터 시작할까요?</h2><p>이번 달에 우선 지킬 규칙 한 가지를 골라주세요.</p><div className="month-options">{dormRules.map(option => <button key={option.id} aria-pressed={state.rule === option.id} disabled={state.completed} onClick={() => { onUpdate(current => ({ ...current, rule: option.id })); setMenu(null); }}><strong>{option.label}</strong><span>{option.description}</span></button>)}</div></Modal>
     <Modal open={menu === 'confirm'} title="첫 달 계획 확인" className="month-modal" onClose={() => setMenu(null)}><p className="section-kicker">대표님의 첫 운영 계획</p><h2>이 계획으로 준비할까요?</h2>{summary}<p>확정 후에는 이번 달 선택을 바꿀 수 없습니다. 이 단계는 데모 계획 기록이며 성공·실패 결과를 계산하지 않습니다.</p><button className="primary-button" disabled={!canFinishMonth(state) || state.completed} onClick={() => { onUpdate(finishMonth); setMenu(null); }}>첫 달 계획 확정</button></Modal>
