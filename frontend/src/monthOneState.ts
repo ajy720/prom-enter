@@ -13,11 +13,13 @@ export function createMonthOneState(): MonthOneState {
   return { scene: 0, training: null, rule: null, conversations: { dahyun: [], haram: [], yuna: [], newcomer: [] }, completed: false };
 }
 export function canFinishMonth(state: MonthOneState): boolean {
-  return !!state.training && !!state.rule && memberIds.every(id => hasDiscussion(state, id));
+  return !!state.training && !!state.rule && ([...memberIds, 'newcomer'] as MonthSpeaker[]).every(id => hasDiscussion(state, id));
 }
-export function hasDiscussion(state: MonthOneState, speaker: MonthSpeaker): boolean { return new Set(state.conversations[speaker].filter(message => message.kind === 'dialogue').map(message => message.id)).size >= 3; }
+export function monthDialogueCount(state: MonthOneState, speaker: MonthSpeaker): number { return new Set(state.conversations[speaker].filter(message => message.kind === 'dialogue').map(message => message.id)).size; }
+export function hasDiscussion(state: MonthOneState, speaker: MonthSpeaker): boolean { return monthDialogueCount(state,speaker) >= 1; }
 export function recordMonthTurn(state: MonthOneState, speaker: MonthSpeaker, message: MonthMessage): MonthOneState {
   if (state.completed || state.conversations[speaker].some(item => item.id === message.id)) return state;
+  if (message.kind === 'dialogue' && monthDialogueCount(state,speaker) >= 8) return state;
   return { ...state, conversations: { ...state.conversations, [speaker]: [...state.conversations[speaker], message].slice(-40) } };
 }
 export function finishMonth(state: MonthOneState): MonthOneState {

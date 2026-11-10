@@ -19,6 +19,9 @@ PATTERNS = {
     'mediate_rehearsal':r'면담.{0,8}(?:마무리|마치|종료)|팀 면담',
     'continue_rehearsal':r'(?:그대로|계속).{0,8}리허설',
     'respond_press':r'(?:기사|언론).{0,8}대응',
+    'encourage_newcomer':r'신입.{0,12}격려',
+    'apologize_on_stage':r'(?:토크|위트).{0,15}사과',
+    'request_member_support':r'(?:기존 멤버|멤버들).{0,12}지지',
     'hold_showcase':r'쇼케이스.{0,8}(?:확정|진행|개최)',
     'promote_standard':r'기본 홍보',
     'promote_lowcost':r'저예산 홍보',
@@ -28,7 +31,7 @@ PATTERNS = {
     'train_variety':r'예능.{0,8}(?:훈련|연습)', 'rest':r'(?:휴식|휴가|쉬게)',
     'finish_event':r'(?:활동|이번 달).{0,8}(?:확정|마무리)',
     'accept_offer':r'(?:신입|출연).{0,8}(?:출연|시키|수락)',
-    'recommend_other':r'다른 멤버.{0,8}(?:추천|출연)', 'decline_offer':r'(?:예능|제안|이번).{0,8}거절',
+    'recommend_other':r'(?:다른 멤버|리안|도하|세인).{0,12}(?:추천|출연|대신)', 'decline_offer':r'(?:예능|제안|이번).{0,8}거절',
     'check_sns':r'(?:SNS|에스엔에스).{0,10}(?:기록|이력|확인)',
     'contact_hana':r'(?:친구 하나|하나에게|하나한테).{0,10}(?:연락|확인|물어)',
     'check_school':r'(?:담임|학교|상담 기록).{0,10}(?:확인|연락|조사)',
@@ -144,6 +147,11 @@ class DemoProvider:
             body='아직 서로 어색해서 그래요. 제가 먼저 말을 걸어볼게요. 힘든 건 혼자 참지 않았으면 좋겠어요!'
         else:
             body='저…… 아직 조금 걱정되지만, 말씀은 기억할게요.' if direction.openness == 'guarded' else '대표님, 이번에는 제 생각도 말씀드리고 싶어요.'
+        if actor.get('result_event_id') == 'p2_m03_rehearsal' and any('공개 질책을 중단했습니다.' in fact for fact in facts):
+            if profile['id'] == 'yuna':
+                body = '네, 대표님. 여기서 그만할게요. 제 말이 날카로웠어요. 면담에서 차분히 이야기하겠습니다.'
+            elif 'newcomer' in actor.get('allowed_speakers', []):
+                body = '대표님, 멈춰주셔서 감사해요. 조금 진정하고 면담에서 제 이야기도 말씀드릴게요.'
         if direction.emotion == 'tired' and not clarification:
             body='조금 지쳤어요. 잠깐 숨을 돌려도 될까요?'
         promises=[m['text'] for m in actor['memories'] if m['kind']=='promise' and m['text']!=text]

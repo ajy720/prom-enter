@@ -4,6 +4,11 @@ STOP = 'stop_reprimand'
 MARKER = f'{EVENT}:{STOP}'
 
 
+def ordered_messages(messages):
+    order = {'newcomer': 0, 'yuna': 1, 'secretary': 2, 'baek_hayeon': 2}
+    return sorted(messages, key=lambda message: order.get(message['speaker_id'] if isinstance(message, dict) else message.speaker_id, 0))
+
+
 def phase(state):
     return 'interviews' if MARKER in state.applied_effects else 'reprimand'
 

@@ -1,6 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { candidateInterviewDisplay, candidateInterviewFrames, interviewCandidateId, latestCompletedCandidateId, recruitedCandidateId, serverCandidates, serverInterviewFrames } from '../src/serverInterviewState.ts';
+import { orderedTurnMessages } from '../src/serverInterviewState.ts';
+
+test('이전 저장의 질책 중단 답변도 신입·세인·백하연 순서로 복원한다', () => {
+  const turn = {event_id:'p2_m03_rehearsal',analysis:{action_id:'stop_reprimand'},messages:[{speaker_id:'newcomer',text:'신입 답변'},{speaker_id:'secretary',text:'백하연 답변'},{speaker_id:'yuna',text:'세인 답변'}]};
+  assert.deepEqual(orderedTurnMessages(turn).map(message=>message.speaker_id),['newcomer','yuna','secretary']);
+  assert.deepEqual(turn.messages.map(message=>message.speaker_id),['newcomer','secretary','yuna']);
+  assert.equal(orderedTurnMessages({...turn,analysis:{action_id:'talk'}}),turn.messages);
+});
 
 test('면담 목록 복귀 시 자유로운 면담 순서대로 마지막 완료 후보를 선택한다', () => {
   const game = { history: [], completed_events: {} };

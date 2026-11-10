@@ -1,3 +1,4 @@
+import { NarrationScene } from './NarrationScene';
 import { useRef, useState } from 'react';
 import { ChatComposer } from './ChatComposer';
 import { Modal } from './Modal';
@@ -104,8 +105,10 @@ export default function PartThree({ session }: { session?: PartThreeSession } = 
     {!session && <details className="six-demo-tools"><summary>프런트 데모 · 임시 대사 · 브라우저 저장</summary><div className="fixture-toolbar"><p>{save.sourceId ? '6개월차 결과와 스텟을 이어받았습니다.' : '7개월차 기본 예시로 시작했습니다. 이전 월의 결과가 없으면 모두 실패 엔딩으로 판정하지 않습니다.'} 기존 서버 저장과 별도로 진행합니다.</p><button onClick={() => { setRestartSource('sample'); setModal('restart'); }}>7개월차 예시로 새로 시작</button><button onClick={() => { setRestartSource('six'); setModal('restart'); }}>6개월차 결과로 새로 시작</button><button onClick={() => { setRestartSource('server'); setModal('restart'); }}>기존 플레이의 6개월차 결과로 새로 시작</button><a href="/?sixMonthDemo=1">3~6개월차 데모</a><p>무대 배경은 제공된 원본이 없어 임시 단색 배경을 사용합니다.</p></div></details>}
     {session && <p className="six-demo-entry">현재 구간 · 임시 대사·브라우저 저장</p>}
     {error && <p className="error-banner" role="alert">{error}</p>}{storageError && <p className="error-banner" role="alert">{storageError}</p>}
-    {!blocked && <section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage part3-stage ${narration ? 'part3-narration' : ''} ${month === 12 ? 'part3-awards' : ''}`} aria-label={`${month}개월차 ${part3Titles[month]}`} style={month === 12 ? undefined : { backgroundImage: `url("${sceneBackgrounds.office}")` }}>
-      <div className="scene-resource-status"><ResourceStatus compact fundsWon={save.stats.funds_won} month={month}/></div>
+    {!blocked && narration ? <NarrationScene title={part3Titles[month]} location={`${month}개월차 · ${month === 12 ? '무대' : '대표실'}`} background={month === 12 ? sceneBackgrounds.stage : sceneBackgrounds.office} text={line.text} className="part3-stage">
+      <div className="monthly-buttons"><button className="primary-button" onClick={next}>{save.phase === 'result' ? month === 7 && [2,3,4,5,6,7].every(m => save.results[m] === 'failure') ? '이야기 마무리' : `${month + 1}개월차로` : save.cursor < intro.length - 1 ? '다음' : month === 12 ? '반기 결산 마치기' : [7,10].includes(month) ? '면담 시작' : month === 11 ? '수상 소감 작성' : '선택하기'} →</button></div>
+    </NarrationScene> : !blocked && <section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage part3-stage ${narration ? 'part3-narration' : ''} ${month === 12 ? 'part3-awards' : ''}`} aria-label={`${month}개월차 ${part3Titles[month]}`} style={month === 12 ? undefined : { backgroundImage: `url("${sceneBackgrounds.office}")` }}>
+      {!interviews && <div className="scene-resource-status"><ResourceStatus compact fundsWon={save.stats.funds_won} month={month}/></div>}
       <aside className="interview-info month-tasks"><p className="section-kicker">{month}개월차 · {month === 12 ? '무대' : '대표실'}</p><h1>{part3Titles[month]}</h1>
         <dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(k => <div key={k}><dt>{labels[k]}</dt><dd>{save.stats[k].toLocaleString()}{k === 'fans' ? <small>명</small> : <small> / 100</small>}</dd></div>)}</dl>
         {save.visualGrowth > 0 && <p className="monthly-note">신입 비주얼 +{save.visualGrowth}</p>}

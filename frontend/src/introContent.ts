@@ -77,6 +77,7 @@ export const sceneBackgrounds = {
   office: '/images/scenes/office.png',
   corridor: '/images/scenes/corridor.png',
   practice: '/images/scenes/practice.png',
+  stage: '/images/scenes/stage.png',
 };
 
 export type IntroScene = {

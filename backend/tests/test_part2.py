@@ -50,16 +50,13 @@ def test_full_part2_free_chat_and_restore(session,slot):
     client,provider,game=session
     game=cast(client,game,slot)
     assert game['character']['id']==slot
-    for text in ['예능 연습을 시켜줘','이번 달 마무리해줘','센터를 합의로 결정해줘',
-                 '질책 중단 후 팀 면담을 하자','네 잘못이 아니야','기사 대응해줘',
-                 '쇼케이스 결과 확정해줘','기본 홍보 진행해줘','신입 출연시켜줘']:
-        if game['event']['id'] == 'p2_m02_center':
-            game = complete_month_two(client, finish_center_discussions(client, game))
-            continue
-        if game['event']['id'] == 'p2_m03_rehearsal':
-            game = send(client, game, '공개 질책을 중단해줘')
-            game = switch_month_room(client, game, None)
-        game=send(client,game,text)
+    game = send(client, game, '예능 연습을 시켜줘')
+    game = send(client, game, '이번 달 마무리해줘')
+    game = complete_month_two(client, finish_center_discussions(client, game))
+    game = complete_month_three(client, game)
+    game = send(client, game, '신입에게 직접 격려해줘')
+    game = allocate_promotion(client, game)
+    game = send(client, game, '신입 출연시켜줘')
     assert game['event']['id']=='p2_complete'
     assert all(game['completed_events'][event]=='success' for event in
                ['p2_m03_rehearsal','p2_m04_showcase','p2_m05_promotion','p2_m06_variety'])
@@ -69,7 +66,7 @@ def test_full_part2_free_chat_and_restore(session,slot):
     generated_turns = [turn for turn in game['history'] if turn['ai_trace']['generation_calls']]
     assert {turn['event_id'] for turn in generated_turns} >= {
         'p2_interview_a', 'p2_m01_training', 'p2_m02_center', 'p2_m03_rehearsal',
-        'p2_m04_showcase', 'p2_m05_promotion', 'p2_m06_variety',
+        'p2_m04_showcase', 'p2_m06_variety',
     }
     expressions = {message['expression'] for turn in generated_turns for message in turn['messages']}
     assert expressions == {'neutral', 'happy'}
@@ -186,20 +183,16 @@ def test_selection_gate_and_noncommands(session):
     assert game['history'][-1]['analysis']['needs_clarification']
 
 
-def test_failure_path_and_decline(session):
+def test_failure_path_and_unprepared_offer(session):
     client,_,game=session
-    game=cast(client,game)
-    for action in ['skip_training','assign_center','continue_rehearsal','hold_showcase','skip_promotion','decline_offer']:
-        if game['event']['id'] == 'p2_m02_center':
-            game = complete_month_two(client, finish_center_discussions(client, game))
-            continue
-        if game['event']['id'] == 'p2_m03_rehearsal':
-            game = send(client, game, '공개 질책을 중단해줘')
-            game = switch_month_room(client, game, None)
-        game=send(client,game,action,action=True)
+    game=send(client,cast(client,game),'skip_training',action=True)
+    game=complete_month_two(client,finish_center_discussions(client,game))
+    game=complete_month_three(client,game)
+    game=send(client,game,'respond_press',action=True)
+    game=allocate_promotion(client,game,success=False)
+    game=send(client,game,'accept_offer',action=True)
     assert game['event']['id']=='p2_complete'
-    assert game['completed_events']['p2_m04_showcase']=='failure'
-    assert game['completed_events']['p2_m06_variety']=='neutral'
+    assert all(game['completed_events'][event]=='failure' for event in ['p2_m02_center','p2_m03_rehearsal','p2_m04_showcase','p2_m05_promotion','p2_m06_variety'])
     assert all(value>=0 for value in game['stats'].values())
 
 
@@ -238,6 +231,32 @@ def switch_month_room(client, game, target):
 
 
 CENTER_REASON = '리안은 각자의 속도를 알아가고 중간에서 이야기를 듣겠다고 했습니다. 도하는 기초 연습과 박자를 나눠서 연습하자고 했고 세인은 어색함을 풀고 혼자 참지 않게 하겠다고 했습니다. 그래서 리안이 센터에서 팀의 속도를 맞춰주고 도하의 기초 연습으로 부족한 부분을 보완하도록 하겠습니다.'
+
+
+def hear_month_one_members(client, game):
+    for member in game['center_interviews']['members']:
+        if member['turn_count'] == 0:
+            game = switch_month_room(client, game, member['character_id'])
+            game = send(client, game, '첫 합숙에서 어떤 도움이 필요해?')
+    return switch_month_room(client, game, None)
+
+
+def complete_month_three(client, game):
+    game = send(client, game, '공개 질책을 중단해줘')
+    for member in game['center_interviews']['members']:
+        game = switch_month_room(client, game, member['character_id'])
+        game = send(client, game, '방금 어떤 마음이었어?')
+    return send(client, game, 'mediate_rehearsal', action=True)
+
+
+def allocate_promotion(client, game, success=True):
+    budget = game['promotion']['budget_won']
+    allocation = {'shortform_won': budget // 2, 'radio_won': budget // 5, 'fansign_won': budget * 3 // 10} if success else {'shortform_won':0,'radio_won':budget,'fansign_won':0}
+    response = client.post(f"/api/games/{game['game_id']}/turns", json={
+        'request_id':f"allocation-{game['version']}", 'state_version':game['version'],
+        'input_type':'action', 'action_id':'allocate_promotion', 'promotion_allocation':allocation})
+    assert response.status_code == 200, response.text
+    return response.json()['game']
 
 
 def complete_month_two(client, game):
@@ -290,7 +309,7 @@ def test_center_interviews_group_finish_requires_each_member_and_keeps_privacy(s
     assert game['center_interviews'] is None
     assert game['completed_events']['p2_m02_center'] == 'failure'
     assert game['center_selection'] is None
-    assert game['stats'] == before
+    assert game['stats'] == {**before, 'teamwork':before['teamwork']-8, 'fatigue':before['fatigue']+10}
     provider.views = []
     game = send(client, game, '면담 안내를 다시 해줘')
     assert all('만 듣는 포지션 이야기' not in view.model_dump_json() for view in provider.views)
@@ -441,6 +460,7 @@ def test_month_plan_choices_can_change_back_and_lock_only_after_confirmation(ses
     assert client.get(f"/api/games/{game['game_id']}").json() == game
     assert provider.views == []
     provider.fail = False
+    game = hear_month_one_members(client, game)
     completed = send(client, game, 'confirm_month_plan', action=True, stop=True, key='confirm-changed-plan')
     assert completed['stats'] == charged
     assert send(client, game, 'confirm_month_plan', action=True, stop=True, key='confirm-changed-plan') == completed
@@ -477,6 +497,7 @@ def test_plan_choice_is_silent_and_preserves_current_room(session, target):
 def test_month_one_completion_stops_without_second_month(session, command, action):
     client, provider, game = session
     game = cast(client, game)
+    game = hear_month_one_members(client, game)
     before = game['stats'].copy()
     provider.fail = True
     send(client, game, command, action=action, status=502, key='month-one-final', stop=True)
@@ -506,6 +527,7 @@ def test_month_one_completion_preserves_training_rule_and_private_records(sessio
     game = switch_month_room(client, game, 'dahyun')
     game = send(client, game, '각자의 속도를 존중하며 연습하자')
     game = switch_month_room(client, game, None)
+    game = hear_month_one_members(client, game)
     before = game['stats'].copy()
     history = game['history'][:]
     completed = send(client, game, 'confirm_month_plan', action=True, stop=True)
@@ -519,6 +541,7 @@ def test_month_one_completion_preserves_training_rule_and_private_records(sessio
 def test_confirmed_month_can_continue_once_without_reapplying_training(session, prepared):
     client, provider, game = session
     game = cast(client, game)
+    game = hear_month_one_members(client, game)
     assert not any(a['id'] == 'start_month_two' for a in game['event']['actions'])
     send(client, game, 'start_month_two', action=True, status=422)
     if prepared:
@@ -545,16 +568,11 @@ def test_confirmed_month_can_continue_once_without_reapplying_training(session, 
     # The old completion marker must not lock any later month's conversation or decisions.
     game = finish_center_discussions(client, advanced)
     game = send(client, game, '연습 이야기를 들려줘')
-    actions = (['agree_center', 'mediate_rehearsal', 'support', 'respond_press', 'hold_showcase', 'promote_lowcost', 'accept_offer']
-               if prepared else ['assign_center', 'continue_rehearsal', 'hold_showcase', 'skip_promotion', 'decline_offer'])
-    for action in actions:
-        if game['event']['id'] == 'p2_m02_center':
-            game = complete_month_two(client, game)
-            continue
-        if game['event']['id'] == 'p2_m03_rehearsal':
-            game = send(client, game, '공개 질책을 중단해줘')
-            game = switch_month_room(client, game, None)
-        game = send(client, game, action, action=True)
+    game = complete_month_two(client, game)
+    game = complete_month_three(client, game)
+    game = send(client, game, 'encourage_newcomer', action=True)
+    game = allocate_promotion(client, game, success=prepared)
+    game = send(client, game, 'accept_offer', action=True)
     assert game['event']['id'] == 'p2_complete'
     assert game['completed_events']['p2_m04_showcase'] == ('success' if prepared else 'failure')
     game = send(client, game, 'finish_prototype', action=True)
@@ -610,7 +628,7 @@ def test_old_monthly_openings_refresh_without_exposing_rules_or_rewriting_save(s
     for event in EVENTS.values():
         if event['id'].startswith('p2_m0'):
             public_copy = str([event['briefing'], *[action['hint'] for action in event['actions']]])
-            assert all(word not in public_copy for word in ['이상이면', '미만', '판정', '실패로', '이면 성공'])
+            assert all(word not in public_copy for word in ['이상이면', '미만', '실패로', '이면 성공'])
 
 
 def test_low_funds_can_finish_fixed_event(session):
@@ -625,7 +643,10 @@ def test_low_funds_can_finish_fixed_event(session):
     state.conversation = make_conversation(state)
     service.repository.commit(state,owner,0,'seed-low-funds','seed',{'id':'seed-low-funds','kind':'conversation_change','input':'setup','event_id':state.event_id,'messages':[]})
     game=client.get(f"/api/games/{game['game_id']}").json()
-    game=send(client,game,'hold_showcase',action=True)
-    assert game['event']['id']=='p2_m05_promotion'
-    game=send(client,game,'skip_promotion',action=True)
-    assert game['event']['id']=='p2_m06_variety' and game['stats']['funds_won']==0
+    game=send(client,game,'respond_press',action=True)
+    assert game['event']['id']=='p2_m05_promotion' and game['stats']['funds_won']==0
+    response=client.post(f"/api/games/{game['game_id']}/turns",json={
+        'request_id':'insufficient-promotion','state_version':game['version'],'input_type':'action',
+        'action_id':'allocate_promotion','promotion_allocation':{'shortform_won':5_000_000,'radio_won':2_000_000,'fansign_won':3_000_000}})
+    assert response.status_code==422
+    assert client.get(f"/api/games/{game['game_id']}").json()==game

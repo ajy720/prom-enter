@@ -29,7 +29,9 @@ def build_context(state: State, history: list[dict], query: str = '', *, convers
     actions = [ActionSpec(**a, target_id=action_target(a['id'])) for a in event['actions']]
     room=conversation or current_conversation(state)
     roles=roles_for(state,room)
-    private=room.mode=='private'
+    # Months 4–6 are operational conversations with the secretary. Decisions
+    # remain available whether that secretary-only room is public or private.
+    private=room.mode=='private' and not (state.event_id in {'p2_m04_showcase','p2_m05_promotion','p2_m06_variety'} and roles == ['secretary'])
     history = participant_history(state, history, roles)
     if private:
         actions=[]; criteria=[]

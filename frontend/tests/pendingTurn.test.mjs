@@ -10,6 +10,13 @@ test('재시도는 ID·버전·선택 필드를 포함한 원본 요청을 복�
   assert.deepEqual(restorePending(store, game), input);
   assert.equal(restorePending(store, { ...game, game_id: 'other-save' }), null);
 });
+
+test('홍보 배분 재시도는 세 항목의 금액과 요청 ID를 그대로 복원한다', () => {
+  const store = storage();
+  const allocation = {...input, action_id:'allocate_promotion', promotion_allocation:{shortform_won:20000000,radio_won:8000000,fansign_won:12000000}};
+  rememberPending(store,game.game_id,allocation);
+  assert.deepEqual(restorePending(store,game),allocation);
+});
 test('저장된 응답·다른 턴의 진행·엔딩 뒤에는 요청을 다시 실행하지 않는다', () => {
   for (const next of [{ ...game, version: 5 }, { ...game, history: [{ id: input.request_id }] }, { ...game, ending: { id: 'end' } }]) {
     const store = storage(); rememberPending(store, game.game_id, input);

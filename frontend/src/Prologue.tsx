@@ -1,3 +1,4 @@
+import { NarrationScene } from './NarrationScene';
 import { useSceneViewport } from './useSceneViewport';
 import { useEffect, useState } from 'react';
 import { Modal } from './Modal';
@@ -163,6 +164,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
       onUpdate={update => setProgress(current => ({ ...current, interviews: update(current.interviews) }))}
       onBack={() => setProgress(current => ({ ...current, step: current.step - 1 }))}
       onProceed={() => setProgress(current => current.interviews.recruitedId && current.interviews.recruitmentStep >= 4 ? ({ ...current, step: introScenes.length, monthOne: current.monthOne ?? createMonthOneState() }) : current)}/>
+    : scene.speaker === '이야기' ? <NarrationScene title={scene.title} location={{office:'대표실',corridor:'복도',practice:'연습실'}[scene.location]} background={sceneBackgrounds[scene.location]} text={briefingText.replace('{name}',nickname ? nickname + ' ' : '')}>{navigation}</NarrationScene>
     : <section className={`intro-scene prologue-scene part-one-photos intro-${scene.location}${scene.speaker === '이야기' ? ' is-narration' : ''}`} aria-label={scene.title} style={{ backgroundImage: `url("${sceneBackgrounds[scene.location]}")` }}>
       <div className="intro-location"><span>Prom::Enter</span><strong>{{ office: '대표실', corridor: '복도', practice: '연습실' }[scene.location]}</strong></div>
       {progress.resourcesIntroduced && <div className="scene-resource-status"><ResourceStatus compact/></div>}

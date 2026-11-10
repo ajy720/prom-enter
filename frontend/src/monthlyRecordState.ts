@@ -1,5 +1,6 @@
 import type { Game, ConversationParticipant, Turn } from './types';
 import type { InterviewFrame } from './serverInterviewState';
+import { orderedTurnMessages } from './serverInterviewState.ts';
 
 const publicId = 'public';
 function canonicalId(game: Game, id: string) {
@@ -43,7 +44,7 @@ export function monthInterviewFrames(game: Game, targetId: string): InterviewFra
     const roomTarget = room?.mode === 'private' && room.target_character_id ? canonicalId(game, room.target_character_id) : publicId;
     if (roomTarget !== targetId) continue;
     if (turn.input) frames.push({ id: `${turn.id}-player`, speakerId: 'player', name: '대표님', text: turn.input });
-    for (const [index, message] of turn.messages.entries()) {
+    for (const [index, message] of orderedTurnMessages(turn).entries()) {
       const person = room?.participants.find(person => person.role === message.speaker_id || person.id === message.speaker_id);
       const id = canonicalId(game, person?.id ?? message.speaker_id);
       // A member's private transcript excludes system secretary closing notices.

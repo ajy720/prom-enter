@@ -73,6 +73,16 @@
       "width": 1536,
       "height": 1024,
       "sha256": "500b98268e23748bbdfa2dbdff19823b613d35de596e5808005f5f50069dbcd5"
+    },
+    {
+      "id": "stage",
+      "path": "/images/scenes/stage.png",
+      "sourceFile": "무대_정방향.png",
+      "source": "사용자 직접 제공 첨부 파일",
+      "downloadedOn": "2026-11-10",
+      "width": 1280,
+      "height": 1280,
+      "sha256": "ca31135d1ba3bff6c882ade159d7f67f2dea267b8794de0b7c4b118c0e8266bc"
     }
   ]
 }

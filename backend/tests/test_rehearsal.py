@@ -18,7 +18,7 @@ def test_arrival_is_sein_dialogue_not_narration_and_no_turn_is_fabricated(sessio
     assert '중단' in opening['messages'][-1]['text'] and '각각' in opening['messages'][-1]['text']
     assert any(p['id']=='yuna' for p in game['conversation']['participants'])
     assert not any(t['event_id']==game['event']['id'] for t in game['history'])
-    assert {a['id'] for a in game['event']['actions']} == {'stop_reprimand','support'}
+    assert {a['id'] for a in game['event']['actions']} == {'stop_reprimand'}
     send(client,game,'mediate_rehearsal',action=True,status=422)
     send(client,game,'continue_rehearsal',action=True,status=422)
     response=client.post(f"/api/games/{game['game_id']}/turns",json={
@@ -34,6 +34,7 @@ def test_arrival_is_sein_dialogue_not_narration_and_no_turn_is_fabricated(sessio
 def test_interruption_stays_in_month_three_without_rewards_and_restores(session,text):
     client, _, game = month_three(session)
     result=send(client,game,text,key='reprimand-stop-once')
+    assert [message['speaker_id'] for message in result['history'][-1]['messages']] == ['newcomer','yuna','secretary']
     assert result['event']['id']=='p2_m03_rehearsal'
     assert result['rehearsal']['phase']=='interviews'
     assert result['stats']==game['stats'] and result['history'][-1]['stat_delta']=={}
@@ -92,8 +93,26 @@ def test_member_interviews_are_private_and_final_result_is_separate(session):
         assert {m['speaker_id'] for m in game['history'][-1]['messages']} == {'newcomer' if person==game['character']['profile_id'] else person}
         assert game['stats']==before
         assert game['event']['month']==3
-    game=switch_month_room(client,game,None)
     result=send(client,game,'mediate_rehearsal',action=True)
     assert result['event']['month']==4
     assert result['completed_events']['p2_m03_rehearsal'] in {'success','failure'}
     assert result['rehearsal'] is None
+
+
+def test_old_saved_stop_reply_and_cached_response_restore_correct_order(session):
+    import json
+    client, _, game = month_three(session)
+    original = game
+    game = send(client, game, '공개 질책을 중단해줘', key='legacy-stop-order')
+    repo = client.app.state.service.repository
+    turn = game['history'][-1]
+    by_role = {message['speaker_id']:message for message in turn['messages']}
+    turn['messages'] = [by_role[role] for role in ['newcomer','secretary','yuna']]
+    with repo.connect() as db:
+        db.execute('UPDATE turns SET data=? WHERE game_id=? AND request_id=?',(json.dumps(turn,ensure_ascii=False),game['game_id'],turn['id']))
+    restored = client.get(f"/api/games/{game['game_id']}").json()
+    assert [message['speaker_id'] for message in restored['history'][-1]['messages']] == ['newcomer','yuna','secretary']
+    response = client.post(f"/api/games/{game['game_id']}/turns",json={'request_id':'legacy-stop-order','state_version':original['version'],'input_type':'chat','action_id':None,'text':'공개 질책을 중단해줘'})
+    assert response.status_code == 200
+    assert [message['speaker_id'] for message in response.json()['turn']['messages']] == ['newcomer','yuna','secretary']
+    assert response.json()['game'] == restored

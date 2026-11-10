@@ -1,4 +1,4 @@
-"""Month-two member interviews, counted only from committed private exchanges."""
+"""Months two and three: committed private exchanges and server result effects."""
 from app.ai.profiles import character_profile
 from app.models import CenterChoiceDraft
 
@@ -9,23 +9,38 @@ FINISHED = EVENT + ':finish_interviews'
 
 
 def completion(state, reason):
-    return {'month': 2, 'reason': reason, 'teamwork': state.stats.teamwork, 'teamwork_min': TEAMWORK_MIN}
+    result = {'month': 2 if state.event_id == EVENT else 3, 'reason': reason,
+              'teamwork': state.stats.teamwork, 'teamwork_min': TEAMWORK_MIN if state.event_id == EVENT else 40}
+    if state.event_id != EVENT:
+        result.update(fatigue=state.stats.fatigue, fatigue_max_exclusive=60)
+    return result
 
 
 def finish(state):
     from app.content import EVENTS
     from app.game.conversation import make_conversation
-    outcome = 'success' if state.stats.teamwork >= TEAMWORK_MIN else 'failure'
-    if FINISHED not in state.applied_effects:
-        state.applied_effects.append(FINISHED)
+    from app.game.engine import apply_delta
+    event_id = state.event_id
+    month = 2 if event_id == EVENT else 3
+    judged_teamwork = state.stats.teamwork
+    success = state.stats.teamwork >= (TEAMWORK_MIN if month == 2 else 40)
+    if month == 3:
+        success = success and state.stats.fatigue < 60
+    outcome = 'success' if success else 'failure'
+    state.applied_effects.append(event_id + ':finish_interviews')
+    if month == 2:
+        delta = {'teamwork': 8, 'trust': 3, 'fatigue': 10} if success else {'teamwork': -8, 'fatigue': 10}
+    else:
+        delta = {'teamwork': 5} if success else {'teamwork': -10, 'fatigue': 15}
+    apply_delta(state, delta)
     state.center_choice_draft = None
-    state.completed_events[EVENT] = outcome
-    state.event_id = EVENTS[EVENT]['next']
+    state.completed_events[event_id] = outcome
+    state.event_id = EVENTS[event_id]['next']
     state.conversation = make_conversation(state)
-    message = (f'대표님, 2개월차 면담을 마쳤습니다. 현재 팀워크는 {state.stats.teamwork}입니다. '
+    message = (f'대표님, {month}개월차 면담을 마쳤습니다. 판정 시 팀워크는 {judged_teamwork}입니다. '
                + ('서로의 의견을 모아 팀의 방향을 정리했습니다. 이번 달은 성공입니다.' if outcome == 'success'
                   else '서로의 의견 차이가 남았습니다. 이번 달은 실패입니다.')
-               + ' 결과를 확인한 뒤 3개월차 쇼케이스 리허설을 시작해주세요.')
+               + f' 결과 수치 변화를 반영했습니다. 다음 {month + 1}개월차 이야기를 확인해주세요.')
     return outcome, message
 
 
@@ -78,11 +93,13 @@ def rationale_turns(history, ids, current_id, current_text):
 
 
 def progress(state, history):
-    if state.event_id != EVENT:
+    from app.game import rehearsal
+    if state.event_id not in {EVENT, 'p2_m01_training'} and not (state.event_id == rehearsal.EVENT and rehearsal.phase(state) == 'interviews'):
         return None
+    event_id = state.event_id
     members = []
     for person_id in (character_profile(state.character_id).id, 'dahyun', 'haram', 'yuna'):
-        ids = {turn['id'] for turn in history if turn.get('event_id') == EVENT
+        ids = {turn['id'] for turn in history if turn.get('event_id') == event_id
                and turn.get('kind') != 'conversation_change'
                and (turn.get('input_type') == 'chat' or ('input_type' not in turn and turn.get('analysis', {}).get('action_id') == 'talk'))
                and turn.get('conversation', {}).get('mode') == 'private'
@@ -95,18 +112,18 @@ def progress(state, history):
                         'turn_count': min(count, LIMIT), 'completed': closed,
                         'completed_by': 'limit' if count >= LIMIT else 'player' if closed else None})
     heard = all(member['turn_count'] >= 1 for member in members)
-    legacy_finished = heard and all(marker(member['character_id']) in state.applied_effects for member in members)
-    ready = FINISHED in state.applied_effects or legacy_finished
+    legacy_finished = heard and all(f"{event_id}:close_member:{member['character_id']}" in state.applied_effects for member in members)
+    ready = event_id + ':finish_interviews' in state.applied_effects or legacy_finished
     if ready:
         for member in members:
             member['completed'] = True
             member['completed_by'] = 'limit' if member['turn_count'] >= LIMIT else 'player'
-    last = history[-1] if history and history[-1].get('event_id') == EVENT else {}
+    last = history[-1] if history and history[-1].get('event_id') == event_id else {}
     action = last.get('analysis', {}).get('action_id')
     notice = '\n'.join(m['text'] for m in last.get('messages', []) if m['speaker_id'] == 'secretary')
     return {'turn_limit': LIMIT, 'members': members, 'ready_for_decision': False,
-            'success_teamwork_min': TEAMWORK_MIN, 'pending_member_id': None,
+            'success_teamwork_min': TEAMWORK_MIN if event_id == EVENT else 40, 'pending_member_id': None,
             'can_finish': heard, 'missing_member_ids': [m['character_id'] for m in members if m['turn_count'] < 1],
-            'finish_notice': notice if not ready and action in {'finish_center_interviews', 'close_center_interview'} else None,
+            'finish_notice': notice if not ready and action in {'finish_center_interviews', 'close_center_interview', 'mediate_rehearsal'} else None,
             'selection_feedback': notice if action == 'select_center' and last.get('outcome') == 'pending' else None,
             'decision_prompt': None}

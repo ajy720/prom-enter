@@ -18,7 +18,7 @@ def seed(client, game, update):
 
 
 @pytest.mark.parametrize('teamwork,outcome',[(0,'failure'),(41,'failure'),(42,'success'),(100,'success')])
-def test_manual_completion_uses_saved_teamwork_and_no_model_or_rewards(session,teamwork,outcome):
+def test_manual_completion_judges_before_rewards_without_model(session,teamwork,outcome):
     client,provider,game=ready(session)
     game=seed(client,game,lambda state:setattr(state.stats,'teamwork',teamwork))
     def forbidden(*args):raise AssertionError('completion must not call a model')
@@ -27,7 +27,10 @@ def test_manual_completion_uses_saved_teamwork_and_no_model_or_rewards(session,t
     result=send(client,game,'finish_center_interviews',action=True,key='finish-month-two')
     turn=result['history'][-1]
     assert result['event']['id']=='p2_m03_rehearsal'
-    assert result['stats']==before['stats'] and turn['stat_delta']=={}
+    expected = {**before['stats'], 'teamwork': min(100, max(0, teamwork + (8 if outcome == 'success' else -8))),
+                'fatigue': before['stats']['fatigue'] + 10, 'trust': before['stats']['trust'] + (3 if outcome == 'success' else 0)}
+    assert result['stats'] == expected
+    assert turn['stat_delta'] == {key:value-before['stats'][key] for key,value in expected.items() if value != before['stats'][key]}
     assert result['completed_events'][center.EVENT]==outcome
     assert turn['outcome']==outcome
     assert turn['month_completion']=={'month':2,'reason':'manual','teamwork':teamwork,'teamwork_min':42}
@@ -78,7 +81,8 @@ def test_final_eighth_reply_auto_completes_atomically_and_retries_once(session,t
     result=send(client,game,'마지막 이야기를 들려줘',key='last-eighth')
     turn=result['history'][-1]
     assert result['event']['month']==3 and result['completed_events'][center.EVENT]==outcome
-    assert result['stats']==before['stats']
+    assert result['stats']['teamwork']==teamwork+(8 if outcome=='success' else -8)
+    assert result['stats']['fatigue']==before['stats']['fatigue']+10
     assert turn['month_completion']['reason']=='limit'
     assert [m['speaker_id'] for m in turn['messages']]==['yuna','secretary']
     assert len([t for t in result['history'] if t['event_id']==center.EVENT and t.get('input_type')=='chat'])==32
