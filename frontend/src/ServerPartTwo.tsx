@@ -121,7 +121,7 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
       {status && <div className="monthly-buttons"><p className="monthly-note">멤버별 최소 1회 · 최대 8회 면담{!status.can_finish && ' · 아직 면담하지 않은 멤버가 있습니다.'}</p><button className="primary-button" disabled={locked || !status.can_finish} onClick={() => void onSend(month === 2 ? 'finish_center_interviews' : 'mediate_rehearsal')}>면담 완료</button></div>}
       {last && <Delta delta={last.stat_delta}/>}
       {month === 4 && <div className="month-options" aria-label="쇼케이스 대응 선택">{game.event.actions.map(action => <button key={action.id} disabled={locked} onClick={() => setChoice(action)}><strong>{action.label}</strong><span>{action.hint}</span></button>)}</div>}
-      {budget && <><p>{budget.track}트랙 · 홍보 예산 {budget.budget_won.toLocaleString()}원</p><button className="primary-button" disabled={locked} onClick={() => setBudgetOpen(true)}>홍보 예산 배분하기 →</button></>}
+      {budget && <><p>{budget.track}트랙 · 홍보 예산 {budget.budget_won.toLocaleString()}원</p><p className="dock-caption">홍보 계획은 채팅에서 상의하고, 금액은 예산 배분 창에서 확정하세요.</p><button className="primary-button" disabled={locked} onClick={() => setBudgetOpen(true)}>홍보 예산 배분하기 →</button></>}
       <p className="dock-caption">{game.provider === 'demo' ? '규칙 기반 데모 응답' : 'AI 응답'}</p>
     </Scene>;
   }
