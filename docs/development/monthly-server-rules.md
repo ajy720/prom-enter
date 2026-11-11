@@ -2,6 +2,8 @@
 
 2026-11-10. 사용자 지정 흐름과 수치표 승인에 따른 현재 구현이다. 이전 축약 기획·프런트 데모의 규칙보다 우선한다. [HTTP·프런트 계약](frontend-integration.md), [통합 플레이](unified-playthrough.md).
 
+2026-11-11부터 새로 6개월 결산을 넘어가는 저장은 [7~12개월 보존 기준](part3-server-integration-rules.md)과 [13~24개월 보존 기준](part4-server-integration-rules.md)의 월별 규칙을 사용한다. 아래 7~24개월 규칙은 이미 진행 중인 이전 서버 저장에 적용한다.
+
 ## 월별 흐름
 
 | 월 | 흐름·판정 |
