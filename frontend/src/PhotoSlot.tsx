@@ -6,7 +6,8 @@ export function PhotoSlot({ src, fallbackSrc, name, caption, className = '', sty
   const [failedSources, setFailedSources] = useState<string[]>([]);
   const imageSrc = [src, fallbackSrc].find(candidate => candidate && !failedSources.includes(candidate));
   const frame = imageSrc && portraitFrames[imageSrc.replace('/images/characters/', '')];
-  const photoRef = usePortraitLayout(!!frame);
+  const widthRatio = frame ? .98 * (frame[2] - frame[0]) / (frame[3] - frame[1]) : 0;
+  const photoRef = usePortraitLayout(!!frame, widthRatio);
   const framing = frame ? {
     '--cutout-size': .98 * frame[5] / (frame[3] - frame[1]),
     '--cutout-top': .02 - .98 * frame[1] / (frame[3] - frame[1]),

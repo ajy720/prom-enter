@@ -371,7 +371,7 @@ class TurnService:
                           'emotional': '대표는 감정적 맞대응을 지시했다. 백하연은 그 위험을 짚는다.',
                           'unclear': '이 발화에서는 새로운 실행 지침이 확인되지 않았다.'}[assessment.verdict]]
             actor = build_dialogue_context(state, history, text, facts=facts, speaker_roles=listeners)
-            actor.scene.update(scene='대표실', briefing=monthly_story.interview_briefing(story),
+            actor.scene.update(scene='대표실', briefing=monthly_story.interview_briefing(story, state.character_id),
                                goal='현재 면담 주제 안에서 대표의 질문에 답한다. 활동을 확정하거나 수치를 바꾸지 않는다.')
             actor.event_opening = None
             view = scope_actor(actor, state, text, listeners[0], history)

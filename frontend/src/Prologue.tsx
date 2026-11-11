@@ -155,7 +155,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
   </>;
 
   return <div ref={viewportRef} className="prologue-shell">
-    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy} onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span><button className="quiet-button" disabled={busy} onClick={onTitle}>시작 화면</button></header>
+    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy} onClick={onTitle}>prom::enter.</button><span>프롤로그 · {progress.interviews.recruitedId ? '프로뮤의 새로운 시작' : scene.title}</span></header>
     {storageError && <p className="error-banner" role="alert">이 브라우저에 진행 상황을 저장하지 못했습니다. 새로고침하면 진행이 사라질 수 있어요.</p>}
     {serverError && <p className="error-banner" role="alert">{serverError}</p>}
     {scene.kind === 'introduction' && character ? <section className="character-introduction part-one-photos" aria-label={`${character.name} 소개`}>

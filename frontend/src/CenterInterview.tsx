@@ -79,7 +79,7 @@ export function CenterMonthSidebar({ game, onTitle, onRecords, disabled }: {
     <p className="section-kicker">PROMYOU · 2개월차</p><h1>함께 정하는 포지션</h1>
     <p>멤버들의 이야기를 듣고 이번 달 면담을 마무리해주세요.</p>
     <section className="team-status-summary" aria-label="팀 능력치"><div className="team-status-values">
-      {([['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', game.stats.awareness], ['팬 수', '-']] as const).map(([label,value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}
+      {([['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', '-'], ['팬 수', '-']] as const).map(([label,value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}
     </div></section>
     <ol className="month-checklist"><li>{heard === 4 ? '✓' : '○'} 멤버 면담 · {heard}/4명</li><li>○ 전체 면담 마무리</li></ol>
     <button className="operation-button" onClick={onRecords}><span>이번 달 면담 기록</span><span aria-hidden="true">→</span></button>

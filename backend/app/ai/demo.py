@@ -1,5 +1,6 @@
 """Conservative Korean fixtures for offline development; not a general NLU model."""
 import re
+from app.member_text import member_reference
 from app.models import Analysis, Assessment, Dialogue, Message
 from app.ai.routing import offline_intent
 
@@ -325,6 +326,9 @@ class DemoProvider:
             secretary_text = ('대표님, 보고드립니다. '+' '.join(facts)) if facts else body
             if actor.get('result_event_id') == 'p2_m01_training' and any(fact.startswith('첫 달 계획을 확정했습니다.') for fact in facts):
                 secretary_text = MONTH_ONE_COMPLETION_MESSAGE
+            selected_name = actor.get('scene', {}).get('selected_member_name')
+            if selected_name:
+                secretary_text = member_reference(secretary_text, selected_name, polite=True)
             messages.append(Message(speaker_id='secretary',text=secretary_text, emotion='neutral', fact_ids=list(actor.get('resolved_facts',{}))))
         for role in ('dahyun','haram','yuna'):
             if role in actor.get('allowed_speakers',[]):

@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 
 // Follow actual flex wrapping and the real header height, rather than assuming
 // every scene has the same toolbar, padding and resource/banner rows.
-export function usePortraitLayout(enabled: boolean) {
+export function usePortraitLayout(enabled: boolean, widthRatio: number) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const photo = ref.current;
@@ -12,6 +12,7 @@ export function usePortraitLayout(enabled: boolean) {
     if (!enabled || !photo || !pane || !stage || !dock) return;
     let frame = 0;
     const measure = () => {
+      pane.style.setProperty('--portrait-column-width', `max(340px, calc(var(--dialogue-portrait-height) * ${widthRatio} + 24px))`);
       const portrait = pane.getBoundingClientRect();
       const dialogue = dock.getBoundingClientRect();
       const desktop = window.innerWidth >= 1001;
@@ -28,8 +29,8 @@ export function usePortraitLayout(enabled: boolean) {
     measure();
     return () => {
       cancelAnimationFrame(frame); observer.disconnect(); window.removeEventListener('resize', schedule);
-      stage.classList.remove('portrait-stacked'); pane.style.removeProperty('--portrait-stage-top');
+      stage.classList.remove('portrait-stacked'); pane.style.removeProperty('--portrait-stage-top'); pane.style.removeProperty('--portrait-column-width');
     };
-  }, [enabled]);
+  }, [enabled, widthRatio]);
   return ref;
 }

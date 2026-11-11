@@ -27,29 +27,33 @@
 #root :is(.prologue-scene, .recruitment-briefing) > .intro-dialogue-dock { margin-top: 0; }
 #root .character-introduction .introduction-photo { align-items: end; }
 @media (min-width: 1001px) {
-  /* Reserve the reference-sized person first. Information may overlap the
-     portrait; the dialogue wraps below when both columns cannot fit. */
+  /* Reserve separate space for information and the reference-sized person.
+     The dialogue wraps below when all three columns cannot fit. */
   #root :is(.candidate-interview, .month-photo-stage, .monthly-stage, .monthly-intro, .character-introduction):has(.dialogue-photo) {
     display: flex; flex-wrap: wrap; gap: 24px 32px; align-items: stretch; overflow: clip;
   }
   #root :is(.interview-portrait, .monthly-portrait, .monthly-intro-portrait):has(> .dialogue-photo),
   #root .introduction-photo:has(> .dialogue-photo) {
-    flex: 1 0 var(--dialogue-portrait-height);
-    min-width: min(100%, var(--dialogue-portrait-height)); max-width: 100%;
+    flex: 0 0 var(--portrait-column-width, var(--dialogue-portrait-height));
+    min-width: min(100%, var(--portrait-column-width, var(--dialogue-portrait-height))); max-width: 100%;
   }
   #root :is(.candidate-interview, .month-photo-stage) > .interview-dock,
   #root :is(.monthly-stage:has(.dialogue-photo) > .monthly-dock, .monthly-intro:has(.dialogue-photo) > .monthly-intro-copy, .character-introduction > .introduction-copy) {
-    flex: 1 0 340px; min-width: min(100%, 340px); max-width: 100%; width: auto; align-self: center; margin: 0;
+    flex: 1 0 340px; min-width: min(100%, 340px); max-width: 680px; width: auto; align-self: center; margin: 0;
   }
   #root :is(.candidate-interview, .month-photo-stage) > :is(.interview-info, .month-tasks),
   #root .monthly-stage > .monthly-info {
-    position: absolute; top: 24px; left: 32px; width: 180px; z-index: 2;
+    position: relative; top: auto; left: auto; width: 180px;
+    flex: 0 0 180px; align-self: start; z-index: 2;
   }
-  #root .monthly-stage > .monthly-info { top: 120px; }
+  #root .monthly-stage > .monthly-info { top: auto; margin-top: 0; }
   #root :is(.monthly-stage:has(.dialogue-photo) > header, .monthly-intro:has(.dialogue-photo) > header) {
-    position: absolute; top: 24px; left: 32px; right: 32px; width: auto; z-index: 2;
+    position: relative; inset: auto; flex: 0 0 100%; width: 100%; max-width: none;
+    margin: 0; align-self: start; z-index: 2;
   }
-  #root .monthly-stage:has(.dialogue-photo) > .monthly-dock { margin-top: 88px; }
+  #root :is(.monthly-stage, .monthly-intro):has(.dialogue-photo) { align-content: start; }
+  #root .monthly-intro:has(.dialogue-photo) { justify-content: center; align-content: stretch; }
+  #root .monthly-stage:has(.dialogue-photo) > .monthly-dock { margin-top: 0; }
   #root :is(.candidate-interview, .month-photo-stage) > .scene-resource-status {
     position: absolute; top: 24px; right: 32px; margin: 0;
   }

@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 type Props = {
   id: string;
@@ -13,8 +13,22 @@ type Props = {
 
 export function ChatComposer({ id, label, text, placeholder, disabled = false, suggestions = [], onTextChange, onSend }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  function send() {
-    if (!disabled && text.trim()) void onSend();
+  const restoreFocus = useRef(false);
+  function focusAfterSend() {
+    if (!restoreFocus.current || !inputRef.current || inputRef.current.disabled) return;
+    // Do not take focus back if the player moved to another control while waiting.
+    if ([document.body, inputRef.current].includes(document.activeElement as HTMLElement)) {
+      inputRef.current.focus({ preventScroll: true });
+    }
+    restoreFocus.current = false;
+  }
+  useEffect(() => { if (!disabled) focusAfterSend(); }, [disabled]);
+  async function send() {
+    if (disabled || !text.trim()) return;
+    restoreFocus.current = true;
+    // A mouse click leaves focus on the send button; return it before the input locks.
+    inputRef.current?.focus({ preventScroll: true });
+    try { await onSend(); } finally { focusAfterSend(); }
   }
   return <>
     {!!suggestions.length && <details className="question-prompts"><summary>질문 예시</summary>

@@ -58,6 +58,24 @@ form.story-composer textarea:focus-visible { outline: none; }
 .profile-card .profile-card-label { padding: var(--space-4) var(--space-2); border: 0; background: var(--white); }
 .profile-card-label strong { font-weight: 600; }
 .profile-card .profile-number { border: 0; border-radius: 0; background: var(--white); }
+.interview-hub .profile-card.interview-completed .profile-number,
+.interview-hub .profile-card.interview-completed .profile-card-label {
+  background: var(--pink-soft); color: var(--ink);
+}
+.interview-hub .profile-card.interview-completed .profile-number::before { content: '✓ '; }
+
+/* Fit the full artist file on normal desktop screens; small screens scroll. */
+@media (min-width: 1001px) and (min-height: 700px) {
+  .profiles-modal { padding: 24px 32px; max-height: calc(100dvh - 32px); }
+  .profiles-modal .selection-heading { margin-bottom: 16px; }
+  .profiles-modal .selection-heading :is(h2, p) { margin-block: 8px; }
+  .profiles-modal .gallery-layout { gap: 24px; align-items: start; }
+  .profiles-modal .profile-card { height: min(360px, calc(100dvh - 300px)); }
+  .profiles-modal .profile-detail { padding-top: 0; }
+  .profiles-modal .profile-detail :is(h2, p) { margin-block: 8px; }
+  .profiles-modal .profile-abilities { margin-top: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+  .profiles-modal button.modal-footer-close { margin-top: 16px; }
+}
 .profile-detail.glass-panel { padding: var(--space-3) 0 var(--space-3) var(--space-5); border: 0; border-left: 1px solid var(--border); border-radius: 0; background: none; }
 .character-keywords { gap: var(--space-3); }
 .character-keywords span { border: 0; border-radius: 0; padding: 0; color: var(--ink-muted); }
@@ -294,3 +312,7 @@ button.modal-footer-close { display: block; width: fit-content; min-width: 120px
   .character-introduction.part-one-photos > .introduction-photo { height: 340px; min-height: 0; }
   .character-introduction.part-one-photos .introduction-photo .photo-slot { height: 340px; }
 }
+
+/* The brand is the sole title navigation in the top bar. */
+.intro-topbar .intro-brand,
+.intro-topbar .intro-brand:is(:hover, :focus-visible, :visited) { text-decoration: none; }

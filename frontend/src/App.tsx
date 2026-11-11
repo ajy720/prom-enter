@@ -193,7 +193,7 @@ export default function App() {
   const partTwo = game.event.month >= 2 && game.event.month <= 6 || game.event.id === 'p2_complete';
   const monthly = !partTwo && ((game.event.month >= 7 && game.event.month <= 24) || !!game.ending);
   const renderTopbar = (title: string) => <>
-    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy || !!pending} onClick={() => setView('title')}>prom::enter.</button><span>{title}</span><button className="quiet-button" disabled={busy || !!pending} onClick={() => setView('title')}>시작 화면</button></header>
+    <header className="intro-topbar"><button className="text-button intro-brand" disabled={busy || !!pending} onClick={() => setView('title')}>prom::enter.</button><span>{title}</span></header>
     {error && <div className="error-banner" role="alert"><span>{error}</span>{pending && <button disabled={busy} onClick={() => void send(undefined, pending)}>같은 요청 재시도</button>}<button disabled={busy} onClick={() => window.location.reload()}>다시 불러오기</button></div>}
   </>;
 

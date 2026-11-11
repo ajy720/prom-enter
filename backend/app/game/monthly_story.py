@@ -1,5 +1,5 @@
 """Server-owned progression for the authored Part 3 and Part 4 screens."""
-from app.ai.profiles import profile_id
+from app.ai.profiles import character_profile, profile_id
 from app.content import EVIDENCE, EVENTS
 from app.game import later_months, member_abilities
 from app.game.conversation import make_conversation
@@ -372,10 +372,16 @@ def ending(stats):
     return 'ordinary'
 
 
-def interview_briefing(story):
+def interview_briefing(story, selected_character_id):
     if story.month == 19:
-        return ('일본 진출을 앞두고 언어 훈련과 현지 곡 콘셉트에 관한 생각을 듣는다. 사야는 일본어에 익숙하다.'
-                if story.route == 'overseas' else '도하의 생일 카페 방문과 국내 팬들에게 감사 인사를 전하는 방법을 이야기한다.')
+        if story.route == 'domestic':
+            return '도하의 생일 카페 방문과 국내 팬들에게 감사 인사를 전하는 방법을 이야기한다.'
+        name = character_profile(selected_character_id).name
+        language = ('사야는 일본어에 익숙하며 다른 멤버들의 연습을 도울 수 있다.'
+                    if profile_id(selected_character_id) == 'jiwoo' else
+                    '멤버들이 낯선 언어와 현지 방송을 준비하는 데 필요한 도움을 이야기한다.')
+        return (f'현재 팀원은 {name}, 리안, 도하, 세인이다. 선발되지 않은 후보를 현재 팀원처럼 언급하지 않는다. '
+                f'일본 진출을 앞두고 언어 훈련과 현지 곡 콘셉트에 관한 생각을 듣는다. {language}')
     return {
         7: '악성 게시물에 상처받은 신입이 먼저 대표실에 찾아왔다. 신입의 걱정과 바라는 도움을 이야기한다.',
         10: '두 번째 컴백의 센터를 정하기 전에 각 멤버의 생각을 듣는다.',

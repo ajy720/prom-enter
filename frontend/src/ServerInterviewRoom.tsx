@@ -1,3 +1,4 @@
+import { PlayModeInfo } from './PlayModeInfo';
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { ChatComposer } from './ChatComposer';
@@ -39,8 +40,8 @@ export function ServerInterviewRoom({ game, busy, pending, text, onTextChange, o
         {!complete && <div className="interview-dialogue-footer"><button className="text-button" disabled={locked || count < 1 || !finish || finish.used} onClick={() => void onSend('close_interview')}>면담 마무리</button></div>}
       </section>
       {complete ? <div className="interview-complete"><span>{awaitingClosing ? '마지막 답변' : '면담 종료'}</span>{awaitingClosing ? <button className="primary-button" disabled={busy || !!pending} onClick={() => { localStorage.setItem(readingKey, closingId); setAcknowledgedClosingId(closingId); }}>다음 →</button> : <button className="primary-button" disabled={busy || !!pending} onClick={onBack}>면담 상대 목록으로 →</button>}</div> : <><ChatComposer id="server-interview-message" label="면담 질문" text={text} placeholder="궁금한 이야기를 물어보세요." disabled={locked} onTextChange={onTextChange} onSend={() => onSend()} suggestions={['아이돌이 되고 싶은 이유가 뭐야?', '가장 자신 있는 분야는 뭐야?', '요즘 어떤 점이 가장 걱정돼?']}/>
-      <div className="dock-caption"><span>Enter로 전송 · Shift + Enter로 줄바꿈</span><span>{game.provider === 'demo' ? '규칙 기반 데모 응답' : 'AI 응답'}</span></div></>}
+      <div className="dock-caption"><span>Enter로 전송 · Shift + Enter로 줄바꿈</span></div></>}
     </div>
-    <Modal open={recordsOpen} title={`${character.name} 면담 기록`} className="records-modal" onClose={() => setRecordsOpen(false)}><h2>{character.name} 면담 기록</h2><div className="interview-history">{recordFrames.map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : ['secretary', 'baek_hayeon'].includes(frame.speakerId) ? 'secretary' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>)}</div></Modal>
+    <Modal open={recordsOpen} title={`${character.name} 면담 기록`} className="records-modal" onClose={() => setRecordsOpen(false)}><h2>{character.name} 면담 기록</h2><PlayModeInfo provider={game.provider}/><div className="interview-history">{recordFrames.map(frame => <article className={`interview-history-message speaker-${frame.speakerId === 'player' ? 'player' : ['secretary', 'baek_hayeon'].includes(frame.speakerId) ? 'secretary' : 'trainee'}`} key={frame.id}><strong>{frame.name}</strong><p>{frame.text}</p></article>)}</div></Modal>
   </section>;
 }

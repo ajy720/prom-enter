@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { advancePart4 as act, albumMinimums, assessDemoGuidance, createPart4, createPart4FromServer, fanmeetingProfit, inappropriatePromotion, part4Count, part4Ending, part4Evidence, part4Members, restorePart4 } from '../src/part4State.ts';
+import { advancePart4 as act, albumMinimums, assessDemoGuidance, createPart4, createPart4FromServer, fanmeetingProfit, inappropriatePromotion, part4Count, part4Ending, part4Evidence, part4Members, part4ResultText, restorePart4 } from '../src/part4State.ts';
 import { part4Intro, part4InterviewStart, part4SocialPhotos, part4EndingCopy } from '../src/part4Content.ts';
 import { createPart3 } from '../src/part3State.ts';
 
@@ -151,3 +151,31 @@ test('깨진 저장·면담 횟수 초과는 거절하고 서버 진입은 12개
   const s=createPart4(undefined,'national');for(const patch of [{stats:{...s.stats,teamwork:101}},{phase:'flash'},{month:25},{route:'oops'},{evidence:['sns','sns']}])assert.throws(()=>restored({...s,...patch}),/저장/);
   const game={game_id:'server',event:{month:13,id:'p2_m13'},completed_events:{p2_m12:'success'},history:[],character:{id:'a',name:'이도'},stats:s.stats};assert.equal(createPart4FromServer(game).sourceId,'server');assert.throws(()=>createPart4FromServer({...game,event:{month:14}}),/직후/);
 });
+
+
+test('콘서트 결과는 실패 원인을 설명하되 내부 임계값을 노출하지 않는다', () => {
+  const text = part4ResultText(21, 'failure', 'domestic', 'small', ['피로도 60 이상', '자금의 20%를 초과한 연출비']);
+  assert.match(text, /컨디션/);
+  assert.match(text, /연출 비용/);
+  assert.doesNotMatch(text, /60|20%/);
+});
+
+
+for (const [id,name] of [['hyerin','이도'],['seoyeon','여울'],['jiwoo','사야']]) {
+  test(`19개월 해외 안내와 면담은 실제 선발 ${name}의 언어 배경만 사용한다`, () => {
+    let s={...createPart4(undefined,'national'),month:19,route:'overseas',phase:'interviews',newcomer:{id,name},target:id};
+    const guide=part4Intro(s).find(line=>line.name==='백하연').text;
+    assert.match(guide,new RegExp(name));
+    if(id!=='jiwoo') assert.doesNotMatch(guide,/사야|일본어가 익숙/);
+    else assert.match(guide,/사야 씨는 일본어가 익숙/);
+    for(const member of part4Members(s)) {
+      s=act(s,{type:'target',id:member.id});
+      const first=part4InterviewStart(s).text;
+      s=act(s,{type:'chat',id:`${id}-${member.id}`,text:'현지 활동에서 어떤 점이 걱정돼?'});
+      if(id!=='jiwoo') {
+        assert.doesNotMatch(first,/사야/);
+        assert.doesNotMatch(s.chats.at(-1).reply,/사야/);
+      } else if(member.id==='jiwoo') assert.match(s.chats.at(-1).reply,/부담 없/);
+    }
+  });
+}

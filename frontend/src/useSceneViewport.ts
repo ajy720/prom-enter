@@ -15,6 +15,11 @@ export function useSceneViewport() {
         root.classList.remove('scene-fit');
         return;
       }
+      // Temporarily fitting a long page clamps scrollY to zero. Draft/status
+      // updates must not refit the page while the player is reading or typing.
+      const active = document.activeElement;
+      if (window.scrollY > 0 || (active instanceof HTMLElement && root.contains(active)
+          && active.matches('input, textarea, [contenteditable="true"]'))) return;
       root.classList.add('scene-fit');
       const scene = Array.from(root.children).find(element => element.tagName === 'SECTION');
       if (!scene) { root.classList.remove('scene-fit'); return; }

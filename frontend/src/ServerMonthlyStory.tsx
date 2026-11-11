@@ -109,6 +109,6 @@ export function ServerMonthlyStory({game, controls, onTitle}: {game: Game; contr
   const part3 = game.monthly_story!.month <= 12;
   const save = useMemo(() => part3 ? part3View(game) : part4View(game), [game, part3]);
   if (part3) return <PartThree key={game.game_id} server={{save: save as Part3Save, source: game, controls, onTitle}}/>;
-  return <PartFour key={game.game_id} server={{save: save as Part4Save, controls, onTitle,
+  return <PartFour key={game.game_id} server={{provider: game.provider, save: save as Part4Save, controls, onTitle,
     promotionText: game.monthly_story!.promotion_text, promotionWarning: game.monthly_story!.promotion_warning}}/>;
 }

@@ -1,3 +1,4 @@
+import { secretaryText } from './narrationText';
 import { useState } from 'react';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
@@ -58,15 +59,15 @@ export function RecruitmentResult({ character, nickname, step, onAdvance, onPrev
     <Modal open={announcementOpen} title="프로뮤 최종 영입 확정" className="recruitment-announcement-modal" onClose={() => setAnnouncementOpen(false)}>{announcement}</Modal>
   </section>;
 
-  const current = choosingGoal ? { title: '2년 뒤, 우리가 서 있을 무대', text: '대표님, 프로뮤가 어떤 그룹으로 기억되길 바라시나요? 선택하신 목표를 마지막 앨범까지 이어가겠습니다.' } : briefing[Math.min(step, 3) - 1];
+  const current = choosingGoal ? { title: '2년 뒤, 우리가 서 있을 무대', text: '대표님, 프로뮤가 앞으로 어떤 그룹으로 성장하면 좋을까요? 멤버들과 함께 나아갈 방향을 정해주세요.' } : briefing[Math.min(step, 3) - 1];
   return <section className="intro-scene intro-office recruitment-briefing part-one-photos" aria-label={current.title} style={{ backgroundImage: `url("${sceneBackgrounds.office}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact/></div>
     <aside className="formation-status glass-panel"><p className="section-kicker">PROMYOU · 팀 상태 안내</p><h2>함께할 네 사람</h2><p>{members.map(member => member.name).join(' · ')}</p><TeamStatus/></aside>
     <div className="secretary-photo"><PhotoSlot src={characterPortraits.baek_hayeon} name="백하연" caption="대표 비서실장 · 반신 사진 자리"/></div>
-    <div className="intro-dialogue-dock"><section className="dialogue-box"><header className="dialogue-header"><h2>백하연</h2><span className="mode-label">{current.title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{current.text}</p></div>
-      {choosingGoal && <fieldset className="game-goal-options"><legend>프로뮤의 2년 차 목표</legend>{gameGoals.map(item => <label key={item.id}><input type="radio" name="game-goal" value={item.id} checked={goal === item.id} onChange={() => setGoal(item.id)}/><span><strong>{item.label}</strong><small>{item.description}</small></span></label>)}</fieldset>}
+    <div className="intro-dialogue-dock"><section className="dialogue-box"><header className="dialogue-header"><h2>백하연</h2><span className="mode-label">{current.title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{secretaryText(current.text, character.name)}</p></div>
+      {choosingGoal && <fieldset className="game-goal-options"><legend>프로뮤의 활동 방향</legend>{gameGoals.map(item => <label key={item.id}><input type="radio" name="game-goal" value={item.id} checked={goal === item.id} onChange={() => setGoal(item.id)}/><span><strong>{item.label}</strong><small>{item.description}</small></span></label>)}</fieldset>}
       {goalError && <p className="error-banner" role="alert">{goalError}</p>}
-      <div className="intro-navigation"><button className="quiet-button" onClick={choosingGoal ? () => setChoosingGoal(false) : onPrevious}>← 이전</button><span>{choosingGoal ? '4 / 4' : `${Math.min(step, 3)} / 4`}</span><button className="primary-button" disabled={choosingGoal && !goal} onClick={choosingGoal ? confirmGoal : step >= 3 ? () => setChoosingGoal(true) : onAdvance}>{choosingGoal ? '목표 확정 · 첫 합숙 시작' : step >= 3 ? '2년 차 목표 선택' : '다음'} →</button></div>
+      <div className="intro-navigation"><button className="quiet-button" onClick={choosingGoal ? () => setChoosingGoal(false) : onPrevious}>← 이전</button><span>{choosingGoal ? '4 / 4' : `${Math.min(step, 3)} / 4`}</span><button className="primary-button" disabled={choosingGoal && !goal} onClick={choosingGoal ? confirmGoal : step >= 3 ? () => setChoosingGoal(true) : onAdvance}>{choosingGoal ? '목표 확정 · 첫 합숙 시작' : step >= 3 ? '활동 방향 선택' : '다음'} →</button></div>
     </section></div>
   </section>;
 }
