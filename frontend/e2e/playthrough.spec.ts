@@ -62,7 +62,7 @@ async function opening(page:Page) {
     if(await old.isVisible()) {
       if(['나레이션','기자'].includes((await old.locator('.dialogue-header h2').textContent()) ?? '')) {
         await expect(old.locator('.interview-info, .scene-resource-status')).toHaveCount(0);
-        if((await old.locator('.dialogue-header h2').textContent()) === '기자' || (await old.getByRole('log').textContent())?.includes('오늘은 데뷔 쇼케이스')) await expect(old).toHaveCSS('background-image', /stage\.png/);
+        if((await old.locator('.dialogue-header h2').textContent()) === '기자' || (await old.getByRole('log').textContent())?.includes('오늘은 데뷔 쇼케이스')) await expect(old).toHaveCSS('background-image', /stage\.webp/);
         expect(await old.locator('.dialogue-box').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe('rgb(255, 255, 255)');
         await shot(page,'narration-'+(await old.locator('header h1').textContent()));
       }
@@ -249,7 +249,7 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   expect(prepared.award_speech).toBe(speech);
   const awarded = await storyStep(page, '12개월차로 →');
   expect(awarded.stats.fans - prepared.stats.fans).toBe(awarded.monthly_story.award_expected ? 50_000 : 10_000);
-  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /stage\.png/);
+  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /stage\.webp/);
   await resume(page);
   await storyStep(page, '다음 →');
   if (awarded.monthly_story.award_expected) {

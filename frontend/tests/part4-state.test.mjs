@@ -26,7 +26,7 @@ test('사진은 세 신입별 원본에 연결되고 띠링→글→백하연→
   for(const [id,folder] of [['hyerin','ido'],['seoyeon','yeoul'],['jiwoo','saya']]) {
     let s=createPart4(undefined,'national');s.newcomer.id=id;s.target=id;
     assert.match(part4Intro(s)[0].text,/띠링/);s=act(s,{type:'next'});assert.equal(s.phase,'post');
-    assert.equal(part4SocialPhotos[id].post,`/images/characters/${folder}/past-rumor.png`);
+    assert.equal(part4SocialPhotos[id].post,`/images/characters/${folder}/past-rumor.webp`);
     s=act(s,{type:'next'});assert.equal(part4Intro(s)[s.cursor].speaker,'baek_hayeon');s=act(s,{type:'next'});assert.equal(s.phase,'comments');s=act(s,{type:'next'});assert.equal(s.phase,'interviews');
   }
 });
