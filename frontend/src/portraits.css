@@ -1,0 +1,89 @@
+/* One body scale across dialogue scenes, independent of speaker and text length.
+   The alpha bounds remove only transparent padding; supplied PNGs stay intact.
+   Root specificity deliberately replaces the older scene-specific crop rules. */
+#root { --dialogue-portrait-height: clamp(560px, calc(100dvh - 180px), 980px); }
+#root :is(.secretary-photo, .interview-portrait, .monthly-portrait, .monthly-intro-portrait):has(> .dialogue-photo) {
+  position: relative; inset: auto; align-self: end; justify-self: center;
+  width: 100%; max-width: none; height: var(--dialogue-portrait-height);
+  min-height: var(--dialogue-portrait-height); max-height: none; aspect-ratio: auto;
+  margin: 0; padding: 0; overflow: visible; flex-shrink: 0;
+}
+#root .introduction-photo:has(> .dialogue-photo) { padding: 0; min-height: var(--dialogue-portrait-height); }
+#root .photo-slot.dialogue-photo {
+  height: var(--dialogue-portrait-height); min-height: var(--dialogue-portrait-height);
+  max-height: none; aspect-ratio: auto; width: 100%; overflow: hidden;
+}
+#root .photo-slot.dialogue-photo > img {
+  position: absolute; top: calc(var(--dialogue-portrait-height) * var(--cutout-top)); bottom: auto; left: 50%;
+  width: auto; max-width: none; height: calc(var(--dialogue-portrait-height) * var(--cutout-size));
+  object-fit: contain; object-position: center; transform: translateX(var(--cutout-center));
+  transform-origin: center;
+}
+/* Keep the lower edge behind the dock in stacked scenes, and at the stage's
+   lower edge in columns. Longer dialogue grows the page, never the portrait. */
+#root :is(.prologue-scene, .recruitment-briefing):has(.dialogue-photo) {
+  grid-template-rows: auto auto; align-content: center; overflow: visible;
+}
+#root :is(.prologue-scene, .recruitment-briefing) > .intro-dialogue-dock { margin-top: 0; }
+#root .character-introduction .introduction-photo { align-items: end; }
+@media (min-width: 1001px) {
+  /* Reserve the reference-sized person first. Information may overlap the
+     portrait; the dialogue wraps below when both columns cannot fit. */
+  #root :is(.candidate-interview, .month-photo-stage, .monthly-stage, .monthly-intro, .character-introduction):has(.dialogue-photo) {
+    display: flex; flex-wrap: wrap; gap: 24px 32px; align-items: stretch; overflow: clip;
+  }
+  #root :is(.interview-portrait, .monthly-portrait, .monthly-intro-portrait):has(> .dialogue-photo),
+  #root .introduction-photo:has(> .dialogue-photo) {
+    flex: 1 0 var(--dialogue-portrait-height);
+    min-width: min(100%, var(--dialogue-portrait-height)); max-width: 100%;
+  }
+  #root :is(.candidate-interview, .month-photo-stage) > .interview-dock,
+  #root :is(.monthly-stage:has(.dialogue-photo) > .monthly-dock, .monthly-intro:has(.dialogue-photo) > .monthly-intro-copy, .character-introduction > .introduction-copy) {
+    flex: 1 0 340px; min-width: min(100%, 340px); max-width: 100%; width: auto; align-self: center; margin: 0;
+  }
+  #root :is(.candidate-interview, .month-photo-stage) > :is(.interview-info, .month-tasks),
+  #root .monthly-stage > .monthly-info {
+    position: absolute; top: 24px; left: 32px; width: 180px; z-index: 2;
+  }
+  #root .monthly-stage > .monthly-info { top: 120px; }
+  #root :is(.monthly-stage:has(.dialogue-photo) > header, .monthly-intro:has(.dialogue-photo) > header) {
+    position: absolute; top: 24px; left: 32px; right: 32px; width: auto; z-index: 2;
+  }
+  #root .monthly-stage:has(.dialogue-photo) > .monthly-dock { margin-top: 88px; }
+  #root :is(.candidate-interview, .month-photo-stage) > .scene-resource-status {
+    position: absolute; top: 24px; right: 32px; margin: 0;
+  }
+  #root :is(.candidate-interview, .month-photo-stage):has(> .scene-resource-status) > .interview-dock { margin-top: 88px; }
+  #root :is(.candidate-interview, .month-photo-stage, .monthly-stage) > :is(.interview-portrait, .monthly-portrait):has(> .dialogue-photo) {
+    position: sticky; top: var(--portrait-stage-top); align-self: start; margin-bottom: -24px;
+    height: max(var(--dialogue-portrait-height), calc(100dvh - var(--portrait-stage-top)));
+    display: flex; align-items: end;
+  }
+  /* Crop the body, never resize it, when the dock is underneath. The white dock
+     starts at the crop edge so no raw PNG boundary can show in the background. */
+  #root .portrait-stacked:has(.dialogue-photo) { row-gap: 0; }
+  #root .portrait-stacked > :is(.secretary-photo, .interview-portrait, .monthly-portrait, .monthly-intro-portrait):has(> .dialogue-photo) {
+    position: relative; top: auto; height: calc(var(--dialogue-portrait-height) * .6);
+    min-height: calc(var(--dialogue-portrait-height) * .6); margin-bottom: 0; display: block;
+  }
+  #root .portrait-stacked .dialogue-photo {
+    height: calc(var(--dialogue-portrait-height) * .6); min-height: calc(var(--dialogue-portrait-height) * .6);
+  }
+  #root .portrait-stacked:has(.dialogue-photo) > :is(.intro-dialogue-dock, .interview-dock, .monthly-dock, .monthly-intro-copy) {
+    margin-top: 0; z-index: 3;
+  }
+}
+@media (max-width: 1000px) {
+  #root { --dialogue-portrait-height: clamp(280px, calc(100vw - 32px), 440px); }
+  #root :is(.candidate-interview, .month-photo-stage) > .interview-portrait:has(> .dialogue-photo) { margin-bottom: calc(-1 * var(--space-4)); }
+  #root :is(.monthly-stage, .character-introduction) { grid-template-columns: minmax(0, 1fr); }
+  #root .server-monthly-stage > .monthly-portrait { grid-area: 2 / 1; }
+  #root .server-monthly-stage > .monthly-dock { grid-area: 3 / 1; }
+  #root .server-monthly-stage > .monthly-info { grid-area: 4 / 1; }
+  #root .server-monthly-stage.is-summary > .monthly-dock { grid-area: 2 / 1; }
+  #root .server-monthly-stage.is-summary > .monthly-portrait { grid-area: 3 / 1; }
+}
+@media (max-width: 900px) {
+  #root .monthly-stage { grid-template-columns: minmax(0, 1fr); }
+  #root .monthly-portrait:has(> .dialogue-photo) { margin-bottom: calc(-1 * var(--space-5)); }
+}

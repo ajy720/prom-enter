@@ -31,13 +31,5 @@
 .part4-demo-entry { padding: 16px 24px; background: var(--surface-tint); border-bottom: 1px solid var(--border); }
 .part4-demo-entry p { margin: 0 0 8px; line-height: 1.7; }
 @keyframes part4-fade-white { from { opacity: 0; } to { opacity: 1; } }
-@media (min-width: 1001px) {
-  /* Long decision forms keep the same portrait scale near the dialogue's start.
-     The lower image edge remains clipped at the viewport boundary. */
-  .part-four .part4-stage.month-one-photos.month-photo-stage.interview-room > .interview-portrait {
-    position: sticky; inset: auto; top: 0; align-self: start; height: calc(100dvh - 108px);
-    min-height: 480px; max-height: none; aspect-ratio: auto; margin: 0; overflow: hidden;
-  }
-}
 @media (prefers-reduced-motion: reduce) { .part4-whiteout { animation: none; } }
 @media (max-width: 600px) { .part4-social-scene { padding: 24px 12px; } }
