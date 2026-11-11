@@ -54,7 +54,8 @@ jobs:
           umask 077
           printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/prom-deploy-key"
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/prom-known-hosts"
-          git archive --format=tar "$GITHUB_SHA" > "$RUNNER_TEMP/prom-source.tar"
+          # The application serves WebP. Keep source PNGs in Git and out of the deployment archive.
+          git archive --format=tar "$GITHUB_SHA" . ':(exclude,glob)frontend/public/images/**/*.png' > "$RUNNER_TEMP/prom-source.tar"
           digest=$(sha256sum "$RUNNER_TEMP/prom-source.tar")
           ssh -i "$RUNNER_TEMP/prom-deploy-key" -p "$DEPLOY_PORT" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
