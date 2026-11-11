@@ -5,9 +5,9 @@ export type Part4Line = {speaker:string;name:string;text:string};
 const n=(text:string):Part4Line=>({speaker:'narrator',name:'나레이션',text});
 const b=(text:string):Part4Line=>({speaker:'baek_hayeon',name:'백하연',text});
 export const part4SocialPhotos:Record<string,{post:string;comments:string}>={
-  hyerin:{post:'/images/characters/ido/past-rumor.png',comments:'/images/characters/ido/rumor-comments.png'},
-  seoyeon:{post:'/images/characters/yeoul/past-rumor.png',comments:'/images/characters/yeoul/rumor-comments.png'},
-  jiwoo:{post:'/images/characters/saya/past-rumor.png',comments:'/images/characters/saya/rumor-comments.png'},
+  hyerin:{post:'/images/characters/ido/past-rumor.webp',comments:'/images/characters/ido/rumor-comments.webp'},
+  seoyeon:{post:'/images/characters/yeoul/past-rumor.webp',comments:'/images/characters/yeoul/rumor-comments.webp'},
+  jiwoo:{post:'/images/characters/saya/past-rumor.webp',comments:'/images/characters/saya/rumor-comments.webp'},
 };
 export function part4Intro(s:Part4Save):Part4Line[] {
   const success=(month:number)=>s.results[month]==='success';

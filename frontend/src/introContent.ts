@@ -36,20 +36,20 @@ export const debutMembers: IntroCharacter[] = [
 ];
 
 export const titlePhotos = [
-  '/images/scenes/title-white.png',
-  '/images/scenes/title-uniform.png',
-  '/images/scenes/title-black.png',
+  '/images/scenes/title-white.webp',
+  '/images/scenes/title-uniform.webp',
+  '/images/scenes/title-black.webp',
 ];
 
 // Producer-provided cutouts, keyed by the existing save/AI character IDs.
 export const characterPortraits: Record<string, string> = {
-  baek_hayeon: '/images/characters/hayeon/half-body-transparent.png',
-  dahyun: '/images/characters/rian/half-body-transparent.png',
-  haram: '/images/characters/doha/half-body-transparent.png',
-  yuna: '/images/characters/sein/half-body-transparent.png',
-  seoyeon: '/images/characters/yeoul/half-body-transparent.png',
-  hyerin: '/images/characters/ido/half-body-transparent.png',
-  jiwoo: '/images/characters/saya/half-body-transparent.png',
+  baek_hayeon: '/images/characters/hayeon/half-body-transparent.webp',
+  dahyun: '/images/characters/rian/half-body-transparent.webp',
+  haram: '/images/characters/doha/half-body-transparent.webp',
+  yuna: '/images/characters/sein/half-body-transparent.webp',
+  seoyeon: '/images/characters/yeoul/half-body-transparent.webp',
+  hyerin: '/images/characters/ido/half-body-transparent.webp',
+  jiwoo: '/images/characters/saya/half-body-transparent.webp',
 };
 
 const portraitExpressions = new Set(['excited', 'angry', 'happy', 'sad', 'surprised']);
@@ -57,27 +57,27 @@ const portraitExpressions = new Set(['excited', 'angry', 'happy', 'sad', 'surpri
 export function dialoguePhoto(characterId: string, expression?: string) {
   const fallbackSrc = characterPortraits[characterId];
   const src = fallbackSrc && expression && portraitExpressions.has(expression)
-    ? fallbackSrc.replace('half-body-transparent.png', `expression-${expression}.png`)
+    ? fallbackSrc.replace('half-body-transparent.webp', `expression-${expression}.webp`)
     : fallbackSrc;
   return { src, fallbackSrc };
 }
 
 // The producer calls these profile 1 (the files have no "2" suffix).
 export const characterProfiles: Record<string, string> = {
-  baek_hayeon: '/images/characters/hayeon/profile.png',
-  dahyun: '/images/characters/rian/profile.png',
-  haram: '/images/characters/doha/profile.png',
-  yuna: '/images/characters/sein/profile.png',
-  seoyeon: '/images/characters/yeoul/profile.png',
-  hyerin: '/images/characters/ido/profile.png',
-  jiwoo: '/images/characters/saya/profile.png',
+  baek_hayeon: '/images/characters/hayeon/profile.webp',
+  dahyun: '/images/characters/rian/profile.webp',
+  haram: '/images/characters/doha/profile.webp',
+  yuna: '/images/characters/sein/profile.webp',
+  seoyeon: '/images/characters/yeoul/profile.webp',
+  hyerin: '/images/characters/ido/profile.webp',
+  jiwoo: '/images/characters/saya/profile.webp',
 };
 
 export const sceneBackgrounds = {
-  office: '/images/scenes/office.png',
-  corridor: '/images/scenes/corridor.png',
-  practice: '/images/scenes/practice.png',
-  stage: '/images/scenes/stage.png',
+  office: '/images/scenes/office.webp',
+  corridor: '/images/scenes/corridor.webp',
+  practice: '/images/scenes/practice.webp',
+  stage: '/images/scenes/stage.webp',
 };
 
 export type IntroScene = {
