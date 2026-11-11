@@ -13,7 +13,7 @@ from app.game.openings import ensure_opening, openings_for_view
 from app.models import Analysis, Dialogue, GameError, Message, State, TurnRequest
 from app.game.interviews import LIMIT, CLOSING, is_interview, progress, turn_count
 from app.game import center_interviews as center
-from app.game import rehearsal, interview_effects, later_months, member_abilities
+from app.game import rehearsal, interview_effects, later_months, member_abilities, monthly_story
 from app.game import monthly_decisions as monthly
 
 
@@ -38,7 +38,11 @@ class TurnService:
         # Copy before annotating actions: the content registry is shared by all players.
         event = {**event, "actions": [{**a, "used": f"{state.event_id}:{a['id']}" in state.applied_effects} for a in rehearsal.actions_for(state, event["actions"])
                  if a['id'] != 'start_month_two' or 'p2_m01_training:confirm_month_plan' in state.applied_effects]}
-        history=self.repository.history(state.game_id)
+        history = self.repository.history(state.game_id)
+        if state.monthly_story:
+            history = [turn for turn in history if turn.get('state_version', 0) <= state.version]
+            event['actions'] = []
+            event.pop('chat_actions', None)
         # Refresh the old offline fixture's awkward wording without rewriting
         # saved turns or replacing responses produced by a real provider.
         for turn in history:
@@ -59,7 +63,9 @@ class TurnService:
             'rehearsal': {'phase': rehearsal.phase(state)} if state.event_id == rehearsal.EVENT else None,
             'center_selection':state.center_decision.model_dump(exclude={'assessment'}) if state.center_decision else None,
             "stats": state.stats.model_dump(), "training_history": state.training_history,
-            "monthly_interviews": later_months.interview_counts(state, history, later_months.required_members(state)),
+            "monthly_interviews": (monthly_story.counts(state, history) if state.monthly_story else
+                                   later_months.interview_counts(state, history, later_months.required_members(state))),
+            "monthly_story": state.monthly_story.model_dump() if state.monthly_story else None,
             "comeback_center_id": state.comeback_center_id,
             "award_speech": state.award_speech,
             "farewell": state.farewell,
@@ -77,7 +83,7 @@ class TurnService:
         state = self.repository.get(game_id, owner)
         # Preserve fingerprints of requests saved before optional conversation fields.
         fingerprint = hashlib.sha256(request.model_dump_json(
-            exclude={key for key in ('recipient_id','conversation_mode','target_character_id','center_member_id','center_reason','promotion_allocation')
+            exclude={key for key in ('recipient_id','conversation_mode','target_character_id','center_member_id','center_reason','promotion_allocation','story_command')
                      if getattr(request,key) is None} | ({'stop_after_month_one'} if not request.stop_after_month_one else set())).encode()).hexdigest()
         cached = self.repository.cached(game_id, request.request_id, fingerprint)
         if cached is not None:
@@ -90,6 +96,10 @@ class TurnService:
             raise GameError("콘텐츠 버전이 변경됐습니다.", 409)
         start_later = (later_months.can_resume(state) and request.input_type == 'action'
                        and request.action_id == later_months.START)
+        if request.story_command or state.monthly_story:
+            if not request.story_command or state.ending_id and not start_later:
+                raise GameError('현재 이야기의 화면에서 진행해주세요.', 409)
+            return self._monthly_story_turn(owner, state, request, fingerprint, start_later)
         if state.ending_id and not start_later:
             raise GameError('종료된 플레이입니다. 새 플레이를 시작해주세요.',409)
         if (request.center_member_id is not None or request.center_reason is not None) and not (
@@ -321,6 +331,102 @@ class TurnService:
             outcome, message = center.finish(updated)
             return self._center_turn(owner, state, updated, request, fingerprint, message, outcome=outcome)
         return self._center_turn(owner, state, updated, request, fingerprint, message)
+
+    def _monthly_story_turn(self, owner, state, request, fingerprint, start_later):
+        command = request.story_command
+        starting = command.type == 'start'
+        monthly_story.require(start_later if starting else state.monthly_story is not None)
+        monthly_story.require(request.input_type == 'action' and request.action_id ==
+                              (later_months.START if starting else 'monthly_story'))
+        monthly_story.require(not any((request.text, request.recipient_id, request.conversation_mode,
+                                       request.target_character_id, request.center_member_id, request.center_reason,
+                                       request.promotion_allocation, request.stop_after_month_one)))
+        history = [turn for turn in self.repository.history(state.game_id) if turn.get('state_version', 0) <= state.version]
+        updated = state.model_copy(deep=True)
+        outcome, messages, listeners = 'pending', [], []
+        evaluation_calls = generation_calls = 0
+        assessment = None
+        text = command.type
+        room = current_conversation(state)
+        if starting:
+            monthly_story.start(updated, command.goal)
+        elif command.type == 'chat':
+            story = updated.monthly_story
+            raw = command.text or ''
+            text = raw.strip()
+            limit = 7 if story.month == 20 else 8
+            monthly_story.require(story.phase == 'interviews' and text and
+                                  monthly_story.text_length(raw) <= 2000 and
+                                  monthly_story.counts(state, history).get(story.target, limit) < limit,
+                                  '면담 단계와 입력 내용, 대화 횟수를 확인해주세요.')
+            room = make_conversation(state, 'private', story.target)
+            listeners = roles_for(state, room)
+            facts = []
+            if story.month == 20:
+                assessment = self._story_assessment('guidance', text)
+                evaluation_calls = 1
+                if assessment.verdict != 'unclear':
+                    story.guidance, story.guidance_quote = assessment.verdict, assessment.quote
+                facts = [{'calm': '대표는 사실과 공식 절차 중심의 대응을 지시했다.',
+                          'emotional': '대표는 감정적 맞대응을 지시했다. 백하연은 그 위험을 짚는다.',
+                          'unclear': '이 발화에서는 새로운 실행 지침이 확인되지 않았다.'}[assessment.verdict]]
+            actor = build_dialogue_context(state, history, text, facts=facts, speaker_roles=listeners)
+            actor.scene.update(scene='대표실', briefing=monthly_story.interview_briefing(story),
+                               goal='현재 면담 주제 안에서 대표의 질문에 답한다. 활동을 확정하거나 수치를 바꾸지 않는다.')
+            actor.event_opening = None
+            view = scope_actor(actor, state, text, listeners[0], history)
+            direction = character_direction(state, 'pending')
+            dialogue = validate_dialogue(self.provider.generate(text, view, direction, facts, False), view)
+            generation_calls = 1
+            messages = [message.model_dump() for message in dialogue.messages]
+            record_report(updated, text, room.participant_ids, event_id=state.event_id, turn_id=request.request_id)
+            record_dialogue(updated, dialogue, view, request.request_id)
+        elif command.type == 'reviewPromotion':
+            story = updated.monthly_story
+            monthly_story.require(story.month == 20 and story.route == 'domestic' and story.phase == 'decision')
+            text = monthly_story.promotion_text(command.choices)
+            if story.promotion_text != text:
+                assessment = self._story_assessment('promotion', text)
+                evaluation_calls = 1
+                story.promotion_text = text
+                story.promotion_warning = assessment.verdict == 'inappropriate'
+        else:
+            outcome = monthly_story.apply(updated, command, history)
+        if outcome in {'success', 'partial', 'failure'}:
+            advance_mood(state, updated, outcome)
+        before = state.stats.model_dump()
+        delta = {key: value - before[key] for key, value in updated.stats.model_dump().items() if value != before[key]}
+        if command.type == 'decide' or updated.event_id == 'p2_m12' and state.event_id != updated.event_id:
+            updated.monthly_story.last_delta = delta
+        updated.version += 1
+        event = EVENTS[state.event_id]
+        turn = {
+            'id': request.request_id, 'event_id': state.event_id, 'event_title': event['title'], 'input': text,
+            'state_version': updated.version,
+            'input_type': 'chat' if command.type == 'chat' else 'action',
+            'kind': 'dialogue' if command.type == 'chat' else 'activity',
+            'conversation': conversation_view(state, room), 'input_audience': listeners, 'messages': messages,
+            'analysis': Analysis(action_id=command.type, needs_clarification=False, reference_turn_id=None,
+                                 assessments=[]).model_dump(),
+            'direction': character_direction(updated, outcome).model_dump(),
+            'facts': [], 'new_evidence': [], 'outcome': outcome, 'stat_delta': delta, 'image': '/portraits/hopeful.svg',
+            'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': self.provider.name if evaluation_calls or generation_calls else 'system',
+                         'evaluation_calls': evaluation_calls, 'generation_calls': generation_calls,
+                         'phase': 'monthly_story', 'profile_id': canonical(state.character_id)},
+        }
+        if assessment is not None:
+            turn['story_assessment'] = assessment.model_dump()
+        committed = self.repository.commit(updated, owner, state.version, request.request_id, fingerprint, turn)
+        return {'turn': committed, 'game': self.view(self.repository.get(state.game_id, owner))}
+
+    def _story_assessment(self, kind, text):
+        assessment = self.provider.assess_story_text(kind, text)
+        expected = {'calm', 'emotional', 'unclear'} if kind == 'guidance' else {'appropriate', 'inappropriate'}
+        if assessment.verdict not in expected or (
+                assessment.verdict in {'calm', 'emotional', 'inappropriate'}
+                and (not assessment.quote.strip() or assessment.quote not in text)):
+            raise GameError('문장 판정의 근거를 확인하지 못했습니다. 같은 요청으로 다시 시도해주세요.', 502)
+        return assessment
 
     def _later_month_turn(self, owner, state, request, fingerprint, history, *, analysis=None, room=None):
         from_chat = analysis is not None

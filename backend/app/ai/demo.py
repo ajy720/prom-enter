@@ -252,6 +252,35 @@ class DemoProvider:
                         action_text=action_text,
                         clarification_question=(compound_question or '어떤 행동과 대상을 원하시는지 알려주시겠어요?') if clarification else None)
 
+    def assess_story_text(self, kind, text):
+        from app.models import StoryTextAssessment
+        if kind == 'promotion':
+            for sentence in re.split(r'[.!?\n]', text):
+                if (not re.search(r'하지\s*마|않|아니|말자|말고|라고|["“”]', sentence)
+                        and re.search(r'(?:팬|관객).{0,8}(?:멍청|쓰레기)|(?:콘서트|공연).{0,10}오지\s*마', sentence)):
+                    return StoryTextAssessment(verdict='inappropriate', quote=sentence.strip())
+            return StoryTextAssessment(verdict='appropriate', quote='')
+        verdict, quote = 'unclear', ''
+        unquoted = re.sub(r"""“[^”]*”|‘[^’]*’|"[^"]*"|'[^']*'""", lambda m: ' ' * len(m[0]), text)
+        for match in re.finditer(r'[^.!?。\n]+([.!?。]|$)', unquoted):
+            line = match[0].strip()
+            if not line or line.endswith('?') or re.search(r'일까|인가요|할까|어때|하면|하는지|라고|했던|했었|했어|했어요', line):
+                continue
+            clauses = re.finditer(r'.+?(?=지만|하지만|대신|$)', match[0])
+            for clause in clauses:
+                line = clause[0].strip()
+                bad = re.search(r'욕설|욕하|모욕|팬.{0,8}비난|보복|맞대응|폭로|감정적', line)
+                negated = re.search(r'하지\s*마|않|안\s*하|금지|말자|말고', line)
+                if bad and not negated and re.search(r'하자|하라|하세요|해줘|해라|해요|대응해|진행|실행|하겠|할게', line):
+                    verdict = 'emotional'
+                elif ((bad and negated) or (not negated and re.search(r'사실|근거|증거|공식|법적|법률|차분|침착', line)
+                                            and re.search(r'확인|해명|검토|대응|발표|하자|해줘|하세요|합시다|하겠', line))):
+                    verdict = 'calm'
+                else:
+                    continue
+                quote = text[match.start()+clause.start():match.start()+clause.end()].strip()
+        return StoryTextAssessment(verdict=verdict, quote=quote)
+
     def generate(self, text, actor, direction, facts, clarification):
         profile = actor['character']
         if clarification:

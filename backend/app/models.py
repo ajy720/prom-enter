@@ -167,6 +167,61 @@ class AbilityGrowth(Model):
     event_id: str
 
 
+GameGoal = Literal['national', 'global', 'music']
+StoryGuidance = Literal['calm', 'emotional', 'unclear']
+
+
+class StoryTextAssessment(Model):
+    verdict: Literal['calm', 'emotional', 'unclear', 'appropriate', 'inappropriate']
+    quote: str = Field(max_length=2000)
+
+
+class StoryCommand(Model):
+    type: Literal['start', 'next', 'target', 'chat', 'finishInterviews', 'decide', 'enterPartFour',
+                  'goal', 'investigate', 'finishInvestigation', 'guidance', 'reviewPromotion', 'finishFlash']
+    id: str | None = Field(default=None, max_length=40)
+    text: str | None = Field(default=None, max_length=2000)
+    goal: GameGoal | None = None
+    value: Literal['calm', 'emotional'] | None = None
+    choices: dict[Annotated[str, Field(max_length=20)], Annotated[str, Field(max_length=2000)]] = Field(
+        default_factory=dict, max_length=8)
+
+
+class StoryScene(Model):
+    month: int = Field(ge=7, le=24)
+    cursor: int = Field(ge=0, le=7)
+
+
+class StoryDecision(Model):
+    choices: dict[str, str]
+    reasons: list[str] = Field(default_factory=list)
+
+
+class MonthlyStory(Model):
+    month: int = Field(default=7, ge=7, le=24)
+    phase: Literal['intro', 'interviews', 'guidance', 'decision', 'result', 'complete', 'ending',
+                   'goal', 'post', 'comments', 'investigation', 'flash'] = 'intro'
+    cursor: int = Field(default=0, ge=0, le=7)
+    target: str
+    goal: GameGoal | None = None
+    last_delta: dict[str, int] = Field(default_factory=dict)
+    fatigue_at_decision: int | None = None
+    award_expected: bool | None = None
+    route: Literal['domestic', 'overseas'] | None = None
+    overseas_fans_added: int = Field(default=0, ge=0)
+    evidence: list[Literal['sns', 'hana', 'school']] = Field(default_factory=list)
+    guidance: StoryGuidance = 'unclear'
+    guidance_quote: str = ''
+    confirmed_guidance: Literal['calm', 'emotional'] | None = None
+    promotion_text: str | None = None
+    promotion_warning: bool = False
+    award: Literal['song', 'main', 'nominee'] | None = None
+    ending: Literal['happy', 'ordinary', 'forgotten', 'withdrawn'] | None = None
+    renew: bool | None = None
+    scenes: list[StoryScene] = Field(default_factory=list)
+    decisions: dict[int, StoryDecision] = Field(default_factory=dict)
+
+
 class State(Model):
     game_id: str
     character_id: str
@@ -196,6 +251,7 @@ class State(Model):
     comeback_center_id: str | None = None
     award_speech: str = ""
     farewell: str = ""
+    monthly_story: MonthlyStory | None = None
 
     @model_validator(mode='after')
     def part2_starting_funds(self):
@@ -231,6 +287,7 @@ class TurnRequest(Model):
     center_member_id: str | None = Field(default=None, max_length=40)
     center_reason: str | None = Field(default=None, max_length=2000)
     promotion_allocation: PromotionAllocation | None = None
+    story_command: StoryCommand | None = None
 
 
 class Assessment(Model):

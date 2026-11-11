@@ -49,7 +49,7 @@ def scores(state):
                              re.findall(r'(?m)^(VOCAL|DANCE|VISUAL|VARIETY): (\d+)/10', baseline)}
     for item in gains(state):
         result[item.member_id][item.skill] += 1
-    if state.event_id == 'p2_m08' and state.completed_events.get('p2_m07') == 'failure':
+    if not state.monthly_story and state.event_id == 'p2_m08' and state.completed_events.get('p2_m07') == 'failure':
         newcomer = result[profile_id(state.character_id)]
         newcomer['variety'] = max(0, newcomer['variety'] - 1)
     return result

@@ -2,6 +2,8 @@ import json
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
+from pydantic import ValidationError
+
 from app.models import GameError, State
 
 
@@ -42,7 +44,10 @@ class Repository:
             row = db.execute("SELECT state FROM games WHERE id=? AND owner=?", (game_id, owner)).fetchone()
         if row is None:
             raise GameError("플레이를 찾을 수 없습니다. 이 브라우저에서 새 플레이를 시작해주세요.", 404)
-        return State.model_validate_json(row["state"])
+        try:
+            return State.model_validate_json(row["state"])
+        except ValidationError as cause:
+            raise GameError('저장한 이야기의 상태를 읽지 못했습니다. 기존 저장은 보존됩니다.', 409) from cause
 
     def history(self, game_id: str):
         with self.connect() as db:

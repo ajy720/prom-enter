@@ -12,7 +12,8 @@ def people(state: State) -> dict[str, str]:
         return {'newcomer':available['newcomer']}
     if state.event_id in {'p2_m04_showcase', 'p2_m05_promotion', 'p2_m06_variety'}:
         return {'secretary': DATA['secretary_id']}
-    if state.event_id in {'p2_m01_training', 'p2_m02_center', rehearsal.EVENT, 'p2_m10', 'p2_m20'}:
+    if state.event_id in {'p2_m01_training', 'p2_m02_center', rehearsal.EVENT, 'p2_m10', 'p2_m20'} or (
+            state.event_id == 'p2_m19' and state.monthly_story):
         available.update({person:person for person in ('dahyun','haram','yuna')})
     return available
 
