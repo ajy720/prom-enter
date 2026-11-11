@@ -22,7 +22,6 @@ def finish(state):
     from app.game.engine import apply_delta
     event_id = state.event_id
     month = 2 if event_id == EVENT else 3
-    judged_teamwork = state.stats.teamwork
     success = state.stats.teamwork >= (TEAMWORK_MIN if month == 2 else 40)
     if month == 3:
         success = success and state.stats.fatigue < 60
@@ -40,10 +39,10 @@ def finish(state):
     state.completed_events[event_id] = outcome
     state.event_id = EVENTS[event_id]['next']
     state.conversation = make_conversation(state)
-    message = (f'대표님, {month}개월차 면담을 마쳤습니다. 판정 시 팀워크는 {judged_teamwork}입니다. '
+    message = (f'대표님, {month}개월차 면담을 마쳤습니다. '
                + ('서로의 의견을 모아 팀의 방향을 정리했습니다. 이번 달은 성공입니다.' if outcome == 'success'
                   else '서로의 의견 차이가 남았습니다. 이번 달은 실패입니다.')
-               + (' 신입의 댄스 능력치가 1 올랐습니다.' if month == 3 and success else '')
+               + (f' {character_profile(state.character_id).name} 씨의 댄스 능력치가 1 올랐습니다.' if month == 3 and success else '')
                + f' 결과 수치 변화를 반영했습니다. 다음 {month + 1}개월차 이야기를 확인해주세요.')
     return outcome, message
 

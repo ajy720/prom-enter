@@ -14,7 +14,9 @@ type Props = {
 export function ChatComposer({ id, label, text, placeholder, disabled = false, suggestions = [], onTextChange, onSend }: Props) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   function send() {
-    if (!disabled && text.trim()) void onSend();
+    if (disabled || !text.trim()) return;
+    inputRef.current?.focus({ preventScroll: true });
+    void onSend();
   }
   return <>
     {!!suggestions.length && <details className="question-prompts"><summary>질문 예시</summary>
@@ -23,7 +25,7 @@ export function ChatComposer({ id, label, text, placeholder, disabled = false, s
     </details>}
     <form className="chat-composer story-composer" onSubmit={event => { event.preventDefault(); send(); }}>
       <label htmlFor={id} className="sr-only">{label}</label>
-      <textarea ref={inputRef} id={id} rows={1} maxLength={2000} value={text} placeholder={placeholder} disabled={disabled}
+      <textarea ref={inputRef} id={id} rows={1} maxLength={2000} value={text} placeholder={placeholder} readOnly={disabled} aria-disabled={disabled} tabIndex={disabled ? -1 : undefined}
         onChange={event => onTextChange(event.target.value)} onKeyDown={event => {
           if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing && event.keyCode !== 229) { event.preventDefault(); send(); }
         }}/>

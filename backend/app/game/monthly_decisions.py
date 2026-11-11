@@ -1,4 +1,5 @@
 """Server-owned month 4–6 decisions. Dialogue stat scoring belongs to the AI integration."""
+from app.ai.profiles import character_profile
 from app.models import GameError
 
 SHOWCASE = 'p2_m04_showcase'
@@ -44,22 +45,23 @@ def allocate(state, allocation):
     updated.event_id = VARIETY
     updated.conversation = make_conversation(updated)
     return Proposal(updated, [f"{plan['track']}트랙 홍보 예산 {budget:,}원을 집행했습니다.",
-                              result_narration(PROMOTION, outcome)], outcome, [])
+                              result_narration(state, outcome)], outcome, [])
 
 
-def result_narration(event_id, outcome):
+def result_narration(state, outcome):
+    name = character_profile(state.character_id).name
     successful = outcome == 'success'
     texts = {
         'p2_m02_center': ('서로의 의견을 모아 포지션을 정리했다. 팀은 함께 연습을 이어간다.',
                           '포지션에 대한 의견 차이가 남았다. 일부 멤버가 연습에 불참하며 갈등이 이어진다.'),
-        'p2_m03_rehearsal': ('세인이 신입에게 먼저 사과한다. 멤버들은 서로의 속도를 맞추며 리허설을 다시 시작한다.',
-                             '면담 후에도 갈등과 피로가 남았다. 신입은 위축된 채 쇼케이스를 준비한다.'),
-        SHOWCASE: ('멤버들이 신입을 감싸는 모습이 화제가 되었다. 팀을 응원하는 반응이 늘었다.',
-                   '쇼케이스의 실수 영상이 퍼졌다. 팀과 신입을 향한 우려 속에서 다음 활동을 준비한다.'),
+        'p2_m03_rehearsal': (f'세인이 {name} 씨에게 먼저 사과한다. 멤버들은 서로의 속도를 맞추며 리허설을 다시 시작한다.',
+                             f'면담 후에도 갈등과 피로가 남았다. {name} 씨는 위축된 채 쇼케이스를 준비한다.'),
+        SHOWCASE: (f'멤버들이 {name} 씨를 감싸는 모습이 화제가 되었다. 팀을 응원하는 반응이 늘었다.',
+                   f'쇼케이스의 실수 영상이 퍼졌다. 팀과 {name} 씨를 향한 우려 속에서 다음 활동을 준비한다.'),
         PROMOTION: ('홍보를 통해 음악을 새로 들어주는 사람들이 늘었다. 다음 활동을 향한 기대가 생겼다.',
                     '홍보가 기대한 성과로 이어지지 않았다. 추가 손실 1억 원을 반영하고 다음 활동을 준비한다.'),
         VARIETY: ('예능에 출연한 멤버가 좋은 모습을 보여주며 팀의 인지도가 늘었다.',
-                  '예능에 출연한 신입이 말실수를 했다. 방송 이후 신입을 향한 악플이 늘고 있다.'),
+                  f'예능에 출연한 {name} 씨가 말실수를 했다. 방송 이후 {name} 씨를 향한 악플이 늘고 있다.'),
     }
-    pair = texts.get(event_id)
+    pair = texts.get(state.event_id)
     return pair[0 if successful else 1] if pair else None

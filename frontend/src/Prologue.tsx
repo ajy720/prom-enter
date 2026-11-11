@@ -99,9 +99,9 @@ function CharacterDetails({ character, showAbilities = false }: { character: Int
 }
 
 function CharacterGallery({ characters, selectedId, onSelect }: { characters: IntroCharacter[]; selectedId: string; onSelect: (id: string) => void }) {
-  return <div className="profile-cards">{characters.map((character, index) => <button key={character.id} className={`profile-card ${character.id === selectedId ? 'is-selected' : ''}`} aria-pressed={character.id === selectedId} onClick={() => onSelect(character.id)}>
-    <span className="profile-number">0{index + 1}</span><PhotoSlot src={characterProfiles[character.id]} name={character.name}/>
-    <span className="profile-card-label"><strong>{character.name}</strong><small>{character.role}</small></span>
+  return <div className="profile-cards">{characters.map(character => <button key={character.id} className={`profile-card ${character.id === selectedId ? 'is-selected' : ''}`} aria-pressed={character.id === selectedId} onClick={() => onSelect(character.id)}>
+    <PhotoSlot src={characterProfiles[character.id]} name={character.name}/>
+    <span className="profile-card-label"><strong>{character.name}</strong></span>
   </button>)}</div>;
 }
 
@@ -188,7 +188,7 @@ export function Prologue({ fresh, onTitle, onServerInterview, busy = false, serv
       <button className="primary-button" onClick={closeResourceNotice}>확인 · 안내 계속하기 →</button>
     </Modal>
     <Modal open={profilesOpen} title="기존 데뷔조 프로필" className="profiles-modal" closeAtBottom onClose={() => setProfilesOpen(false)}>
-      <div className="selection-heading"><p className="section-kicker">PROM::ENTER · ARTIST FILE</p><h2>무대를 기다려온 세 사람</h2><p>프로필을 선택해 기존 멤버들을 알아보세요.</p></div>
+      <div className="selection-heading"><h2>무대를 기다려온 세 사람</h2></div>
       <div className="gallery-layout"><CharacterGallery characters={debutMembers} selectedId={profileId} onSelect={setProfileId}/><aside className="profile-detail glass-panel"><CharacterDetails character={profile} showAbilities/></aside></div>
     </Modal>
   </div>;

@@ -66,6 +66,10 @@ form.story-composer textarea:focus-visible { outline: none; }
 .character-introduction .introduction-copy blockquote { border: 0; padding: 0; }
 .selection-heading > .section-kicker, .section-kicker { letter-spacing: .03em; }
 .interview-status { border-radius: 0; }
+.interview-hub .profile-card:not(.is-selected) { border-color: var(--border); }
+.interview-hub .profile-card:not(.is-selected):has(.status-completed) { border-color: var(--rose); }
+.interview-hub .profile-card:has(.status-completed) :is(.profile-card-label, .profile-number) { background: var(--pink-soft); }
+.interview-hub .profile-card .status-completed::before { content: '✓'; margin-right: .35em; }
 .recruitment-announcement-copy > .interview-status { padding-left: 0; background: none; border: 0; color: var(--accent); }
 .recruitment-result-screen { max-width: 1100px; }
 .formation-status.glass-panel { padding: 0; border: 0; background: none; color: var(--white); }
@@ -165,7 +169,28 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
   max-height: none; overflow-y: visible;
 }
 .profile-open-button { width: fit-content; align-self: flex-start; }
+.profiles-modal { max-height: calc(100svh - 24px); padding: var(--space-4); }
+.profiles-modal .selection-heading { margin-bottom: var(--space-3); }
+.profiles-modal .selection-heading h2 { margin: 0; font-size: clamp(22px, 3vw, 30px); }
+.profiles-modal .gallery-layout { gap: var(--space-3); }
+.profiles-modal .profile-card { height: clamp(135px, 39svh, 320px); }
+.profiles-modal .profile-card .photo-slot { height: calc(100% - 32px); min-height: 0; }
 .profiles-modal .profile-card .photo-slot > img { object-fit: contain; object-position: center; }
+.profiles-modal .profile-card .profile-card-label { min-height: 32px; padding: 4px; text-align: center; }
+.profiles-modal .profile-card-label strong { font-size: 16px; margin: 0; }
+.profiles-modal .profile-detail { min-height: 0; }
+.profiles-modal .profile-detail :is(h2, p, .character-keywords) { margin-block: 4px; }
+.profiles-modal .character-description { padding-top: 6px; line-height: 1.55; }
+.profiles-modal .profile-abilities { grid-template-columns: repeat(4, minmax(0, 1fr)); margin: var(--space-2) 0 0; }
+.profiles-modal .profile-abilities > div { padding-block: 4px; }
+.profiles-modal .profile-abilities dd { font-size: 16px; }
+.profiles-modal button.modal-footer-close { margin-top: var(--space-2); }
+
+@media (max-width: 950px) {
+  .profiles-modal .profile-card { height: clamp(92px, 18svh, 170px); }
+  .profiles-modal .profile-detail { padding-top: var(--space-2); }
+  .profiles-modal .profile-detail h2 { font-size: 20px; }
+}
 button.modal-footer-close { display: block; width: fit-content; min-width: 120px; margin: 24px 0 0 auto; background: var(--pink); }
 
 @media (min-width: 1001px) {

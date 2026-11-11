@@ -47,9 +47,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
         messages = ([OpeningMessage(character_id=character.id,name=character.name,text=f'안녕하세요. {character.name}입니다. 잘 부탁드립니다.')]
                     if is_interview(state.event_id) else [OpeningMessage(character_id=secretary.id,name=secretary.name,text=template['secretary'].format(**values))])
     if state.event_id == 'p2_m07':
-        summary = ('첫 예능의 반응은 좋았지만 신입을 겨냥한 악플이 이어집니다.'
+        summary = (f'첫 예능의 반응은 좋았지만 {character.name} 씨를 겨냥한 악플이 이어집니다.'
                    if state.completed_events.get(monthly.VARIETY) == 'success' else
-                   '첫 예능 이후 신입을 겨냥한 악플이 늘었습니다.')
+                   f'첫 예능 이후 {character.name} 씨를 겨냥한 악플이 늘었습니다.')
         template = {**template, 'narration': summary}
     if state.event_id == 'p2_m16':
         previous = state.completed_events.get('p2_m15')
@@ -63,9 +63,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
     if state.event_id == monthly.SHOWCASE:
         beats = [beat('narrator', '나레이션', '오늘은 데뷔 쇼케이스 당일이다. 조명이 켜지고 멤버들이 무대에 오른다.'),
                  beat(character.id, character.name, '소중한 이야기 들려줄게에……! (목소리가 갈라진다)'),
-                 beat('narrator', '나레이션', f'{character.name}는 당황해 다음 안무도 놓친다. 침울한 표정으로 무대를 이어간다.'),
+                 beat('narrator', '나레이션', f'{character.name} 씨는 당황해 다음 안무도 놓친다. 침울한 표정으로 무대를 이어간다.'),
                  beat('reporter', '기자', '지금 삑사리 난 거 아니야?'),
-                 beat('narrator', '나레이션', '객석이 술렁인다. 무대 앞 카메라가 일제히 신입을 향한다.'),
+                 beat('narrator', '나레이션', f'객석이 술렁인다. 무대 앞 카메라가 일제히 {character.name} 씨를 향한다.'),
                  beat('reporter', '기자', '(찰칵찰칵)'),
                  beat('narrator', '나레이션', '쇼케이스가 끝나고 멤버들이 무대에서 내려왔다.'), *messages]
     if state.event_id == monthly.VARIETY:

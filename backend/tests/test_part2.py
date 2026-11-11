@@ -512,7 +512,9 @@ def test_month_one_completion_stops_without_second_month(session, command, actio
     assert next(a for a in completed['event']['actions'] if a['id'] == 'confirm_month_plan')['used']
     closing = next(message['text'] for message in completed['history'][-1]['messages'] if message['speaker_id'] == 'secretary')
     assert closing.startswith('대표님, 첫 달 계획을 정리했습니다.')
-    assert 'success' not in closing and '처리를 확정' not in closing and '2개월차' not in closing
+    assert '준비되시면 2개월차 일정을 시작하겠습니다.' in closing
+    assert 'success' not in closing and '처리를 확정' not in closing
+    assert not any('2개월차로 이동하지' in fact for fact in completed['history'][-1]['facts'])
     assert send(client, game, command, action=action, key='month-one-final', stop=True) == completed
     assert client.get(f"/api/games/{game['game_id']}").json() == completed
     send(client, completed, '안녕', status=409, stop=True)

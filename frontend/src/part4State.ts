@@ -219,19 +219,19 @@ function decide(s: Part4Save) {
     choice=requireChoice(['renew','disband']);s.renew=choice==='renew';s.ending=part4Ending(s);s.phase='flash';s.records.push({month:24,name:'대표님',text:s.renew?'재계약 의향을 전했다.':'그룹 활동을 마무리할 의향을 전했다.',kind:'choice'});s.draft={};return;
   }
   else throw new Error('이번 달은 결정 단계가 아닙니다.');
-  const text = part4ResultText(s.month, outcome, s.route, choice, reasons);
+  const text = part4ResultText(s.month, outcome, s.route, choice, s.newcomer.name, reasons);
   apply(s,delta);s.results[s.month]=outcome;s.resultText=text;s.phase='result';s.cursor=0;s.draft={};
   const label=s.month===16?`${Number(choice.split('_')[0]).toLocaleString()}석 · ${Number(choice.split('_')[1]).toLocaleString()}원`:s.month===21?concertPackages.find(p=>p.id===choice)!.label:choiceLabels[choice]??choice;
   s.records.push({month:s.month,name:'대표님',text:label,kind:'choice'},{month:s.month,name:'나레이션',text,kind:'result'});
 }
-export function part4ResultText(month: number, outcome: Part4Outcome, route: Part4Save['route'], choice: string, reasons: string[] = []) {
-  if (month === 13) return outcome==='success'?'세 가지 기록이 서로 맞아떨어졌다. 공식 입장은 원치 않는 접근과 상담 사실을 차분하게 설명했고, 왜곡된 주장에 의문을 제기하는 목소리가 늘어났다. 신입은 혼자가 아니라는 안도감 속에서 다시 연습실로 돌아갔다.'
+export function part4ResultText(month: number, outcome: Part4Outcome, route: Part4Save['route'], choice: string, newcomerName: string, reasons: string[] = []) {
+  if (month === 13) return outcome==='success'?`세 가지 기록이 서로 맞아떨어졌다. 공식 입장은 원치 않는 접근과 상담 사실을 차분하게 설명했고, 왜곡된 주장에 의문을 제기하는 목소리가 늘어났다. ${newcomerName} 씨는 혼자가 아니라는 안도감 속에서 다시 연습실로 돌아갔다.`
       :outcome==='partial'?'확보한 기록으로 교제 의혹에는 선을 그었지만, 남은 의혹까지 완전히 해소하지는 못했다. 여론에는 여전히 의문이 남았다. 팀은 활동을 이어가되 잃어버린 신뢰를 천천히 회복하기로 했다.'
-      :'충분한 사실 확인 없이 내놓은 입장은 오히려 의혹을 굳혔다. 이어지는 비난 속에서 신입은 더는 무대에 설 수 없다고 말했다. 멤버들과 회사가 대화를 나눴지만, 결국 탈퇴를 받아들이기로 했다.';
+      :`충분한 사실 확인 없이 내놓은 입장은 오히려 의혹을 굳혔다. 이어지는 비난 속에서 ${newcomerName} 씨는 더는 무대에 설 수 없다고 말했다. 멤버들과 회사가 대화를 나눴지만, 결국 탈퇴를 받아들이기로 했다.`;
   if (month === 14) return '카메라 앞의 약속은 꾸준한 실천으로 이어졌다. 멤버들의 진심이 담긴 콘텐츠가 조금씩 공유되며 차가웠던 반응도 누그러졌다. 광고 계약을 마친 팀은 다시 다음 활동을 준비할 여유를 얻었다.';
   if (month === 15) return outcome==='neutral'?'멤버들은 익숙한 제작진과 자체 콘텐츠를 이어갔다. 큰 변화는 없었지만, 팬들과 나누는 작은 일상은 계속되었다.':outcome==='success'?'멤버들의 자연스러운 호흡과 서로 다른 매력이 방송을 채웠다. 매주 프로뮤를 기다리는 시청자가 늘었고, 무대 영상까지 찾아보는 새로운 팬들이 생겼다.':'낯선 방송 환경에서 대화가 자꾸 엇갈렸다. 분량은 기대보다 적었고, 어색한 장면이 화제가 되면서 팀의 이미지에도 아쉬움이 남았다.';
   if (month === 16) return outcome==='success'?'객석을 채운 팬들의 응원 속에 팬미팅이 성공적으로 끝났다. 멤버들은 가까이서 만난 팬들의 표정과 목소리를 오래 기억하겠다고 약속했다.':'멤버들은 마지막까지 최선을 다해 팬미팅을 마쳤다. 다만 좌석과 가격에 비해 실제 수요가 부족했고, 빈자리를 메우지 못한 비용이 자금 손실로 남았다.';
-  if (month === 17) return outcome==='success'?'일정을 다시 정리하자 멤버들에게 오랜만에 빈 하루가 생겼다. 충분히 잠을 자고 목과 몸을 돌본 멤버들은, 서로의 상태를 살피며 연습실로 돌아왔다.':'달력의 빈칸은 끝내 생기지 않았다. 병원에 들렀다가 곧바로 촬영장으로 향하는 날도 있었고, 목 상태가 나빠진 신입의 음정 실수도 잦아졌다. 지친 얼굴을 감추기 어려워졌다.';
+  if (month === 17) return outcome==='success'?'일정을 다시 정리하자 멤버들에게 오랜만에 빈 하루가 생겼다. 충분히 잠을 자고 목과 몸을 돌본 멤버들은, 서로의 상태를 살피며 연습실로 돌아왔다.':`달력의 빈칸은 끝내 생기지 않았다. 병원에 들렀다가 곧바로 촬영장으로 향하는 날도 있었고, 목 상태가 나빠진 ${newcomerName} 씨의 음정 실수도 잦아졌다. 지친 얼굴을 감추기 어려워졌다.`;
   if (month === 18) return choice==='accept'?'계약서에 서명을 마쳤다. 일본에서의 방송 두 차례와 현지어 곡, 공동 쇼케이스를 준비하는 일정이 달력에 새로 적혔다. 기대와 긴장이 함께 찾아왔다.':'이번 제안은 정중히 거절했다. 멤버들은 익숙한 언어와 무대에서 국내 팬들과 더 자주 만나기로 했다. 더 가까운 곳에도 아직 전하지 못한 고마움이 많았다.';
   if (month === 19 && route === 'overseas') return '각자의 걱정과 자신 있는 부분을 나누자 준비의 방향도 분명해졌다. 멤버들은 선택한 콘셉트로 곡을 맞추고, 팬들에게 전할 인사를 되뇌며 현지 무대를 준비했다. 이번 달은 별도의 성패 없이 준비를 마쳤다.';
   if (month === 19) return outcome==='success'?'카페에 놓인 사진과 손편지를 바라보던 도하가 한동안 말을 잇지 못했다. 함께 방문한 멤버들은 팬들에게 고맙다는 인사를 전했다. 이동으로 몸은 조금 지쳤지만, 서로를 바라보는 마음은 더 따뜻해졌다.':'멤버들은 방문 대신 휴식을 택했다. 몸은 한결 가벼워졌지만, 직접 만나기를 기대했던 팬들 사이에는 아쉬움이 남았다. 카페에서 전하고 싶었던 인사는 다음 기회로 미뤄졌다.';

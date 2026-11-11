@@ -37,6 +37,9 @@
     flex: 1 0 var(--dialogue-portrait-height);
     min-width: min(100%, var(--dialogue-portrait-height)); max-width: 100%;
   }
+  #root :is(.candidate-interview, .month-photo-stage, .server-monthly-stage) > :is(.interview-portrait, .monthly-portrait):has(> .dialogue-photo) {
+    flex-grow: 0;
+  }
   #root :is(.candidate-interview, .month-photo-stage) > .interview-dock,
   #root :is(.monthly-stage:has(.dialogue-photo) > .monthly-dock, .monthly-intro:has(.dialogue-photo) > .monthly-intro-copy, .character-introduction > .introduction-copy) {
     flex: 1 0 340px; min-width: min(100%, 340px); max-width: 100%; width: auto; align-self: center; margin: 0;
