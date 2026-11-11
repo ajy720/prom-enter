@@ -25,3 +25,17 @@ test('동작 줄이기 설정은 첫 사진만 표시한다', async ({ page }) =
   await expect(page.locator('.title-photo-stack img')).toHaveJSProperty('complete', true);
   await expect(page.locator('.title-photo-stack img')).toHaveClass('is-active');
 });
+
+test('시작 사진은 마지막 컷에서 멈춘다', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.clock.install();
+  await page.goto('/');
+  const photos = page.locator('.title-photo-stack img');
+  await expect(photos).toHaveCount(3);
+  await photos.evaluateAll(images => Promise.all(images.map(image => (image as HTMLImageElement).decode())));
+  await expect(photos.nth(1)).toHaveClass(/is-active/, { timeout: 10000 });
+  await expect(photos.nth(2)).toHaveClass(/is-active/, { timeout: 10000 });
+  await page.clock.runFor(10000);
+  await expect(photos.nth(2)).toHaveClass('is-active');
+  await expect(page.getByRole('button', { name: /사진 전환/ })).toHaveCount(0);
+});
