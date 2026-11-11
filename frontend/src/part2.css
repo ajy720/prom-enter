@@ -188,34 +188,6 @@
   }
 }
 
-/* A close secretary crop is reserved for dialogue below the portrait.
-   Side-by-side scenes keep the original hip-length scale. */
-:is(.part-one-photos, .month-one-photos, .month-two-photos) .photo-slot > img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"]) {
-  height: var(--secretary-crop-height, 117%); bottom: var(--secretary-crop-bottom, 0); width: auto; max-width: none;
-}
-.prologue-scene.part-one-photos,
-.recruitment-briefing.part-one-photos { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
-.prologue-scene.part-one-photos.intro-scene > .secretary-photo,
-.recruitment-briefing.part-one-photos.intro-scene > .secretary-photo { width: min(680px, 100%); }
-@media (max-width: 1000px) {
-  .candidate-interview.part-one-photos,
-  .month-one-photos.month-photo-stage { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
-  .prologue-scene.part-one-photos.intro-scene > .secretary-photo,
-  .recruitment-briefing.part-one-photos.intro-scene > .secretary-photo,
-  .candidate-interview.interview-room.interview-refined.part-one-photos > .interview-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])),
-  .month-one-photos.month-photo-stage.interview-room:has(> .scene-resource-status) > .interview-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) { width: min(340px, 100%); height: 300px; aspect-ratio: auto; }
-}
-@media (max-width: 900px) {
-  .monthly-stage.month-two-photos { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
-  .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) { width: min(340px, 100%); }
-  .month-two-photos .monthly-portrait:has(img:is([src$="/hayeon/half-body-transparent.png"], [src*="/hayeon/expression-"])) .photo-slot { height: var(--secretary-portrait-height, 300px); aspect-ratio: auto; }
-}
-@media (max-width: 700px) {
-  .monthly-intro:is(.month-one-photos, .month-two-photos) { --secretary-crop-height: 200%; --secretary-crop-bottom: -64%; }
-  .monthly-intro:is(.month-one-photos, .month-two-photos) > .monthly-intro-portrait { width: min(340px, 100%); }
-  .monthly-intro:is(.month-one-photos, .month-two-photos) .monthly-intro-portrait .photo-slot { height: 300px; aspect-ratio: auto; }
-}
-
 /* Keep the full contract history available without pushing dialogue below 24 rows. */
 .monthly-progress { max-height: 240px; overflow-y: auto; scrollbar-gutter: stable; }
 .monthly-briefing h2 { font-size: 15px; }

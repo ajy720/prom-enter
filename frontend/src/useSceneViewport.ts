@@ -1,7 +1,7 @@
 import { useCallback, useLayoutEffect, useState } from 'react';
 
-// Fit only scenes whose real content fits. Input and overflowing scenes retain
-// their natural page layout, rather than gaining nested scroll areas.
+// Fit only scenes whose real content fits, including input scenes. Overflowing
+// scenes retain their natural page layout rather than nested scroll areas.
 export function useSceneViewport() {
   const [root, setRoot] = useState<HTMLElement | null>(null);
   const ref = useCallback((element: HTMLElement | null) => setRoot(element), []);
@@ -11,7 +11,7 @@ export function useSceneViewport() {
     let disposed = false;
     const measure = () => {
       if (disposed) return;
-      if (window.innerWidth < 1001 || root.querySelector('.nickname-form, form.story-composer')) {
+      if (window.innerWidth < 1001) {
         root.classList.remove('scene-fit');
         return;
       }
@@ -19,13 +19,15 @@ export function useSceneViewport() {
       const scene = Array.from(root.children).find(element => element.tagName === 'SECTION');
       if (!scene) { root.classList.remove('scene-fit'); return; }
       const top = root.querySelector('.intro-topbar')?.getBoundingClientRect().bottom ?? 0;
-      const candidates = scene.querySelectorAll<HTMLElement>('.dialogue-box, .dialogue-content, .introduction-copy, .profile-detail, .interview-info, .formation-status, .interview-dock, .month-finished, .interview-hub-footer, button');
+      const candidates = scene.querySelectorAll<HTMLElement>('.dialogue-photo, .dialogue-box, .dialogue-content, .introduction-copy, .profile-detail, .interview-info, .formation-status, .interview-dock, .month-finished, .interview-hub-footer, button');
       const overflow = root.scrollHeight > root.clientHeight + 1 || Array.from(candidates).some(element => {
         if (element.closest('dialog') || !element.getClientRects().length) return false;
         const rect = element.getBoundingClientRect();
         const style = getComputedStyle(element);
         return rect.bottom > window.innerHeight + 1 || rect.top < top - 1
-          || (['auto', 'scroll', 'hidden'].includes(style.overflowY) && element.scrollHeight > element.clientHeight + 1);
+          // Cutout image boxes include transparent pixels outside the frame.
+          // Their visible alpha bounds are fitted by PhotoSlot, not scrollHeight.
+          || (!element.classList.contains('dialogue-photo') && ['auto', 'scroll', 'hidden'].includes(style.overflowY) && element.scrollHeight > element.clientHeight + 1);
       });
       root.classList.toggle('scene-fit', !overflow);
     };

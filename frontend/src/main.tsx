@@ -6,6 +6,7 @@ import './style.css';
 import './design-system.css';
 import './part2.css';
 import './part4.css';
+import './portraits.css';
 
 const params = new URLSearchParams(location.search);
 const Root = params.get('part4Demo') === '1' ? React.lazy(() => import('./PartFour'))
