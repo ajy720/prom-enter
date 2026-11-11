@@ -14,6 +14,23 @@ ALBUM_MINIMUMS = {'national': (30, 30), 'global': (25, 40), 'music': (50, 20)}
 INTRO_LAST = {7: 1, 8: 1, 9: 3, 10: 1, 11: 2, 23: 7}
 MEMBERS = ('dahyun', 'haram', 'yuna')
 
+# The selected newcomer can share this firsthand account during the private
+# interview (storyline/03-rumor-investigation.md). Clues are acquired separately.
+RUMOR_INTERVIEW_ACCOUNT = {
+    'rumor_photo': (
+        '그건 중학교 때 하굣길에 찍힌 사진이에요. 강태오 선배가 제 뒤를 따라왔고, '
+        '저는 고개를 숙이고 거리를 두고 걸었어요.'
+    ),
+    'rumor_relationship': (
+        '태오 선배와 사귄 적 없어요. 제가 여러 번 거절했는데도 계속 따라와서 '
+        '한동안 등하굣길과 학원 시간도 바꿨어요.'
+    ),
+    'rumor_leads': (
+        '그때 제 SNS에서 태오 선배를 차단했어요. 친구 하나에게 힘들다고 털어놓았고, '
+        '담임 선생님께도 도움을 요청했어요.'
+    ),
+}
+
 
 def require(condition, message='현재 장면에서는 이 동작을 할 수 없습니다.'):
     if not condition:

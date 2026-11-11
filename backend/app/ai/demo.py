@@ -283,6 +283,17 @@ class DemoProvider:
 
     def generate(self, text, actor, direction, facts, clarification):
         profile = actor['character']
+        scene = actor['scene']
+        if 'rumor_photo' in scene and not clarification:
+            if re.search(r'사진|하굣길|하교', text):
+                body = f"{scene['rumor_photo']} {scene['rumor_relationship']}"
+            elif re.search(r'사귀|사귄|교제|열애|거절', text):
+                body = scene['rumor_relationship']
+            elif re.search(r'기록|증거|단서|차단|하나|담임|상담', text):
+                body = scene['rumor_leads']
+            else:
+                body = f"{scene['rumor_relationship']} {scene['rumor_leads']}"
+            return Dialogue(messages=[Message(speaker_id='newcomer', text=body, emotion=direction.emotion)])
         if clarification:
             body=actor.get('clarification_question') or '어떤 행동을 원하시는지 한 번 더 알려주실 수 있을까요?'
         elif actor.get('input_kind') == 'negation':
