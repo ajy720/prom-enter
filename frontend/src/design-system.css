@@ -134,7 +134,8 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
   .profile-detail.glass-panel { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--border); }
 }
 @media (max-width: 600px) {
-  .selection-screen { padding: var(--space-5) var(--space-4); }
+  .selection-screen { padding: var(--space-5) var(--mobile-scene-gutter); }
+  form.story-composer textarea { scroll-margin-block: var(--mobile-scene-gutter); }
   .profile-card .profile-card-label { padding: var(--space-3) 0; }
   .dialogue-box, :is(.intro-dialogue-dock, .dialogue-dock, .interview-dock) .dialogue-box { padding: 0 var(--space-4); }
   .interview-refined .dialogue-box, .month-photo-stage .dialogue-box { padding: 0; }

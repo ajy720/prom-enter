@@ -1,5 +1,5 @@
 /* Monthly play extends the approved white/pink dialogue and operation controls. */
-.monthly-intro.narration-scene { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: clamp(32px, 8vh, 96px); min-height: calc(100dvh - 72px); padding: clamp(24px, 5vw, 72px); box-sizing: border-box; background-size: cover; background-position: center; }
+.monthly-intro.narration-scene { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; align-content: center; gap: clamp(32px, 8vh, 96px); min-height: calc(var(--scene-viewport-height) - 72px); padding: clamp(24px, 5vw, 72px); box-sizing: border-box; background-size: cover; background-position: center; }
 .narration-scene > header, .monthly-intro.narration-scene .monthly-intro-copy { width: min(100%, 1000px); max-width: 1000px; margin: 0 auto; padding: 0; }
 .narration-scene > header { color: white; text-shadow: 0 1px 3px rgb(0 0 0 / 75%); }
 .narration-scene > header .section-kicker { color: white; }
@@ -75,7 +75,7 @@
 @media (max-width: 480px) {
   :is(.month-one-photos, .month-two-photos) .monthly-portrait { margin-bottom: calc(-1 * (var(--space-4) + var(--space-5))); }
 }
-.monthly-intro { min-height: calc(100dvh - 72px); padding: var(--space-6); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-5); align-content: center; background-size: cover; background-position: center; }
+.monthly-intro { min-height: calc(var(--scene-viewport-height) - 72px); padding: var(--space-6); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: var(--space-5); align-content: center; background-size: cover; background-position: center; }
 .monthly-intro > header { grid-column: 1 / -1; width: min(100%, 1000px); margin: 0 auto; }
 .monthly-intro h1 { font-size: clamp(26px, 3vw, 38px); margin: var(--space-3) 0; }
 .monthly-intro-copy { min-width: 0; align-self: center; width: 100%; max-width: 680px; }
@@ -92,7 +92,7 @@
   .monthly-intro-portrait .photo-slot { height: 260px; min-height: 0; }
   .monthly-intro.is-narration .monthly-intro-copy { padding-block: var(--space-6); }
 }
-.monthly-stage { min-height: calc(100dvh - 65px); display: grid; grid-template-columns: 220px minmax(180px, .85fr) minmax(360px, 1.3fr); gap: var(--space-6); padding: var(--space-6); background-size: cover; background-position: center; color: var(--ink); }
+.monthly-stage { min-height: calc(var(--scene-viewport-height) - 65px); display: grid; grid-template-columns: 220px minmax(180px, .85fr) minmax(360px, 1.3fr); gap: var(--space-6); padding: var(--space-6); background-size: cover; background-position: center; color: var(--ink); }
 .monthly-heading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); }
 .monthly-heading h1 { margin: var(--space-2) 0 0; font-size: clamp(25px, 2.6vw, 38px); letter-spacing: -.04em; }
 .monthly-heading .section-kicker { margin: 0; }
