@@ -67,7 +67,7 @@
      starts at the crop edge so no raw PNG boundary can show in the background. */
   #root .portrait-stacked:has(.dialogue-photo) { row-gap: 0; }
   #root .portrait-stacked > :is(.secretary-photo, .interview-portrait, .monthly-portrait, .monthly-intro-portrait):has(> .dialogue-photo) {
-    position: relative; top: auto; height: calc(var(--dialogue-portrait-height) * .6);
+    position: relative; top: auto; align-self: end; height: calc(var(--dialogue-portrait-height) * .6);
     min-height: calc(var(--dialogue-portrait-height) * .6); margin-bottom: 0; display: block;
   }
   #root .portrait-stacked .dialogue-photo {

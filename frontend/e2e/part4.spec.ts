@@ -12,7 +12,7 @@ async function read(page:Page) {
   for(let i=0;i<12;i++) {
     const s=await state(page);
     if(s.phase!=='intro')break;
-    if(s.month===23&&s.cursor===0)await expect(page.locator('.narration-scene')).toHaveCSS('background-image',/stage\.png/);
+    if(s.month===23&&s.cursor===0)await expect(page.locator('.narration-scene')).toHaveCSS('background-image',/stage\.webp/);
     if(s.month===23&&s.cursor===3)await expect(page.locator('.dialogue-header h2')).toHaveText(s.newcomer.name);
     await page.locator('.part-four .primary-button').filter({hasText:/^(다음|멤버 면담 시작|백하연과 대화하기|선택하기|24개월차로)/}).click();
   }
@@ -35,7 +35,7 @@ async function checkLayout(page:Page) {
 }
 for(const route of ['domestic','overseas'] as const)test(`Part 4 ${route} 13→24개월 전체 선택·복원·결말`,async({page},info)=>{
   await seed(page);await page.getByRole('radio',{name:/국민 그룹/}).check();await page.getByRole('button',{name:'목표 확정 · 13개월차 시작 →'}).click();
-  await page.getByRole('button',{name:'게시물 확인 →'}).click();await expect(page.getByAltText('이도 과거 논란 게시물')).toHaveAttribute('src','/images/characters/ido/past-rumor.png');
+  await page.getByRole('button',{name:'게시물 확인 →'}).click();await expect(page.getByAltText('이도 과거 논란 게시물')).toHaveAttribute('src','/images/characters/ido/past-rumor.webp');
   await page.getByRole('button',{name:'백하연의 보고 듣기 →'}).click();await page.getByRole('button',{name:'여론 보기 →'}).click();await expect(page.getByAltText('이도 논란에 달린 댓글')).toBeVisible();await page.getByRole('button',{name:'신입과 면담하기 →'}).click();
   await expect(page.locator('.scene-resource-status')).toHaveCount(0);await expect(page.getByRole('button',{name:'면담 마무리 →'})).toBeDisabled();
   await chat(page,'확인할 수 있는 기록이 남아 있을까?');await checkLayout(page);await page.screenshot({path:info.outputPath('13-interview.png'),fullPage:true});
@@ -64,7 +64,7 @@ test('13개월 단서 없이 결정하면 14개월 대신 탈퇴 엔딩',async({
   const s=createPart4(undefined,'national');await seed(page,{...s,phase:'decision'});await page.getByRole('button',{name:/^조사 결과를 바탕으로 신입 보호/}).click();await confirm(page);await page.getByRole('button',{name:'탈퇴 이후의 이야기 →'}).click();await expect(page.getByRole('heading',{name:'끝내 지키지 못한 자리'})).toBeVisible();expect((await state(page)).month).toBe(13);
 });
 for(const [id,name,folder] of [['seoyeon','여울','yeoul'],['jiwoo','사야','saya']])test(`${name} 글·댓글 사진과 면담 화자 연결`,async({page})=>{
-  await seed(page,{...createPart4(undefined,'national'),newcomer:{id,name},target:id,phase:'post'});await expect(page.getByAltText(`${name} 과거 논란 게시물`)).toHaveAttribute('src',`/images/characters/${folder}/past-rumor.png`);await page.getByRole('button',{name:'백하연의 보고 듣기 →'}).click();await page.getByRole('button',{name:'여론 보기 →'}).click();await expect(page.getByAltText(`${name} 논란에 달린 댓글`)).toHaveAttribute('src',`/images/characters/${folder}/rumor-comments.png`);await page.getByRole('button',{name:'신입과 면담하기 →'}).click();await expect(page.locator('.dialogue-header h2')).toHaveText(name);
+  await seed(page,{...createPart4(undefined,'national'),newcomer:{id,name},target:id,phase:'post'});await expect(page.getByAltText(`${name} 과거 논란 게시물`)).toHaveAttribute('src',`/images/characters/${folder}/past-rumor.webp`);await page.getByRole('button',{name:'백하연의 보고 듣기 →'}).click();await page.getByRole('button',{name:'여론 보기 →'}).click();await expect(page.getByAltText(`${name} 논란에 달린 댓글`)).toHaveAttribute('src',`/images/characters/${folder}/rumor-comments.webp`);await page.getByRole('button',{name:'신입과 면담하기 →'}).click();await expect(page.locator('.dialogue-header h2')).toHaveText(name);
 });
 test('저장 실패·다른 화면 충돌·손상 저장에서 진행과 원본 보존',async({page})=>{
   await seed(page,{...createPart4(undefined,'national'),phase:'interviews'});await page.locator('#part4-chat').fill('저장 오류 후에도 남아야 하는 입력');

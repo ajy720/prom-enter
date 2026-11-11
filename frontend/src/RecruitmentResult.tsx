@@ -9,12 +9,12 @@ import { debutMembers, characterPortraits, sceneBackgrounds, type IntroCharacter
 
 // The recruitment announcement uses original half-body photos and profile 2.
 const recruitmentPhotos: Record<string, string> = {
-  seoyeon: '/images/characters/yeoul/half-body.png',
-  hyerin: '/images/characters/ido/half-body.png',
-  jiwoo: '/images/characters/saya/half-body.png',
-  dahyun: '/images/characters/rian/profile-2.png',
-  haram: '/images/characters/doha/profile-2.png',
-  yuna: '/images/characters/sein/profile-2.png',
+  seoyeon: '/images/characters/yeoul/half-body.webp',
+  hyerin: '/images/characters/ido/half-body.webp',
+  jiwoo: '/images/characters/saya/half-body.webp',
+  dahyun: '/images/characters/rian/profile-2.webp',
+  haram: '/images/characters/doha/profile-2.webp',
+  yuna: '/images/characters/sein/profile-2.webp',
 };
 
 // Median edge colors sampled from the unmodified producer originals.

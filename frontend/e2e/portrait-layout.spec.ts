@@ -39,7 +39,7 @@ test('화면 보완: 나레이션 복원·세로 배치 가슴 아래 가림·�
     await expect.poll(async () => Math.abs((await photoLayout(page)).bottom - page.viewportSize()!.height)).toBeLessThan(1);
     const side = await photoLayout(page);
     await page.screenshot({ path: info.outputPath('side.png'), fullPage: true });
-    await page.setViewportSize({ width: 1200, height: 1000 });
+    await page.setViewportSize({ width: 1001, height: 1000 });
     await expect.poll(async () => (await photoLayout(page)).stacked).toBe(true);
     const stacked = await photoLayout(page);
     expect(stacked.imageHeight).toBeCloseTo(side.imageHeight, 0);

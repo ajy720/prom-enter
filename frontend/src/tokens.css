@@ -39,4 +39,10 @@
   --speed-fast: 160ms;
   --stats-width: 232px;
   --dialogue-width: 1000px;
+  --mobile-scene-gutter: var(--space-4);
+  --scene-viewport-height: 100dvh;
+}
+
+@media (max-width: 1000px) {
+  :root { --scene-viewport-height: 100svh; }
 }

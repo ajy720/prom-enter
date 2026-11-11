@@ -6,7 +6,7 @@ import { PhotoSlot } from '../src/PhotoSlot';
 import { portraitFrames } from '../src/portraitFrames';
 
 // Exercise the real component and stylesheet cascade with every supplied pose.
-// Pixel bounds are measured independently from the PNG alpha channel in-browser.
+// Pixel bounds are measured independently from the WebP alpha channel in-browser.
 test('42종 대화 사진은 장면·화면 크기와 무관하게 잘림 없이 같은 높이를 유지한다', async ({ page }) => {
   const css = ['style.css', 'design-system.css', 'part2.css', 'part3.css', 'part4.css', 'portraits.css']
     .map(file => readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')).join('\n');

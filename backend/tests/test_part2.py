@@ -622,7 +622,7 @@ def test_old_monthly_openings_refresh_without_exposing_rules_or_rewriting_save(s
     refreshed = openings_for_view(state, [])
     assert refreshed[0].id == 'legacy-opening' and refreshed[0].after_turn_id == 'legacy-transition'
     assert '42' not in refreshed[0].model_dump_json() and '판정' not in refreshed[0].model_dump_json()
-    assert '면담 완료' in refreshed[0].messages[0].text
+    assert '이번 달 팀의 방향을 함께 정해주세요.' in refreshed[0].messages[0].text
     assert '센터를 선택' not in refreshed[0].messages[0].text
     assert state.model_dump_json() == before
     for event in EVENTS.values():

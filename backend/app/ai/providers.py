@@ -7,7 +7,7 @@ from app.ai.demo import DemoProvider
 from app.ai.validation import validate_analysis, validate_dialogue
 from app.models import Analysis, CenterAssessment, CenterChatInterpretation, Dialogue, Direction, StoryTextAssessment
 
-PROMPT_VERSION = 'part2-dialogue-6'
+PROMPT_VERSION = 'part2-dialogue-7'
 PROMPTS = Path(__file__).parent / 'prompts'
 ANALYSIS_PROMPT = (PROMPTS / 'analysis.txt').read_text()
 DIALOGUE_PROMPT = (PROMPTS / 'dialogue.txt').read_text()

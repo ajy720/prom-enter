@@ -2,6 +2,7 @@
 from uuid import uuid4
 
 import pytest
+from app.ai.profiles import profile_id
 from app.game.conversation import make_conversation
 from app.models import MonthlyStory, StoryTextAssessment
 from test_monthly_decisions import at_month, seed
@@ -176,6 +177,46 @@ def test_missing_goal_is_chosen_once_at_the_existing_part_four_gate(session):
     assert selected['monthly_story']['goal'] == 'music'
     assert selected['monthly_story']['phase'] == 'intro'
     command(client, selected, 'goal', goal='global', expected=422)
+
+
+@pytest.mark.parametrize('slot', ['a', 'b', 'c'])
+def test_rumor_interview_answers_about_the_post_without_acquiring_clues(session, slot):
+    client, provider, game = session
+    newcomer = profile_id(slot)
+
+    def setup(state):
+        state.character_id = slot
+        state.event_id = 'p2_m13'
+        state.monthly_story = MonthlyStory(month=13, phase='comments', target=newcomer, goal='music')
+        state.conversation = make_conversation(state)
+
+    game = command(client, seed(client, game, setup), 'next')['game']
+    stats = game['stats']
+    questions = [
+        ('사진에 담긴 상황을 직접 설명해줄래?', ('하굣길', '제 뒤를 따라왔고')),
+        ('실제로 사귀었어?', ('사귄 적 없어요', '거절')),
+        ('확인할 수 있는 기록이 남아 있을까?', ('차단', '친구 하나', '담임')),
+    ]
+    for question, details in questions:
+        result = command(client, game, 'chat', text=question)
+        message, = result['turn']['messages']
+        assert message['speaker_id'] == 'newcomer'
+        assert all(detail in message['text'] for detail in details)
+        view = provider.views[-1]
+        assert view.character.id == newcomer
+        assert view.audience_ids == ['player', newcomer]
+        assert '하굣길' in view.scene['rumor_photo']
+        assert '사귄 적 없어요' in view.scene['rumor_relationship']
+        assert view.known_evidence == []
+        game = result['game']
+        assert game['stats'] == stats
+        assert game['evidence'] == game['monthly_story']['evidence'] == []
+
+    game = command(client, game, 'finishInterviews')['game']
+    assert game['monthly_story']['evidence'] == []
+    game = command(client, game, 'investigate', id='sns')['game']
+    assert game['monthly_story']['evidence'] == ['sns']
+    assert [item['id'] for item in game['evidence']] == ['part2_sns_block']
 
 
 @pytest.mark.parametrize('evidence,outcome', [([], 'failure'), (['sns'], 'partial'),

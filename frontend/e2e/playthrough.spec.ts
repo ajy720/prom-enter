@@ -76,7 +76,7 @@ async function opening(page:Page) {
     if(await old.isVisible()) {
       if(['나레이션','기자'].includes((await old.locator('.dialogue-header h2').textContent()) ?? '')) {
         await expect(old.locator('.interview-info, .scene-resource-status')).toHaveCount(0);
-        if((await old.locator('.dialogue-header h2').textContent()) === '기자' || (await old.getByRole('log').textContent())?.includes('오늘은 데뷔 쇼케이스')) await expect(old).toHaveCSS('background-image', /stage\.png/);
+        if((await old.locator('.dialogue-header h2').textContent()) === '기자' || (await old.getByRole('log').textContent())?.includes('오늘은 데뷔 쇼케이스')) await expect(old).toHaveCSS('background-image', /stage\.webp/);
         expect(await old.locator('.dialogue-box').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe('rgb(255, 255, 255)');
         await shot(page,'narration-'+(await old.locator('header h1').textContent()));
       }
@@ -152,11 +152,11 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   await shot(page,'month-three-interviews');
   await serverAction(page,()=>page.getByRole('button',{name:'면담 완료',exact:true}).click());
   await opening(page);
-  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.webp/);
   await page.getByRole('button',{name:failure?'기사 대응 지시':'신입에게 직접 격려',exact:false}).click();
   await serverAction(page,()=>page.locator('dialog[open]').getByRole('button',{name:'대응 확정',exact:true}).click());
   await opening(page);
-  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.webp/);
   const discussion = await serverChat(page, '백하연과 대화', '홍보 예산 배분 확정');
   expect(discussion.event.id).toBe('p2_m05_promotion');
   expect(discussion.history.at(-1).analysis.action_id).toBe('talk');
@@ -230,13 +230,15 @@ test('후보 완료 색상·전송 후 포커스·프로필 배치', async ({pag
           await page.setViewportSize(viewport);
           for (const name of ['리안','도하','세인']) {
             await modal.locator('.profile-card').filter({hasText:name}).click();
-            await expect.poll(()=>modal.evaluate(e => e.scrollHeight <= e.clientHeight + 1)).toBe(true);
+            await expect(modal.locator('.profile-detail h2')).toContainText(name);
+            await expect(modal).toHaveCSS('overflow-y', 'auto');
           }
           await shot(page,`profiles-${viewport.width}`);
         }
         await page.setViewportSize({width:1440,height:1000});
       }
-      await shot(page,'profiles-fit');
+      await modal.getByRole('button',{name:'나가기',exact:true}).scrollIntoViewIfNeeded();
+      await shot(page,'profiles-scroll');
       await modal.getByRole('button',{name:'나가기',exact:true}).click();
       break;
     }
@@ -321,7 +323,7 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   await prologue(page); await cast(page, selected); await monthOne(page, selected); await monthTwo(page, selected);
   const id = await page.evaluate(() => localStorage.getItem('prom-story-game'));
   await sixMonths(page, selected);
-  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.webp/);
   const initial = await storyStep(page, '다음 →');
   await expect(page.getByRole('log')).toContainText('대표님, 상담할 게 있어서 왔어요');
   await storyStep(page, '면담 시작 →');
@@ -371,16 +373,16 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   expect(prepared.award_speech).toBe(speech);
   const awarded = await storyStep(page, '12개월차로 →');
   expect(awarded.stats.fans - prepared.stats.fans).toBe(awarded.monthly_story.award_expected ? 50_000 : 10_000);
-  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /stage\.png/);
+  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /stage\.webp/);
   await resume(page);
   await storyStep(page, '다음 →');
   if (awarded.monthly_story.award_expected) {
     await expect(page.getByRole('log')).toContainText(speech);
     for (let i = 0; i < 3; i++) await storyStep(page, '다음 →');
   }
-  await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /office\.webp/);
   await storyStep(page, '반기 결산 마치기 →');
-  await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /office\.webp/);
   await storyStep(page, '13개월차 · Part 4 시작 →');
   await storyStep(page, '게시물 확인 →');
   await expect(page.getByAltText(`${selected} 과거 논란 게시물`)).toBeVisible();

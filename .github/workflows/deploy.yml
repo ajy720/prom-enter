@@ -54,7 +54,14 @@ jobs:
           umask 077
           printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/prom-deploy-key"
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$RUNNER_TEMP/prom-known-hosts"
-          git archive --format=tar "$GITHUB_SHA" > "$RUNNER_TEMP/prom-source.tar"
+          # Keep PNG originals with WebP delivery copies in Git only.
+          original_images=()
+          while IFS= read -r -d '' image; do
+            if [[ "$image" == *.webp && -f "${image%.webp}.png" ]]; then
+              original_images+=(":(exclude,literal)${image%.webp}.png")
+            fi
+          done < <(git ls-tree -rz --name-only "$GITHUB_SHA" frontend/public/images)
+          git archive --format=tar "$GITHUB_SHA" . "${original_images[@]}" > "$RUNNER_TEMP/prom-source.tar"
           digest=$(sha256sum "$RUNNER_TEMP/prom-source.tar")
           ssh -i "$RUNNER_TEMP/prom-deploy-key" -p "$DEPLOY_PORT" \
             -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \

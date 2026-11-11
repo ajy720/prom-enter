@@ -4,9 +4,9 @@ import { part4Members, type Part4Save } from './part4State.ts';
 
 export type Part4Line = {speaker:string;name:string;text:string};
 export const part4SocialPhotos:Record<string,{post:string;comments:string}>={
-  hyerin:{post:'/images/characters/ido/past-rumor.png',comments:'/images/characters/ido/rumor-comments.png'},
-  seoyeon:{post:'/images/characters/yeoul/past-rumor.png',comments:'/images/characters/yeoul/rumor-comments.png'},
-  jiwoo:{post:'/images/characters/saya/past-rumor.png',comments:'/images/characters/saya/rumor-comments.png'},
+  hyerin:{post:'/images/characters/ido/past-rumor.webp',comments:'/images/characters/ido/rumor-comments.webp'},
+  seoyeon:{post:'/images/characters/yeoul/past-rumor.webp',comments:'/images/characters/yeoul/rumor-comments.webp'},
+  jiwoo:{post:'/images/characters/saya/past-rumor.webp',comments:'/images/characters/saya/rumor-comments.webp'},
 };
 export function part4Intro(s:Part4Save):Part4Line[] {
   const n=(text:string):Part4Line=>({speaker:'narrator',name:'나레이션',text:narrationText(text,s.newcomer.name)});

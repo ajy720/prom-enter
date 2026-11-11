@@ -31,7 +31,7 @@ export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { o
   return <section className="title-screen" aria-label="Prom::Enter 시작 화면">
     <TitleArtwork/>
     <div className="title-copy">
-    <header className="title-heading"><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
+    <header className="title-heading"><h1>Prom<span>::</span>Enter<span>.</span></h1>
       <p className="title-subtitle">다시 빛날 무대의 시작</p>
     </header>
     <div className="title-menu">
@@ -41,7 +41,6 @@ export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { o
         {onLegacy && <button className="quiet-button" disabled={busy} onClick={onLegacy}>이전 브라우저 데모 열기</button>}
         {localStorage.getItem(storyGameKey)&&localStorage.getItem(part4StorageKey(localStorage.getItem(storyGameKey)))&&<button className="quiet-button" disabled={busy} onClick={()=>location.assign('/?part4Demo=1&game='+encodeURIComponent(localStorage.getItem(storyGameKey)!))}>Part 4 데모 이어하기</button>}
       </div>
-      <p className="title-footnote">STORY DEMO</p>
     </div>
     </div>
   </section>;
@@ -49,42 +48,43 @@ export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { o
 
 function TitleArtwork() {
   const [frame, setFrame] = useState<{ active: number; previous: number | null }>({ active: 0, previous: null });
-  const [ready, setReady] = useState(false);
-  const [paused, setPaused] = useState(false);
+  const [firstLoaded, setFirstLoaded] = useState(false);
+  const [loaded, setLoaded] = useState<ReadonlySet<number>>(new Set());
   const [reducedMotion, setReducedMotion] = useState(true);
+  const ready = loaded.size === titlePhotos.length - 1;
+  const active = reducedMotion ? 0 : frame.active;
 
   useEffect(() => {
-    let cancelled = false;
-    // Decode every full-resolution image before starting the loop.
-    void Promise.all(titlePhotos.map(async src => {
-      const image = new Image();
-      image.src = src;
-      await image.decode();
-    })).then(() => { if (!cancelled) setReady(true); }).catch(() => {
-      // Retain the first photo if another outfit cannot be loaded.
-    });
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updatePreference = () => setReducedMotion(preference.matches);
+    const updatePreference = () => {
+      setReducedMotion(preference.matches);
+      if (preference.matches) setFrame({ active: 0, previous: null });
+    };
     updatePreference();
     preference.addEventListener('change', updatePreference);
-    return () => { cancelled = true; preference.removeEventListener('change', updatePreference); };
+    return () => preference.removeEventListener('change', updatePreference);
   }, []);
 
   useEffect(() => {
-    if (!ready || paused || reducedMotion) return;
-    const timer = window.setInterval(() => setFrame(current => ({ active: (current.active + 1) % titlePhotos.length, previous: current.active })), 4500);
-    return () => window.clearInterval(timer);
-  }, [ready, paused, reducedMotion]);
+    if (!ready || reducedMotion || frame.active === titlePhotos.length - 1) return;
+    const timer = window.setTimeout(() => setFrame({ active: frame.active + 1, previous: frame.active }), 4500);
+    return () => window.clearTimeout(timer);
+  }, [ready, reducedMotion, frame.active]);
 
   return <div className="title-art">
     <div className="title-photo-stack" role="img" aria-label="Prom::Enter의 여섯 연습생 단체 사진">
-      {titlePhotos.map((src, index) => <img key={src} src={src} alt="" aria-hidden="true" width={1536} height={1024}
-        loading="eager" decoding="async" className={index === frame.active ? `is-active${frame.previous !== null ? ' is-wiping' : ''}` : index === frame.previous ? 'is-previous' : ''}
+      {(firstLoaded && !reducedMotion ? titlePhotos : titlePhotos.slice(0, 1)).map((src, index) => <img key={src} src={src}
+        srcSet={`${src.replace('.webp', '-768.webp')} 768w, ${src} 1536w`} sizes="(max-width: 640px) 100vw, (max-width: 760px) 640px, 66vw"
+        alt="" aria-hidden="true" width={1536} height={1024} fetchPriority={index === 0 ? 'high' : 'low'} decoding="async"
+        onLoad={event => {
+          if (index === 0) setFirstLoaded(true);
+          else void event.currentTarget.decode().then(() => setLoaded(current => new Set(current).add(index))).catch(() => {});
+        }}
+        className={index === active ? `is-active${!reducedMotion && frame.previous !== null ? ' is-wiping' : ''}` : index === frame.previous ? 'is-previous' : ''}
         onAnimationEnd={event => {
           if (event.animationName === 'title-outfit-wipe') setFrame(current => current.active === index ? { ...current, previous: null } : current);
         }}/>) }
     </div>
-    {ready && !reducedMotion && <button className="title-motion-toggle quiet-button" aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? '사진 전환 재생' : '사진 전환 멈추기'}</button>}
   </div>;
 }
 

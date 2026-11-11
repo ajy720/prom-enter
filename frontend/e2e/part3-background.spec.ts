@@ -11,7 +11,7 @@ for (const newcomer of newcomers) for (const awarded of [true, false]) {
     await expect(page.locator('.monthly-progress')).toHaveCount(0);
     if (awarded) {
       await expect(page.locator('.dialogue-header h2')).toHaveText(save.newcomer.name);
-      await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /stage\.png/);
+      await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /stage\.webp/);
       await expect(page.getByRole('log')).toHaveText(save.speech);
       await expect(page.locator('.scene-resource-status')).toHaveCount(0);
       const awardPhoto=page.locator('.interview-portrait img');
@@ -32,13 +32,13 @@ for (const newcomer of newcomers) for (const awarded of [true, false]) {
       await page.screenshot({path:info.outputPath('award-speech-stage.png'),fullPage:true});
       await page.getByRole('button',{name:'다음 →',exact:true}).click();
       await page.getByRole('button',{name:'다음 →',exact:true}).click();
-      await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.png/);
+      await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.webp/);
       await expect(page.getByText('12개월차 · 대표실',{exact:true})).toBeVisible();
       await page.getByRole('button',{name:'다음 →',exact:true}).click();
     }
     const scene=page.locator('.part3-awards');
     await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
-    await expect(scene).toHaveCSS('background-image', /office\.png/);
+    await expect(scene).toHaveCSS('background-image', /office\.webp/);
     const portrait=scene.locator('.interview-portrait img');
     await expect(portrait).toBeVisible();
     await expect.poll(()=>portrait.evaluate(image=>(image as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
@@ -48,7 +48,7 @@ for (const newcomer of newcomers) for (const awarded of [true, false]) {
     await page.screenshot({path:info.outputPath('annual-report-office.png'),fullPage:true});
     await page.getByRole('button',{name:'반기 결산 마치기 →',exact:true}).click();
     await expect(page.getByRole('heading',{name:'우리의 첫해를 마치며'})).toBeVisible();
-    await expect(scene).toHaveCSS('background-image', /office\.png/);
+    await expect(scene).toHaveCSS('background-image', /office\.webp/);
     await expect(page.locator('.part3-completion button')).toHaveCount(1);
     await expect(page.locator('.part3-completion a')).toHaveCount(0);
     await page.screenshot({path:info.outputPath('part3-complete-office.png'),fullPage:true});

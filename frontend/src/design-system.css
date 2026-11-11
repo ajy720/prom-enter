@@ -64,18 +64,6 @@ form.story-composer textarea:focus-visible { outline: none; }
 }
 .interview-hub .profile-card.interview-completed .profile-number::before { content: '✓ '; }
 
-/* Fit the full artist file on normal desktop screens; small screens scroll. */
-@media (min-width: 1001px) and (min-height: 700px) {
-  .profiles-modal { padding: 24px 32px; max-height: calc(100dvh - 32px); }
-  .profiles-modal .selection-heading { margin-bottom: 16px; }
-  .profiles-modal .selection-heading :is(h2, p) { margin-block: 8px; }
-  .profiles-modal .gallery-layout { gap: 24px; align-items: start; }
-  .profiles-modal .profile-card { height: min(360px, calc(100dvh - 300px)); }
-  .profiles-modal .profile-detail { padding-top: 0; }
-  .profiles-modal .profile-detail :is(h2, p) { margin-block: 8px; }
-  .profiles-modal .profile-abilities { margin-top: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-  .profiles-modal button.modal-footer-close { margin-top: 16px; }
-}
 .profile-detail.glass-panel { padding: var(--space-3) 0 var(--space-3) var(--space-5); border: 0; border-left: 1px solid var(--border); border-radius: 0; background: none; }
 .character-keywords { gap: var(--space-3); }
 .character-keywords span { border: 0; border-radius: 0; padding: 0; color: var(--ink-muted); }
@@ -152,7 +140,8 @@ button.icon-button:hover:not(:disabled) { background: var(--surface-tint); color
   .profile-detail.glass-panel { padding: var(--space-5) 0 0; border-left: 0; border-top: 1px solid var(--border); }
 }
 @media (max-width: 600px) {
-  .selection-screen { padding: var(--space-5) var(--space-4); }
+  .selection-screen { padding: var(--space-5) var(--mobile-scene-gutter); }
+  form.story-composer textarea { scroll-margin-block: var(--mobile-scene-gutter); }
   .profile-card .profile-card-label { padding: var(--space-3) 0; }
   .dialogue-box, :is(.intro-dialogue-dock, .dialogue-dock, .interview-dock) .dialogue-box { padding: 0 var(--space-4); }
   .interview-refined .dialogue-box, .month-photo-stage .dialogue-box { padding: 0; }

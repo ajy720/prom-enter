@@ -375,6 +375,8 @@ class TurnService:
                                goal='현재 면담 주제 안에서 대표의 질문에 답한다. 활동을 확정하거나 수치를 바꾸지 않는다.')
             actor.event_opening = None
             view = scope_actor(actor, state, text, listeners[0], history)
+            if story.month == 13 and listeners == ['newcomer']:
+                view.scene.update(monthly_story.RUMOR_INTERVIEW_ACCOUNT)
             direction = character_direction(state, 'pending')
             dialogue = validate_dialogue(self.provider.generate(text, view, direction, facts, False), view)
             generation_calls = 1
