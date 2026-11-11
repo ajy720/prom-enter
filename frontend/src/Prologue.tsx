@@ -31,7 +31,7 @@ export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { o
   return <section className="title-screen" aria-label="Prom::Enter 시작 화면">
     <TitleArtwork/>
     <div className="title-copy">
-    <header className="title-heading"><h1>Prom<span>::</span><br/>Enter<span>.</span></h1>
+    <header className="title-heading"><h1>Prom<span>::</span>Enter<span>.</span></h1>
       <p className="title-subtitle">다시 빛날 무대의 시작</p>
     </header>
     <div className="title-menu">
@@ -41,7 +41,6 @@ export function TitleScreen({ onStart, onContinue, onLegacy, busy = false }: { o
         {onLegacy && <button className="quiet-button" disabled={busy} onClick={onLegacy}>이전 브라우저 데모 열기</button>}
         {localStorage.getItem(storyGameKey)&&localStorage.getItem(part4StorageKey(localStorage.getItem(storyGameKey)))&&<button className="quiet-button" disabled={busy} onClick={()=>location.assign('/?part4Demo=1&game='+encodeURIComponent(localStorage.getItem(storyGameKey)!))}>Part 4 데모 이어하기</button>}
       </div>
-      <p className="title-footnote">STORY DEMO</p>
     </div>
     </div>
   </section>;
@@ -51,24 +50,26 @@ function TitleArtwork() {
   const [frame, setFrame] = useState<{ active: number; previous: number | null }>({ active: 0, previous: null });
   const [firstLoaded, setFirstLoaded] = useState(false);
   const [loaded, setLoaded] = useState<ReadonlySet<number>>(new Set());
-  const [paused, setPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(true);
   const ready = loaded.size === titlePhotos.length - 1;
   const active = reducedMotion ? 0 : frame.active;
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updatePreference = () => setReducedMotion(preference.matches);
+    const updatePreference = () => {
+      setReducedMotion(preference.matches);
+      if (preference.matches) setFrame({ active: 0, previous: null });
+    };
     updatePreference();
     preference.addEventListener('change', updatePreference);
     return () => preference.removeEventListener('change', updatePreference);
   }, []);
 
   useEffect(() => {
-    if (!ready || paused || reducedMotion) return;
-    const timer = window.setInterval(() => setFrame(current => ({ active: (current.active + 1) % titlePhotos.length, previous: current.active })), 4500);
-    return () => window.clearInterval(timer);
-  }, [ready, paused, reducedMotion]);
+    if (!ready || reducedMotion || frame.active === titlePhotos.length - 1) return;
+    const timer = window.setTimeout(() => setFrame({ active: frame.active + 1, previous: frame.active }), 4500);
+    return () => window.clearTimeout(timer);
+  }, [ready, reducedMotion, frame.active]);
 
   return <div className="title-art">
     <div className="title-photo-stack" role="img" aria-label="Prom::Enter의 여섯 연습생 단체 사진">
@@ -84,7 +85,6 @@ function TitleArtwork() {
           if (event.animationName === 'title-outfit-wipe') setFrame(current => current.active === index ? { ...current, previous: null } : current);
         }}/>) }
     </div>
-    {ready && !reducedMotion && <button className="title-motion-toggle quiet-button" aria-pressed={paused} onClick={() => setPaused(value => !value)}>{paused ? '사진 전환 재생' : '사진 전환 멈추기'}</button>}
   </div>;
 }
 
