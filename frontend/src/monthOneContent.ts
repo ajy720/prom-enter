@@ -4,7 +4,6 @@ import type { MonthSpeaker } from './monthOneState';
 export const trainingOptions = [
   { id: 'vocal', label: '보컬', description: '호흡·발성과 라이브의 기초를 다집니다.' },
   { id: 'dance', label: '댄스', description: '안무 순서와 박자를 나누어 익힙니다.' },
-  { id: 'visual', label: '비주얼', description: '카메라 시선과 표정·무대 표현을 연습합니다.' },
   { id: 'variety', label: '예능', description: '자기소개와 말하기·자연스러운 반응을 연습합니다.' },
 ] as const;
 export const dormRules = [
