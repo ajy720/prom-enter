@@ -163,140 +163,196 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   expect(next.game_id).toBe(result.game_id);
   await resume(page);
 }
-async function laterOpening(page:Page) {
-  const result = page.getByRole('region',{name:'이번 달 결과',exact:true});
-  if (await result.isVisible()) await result.getByRole('button').click();
-  const intro = page.locator('.monthly-intro');
-  await intro.getByRole('button',{name:'다음 →',exact:true}).click();
-  await intro.getByRole('button',{name:'이야기 시작하기 →',exact:true}).click();
+async function storyStep(page: Page, name: string | RegExp) {
+  return serverAction(page, () => page.getByRole('button', {name, exact: typeof name === 'string'}).click());
 }
 
-async function monthlyDecision(page:Page, name:RegExp) {
-  await page.getByRole('button',{name:'이번 달 활동·결정 →',exact:true}).click();
-  const dialog = page.locator('dialog[open]');
-  await dialog.getByRole('button',{name}).click();
-  return serverAction(page,()=>dialog.getByRole('button',{name:'확정하기',exact:true}).click());
+async function storySelect(page: Page, name: string | RegExp) {
+  await page.getByRole('button', {name}).click();
 }
 
-async function monthlyInterview(page:Page, name:string, text?:string) {
-  const rooms = page.getByRole('navigation',{name:'이번 달 면담 상대'});
-  await serverAction(page,()=>rooms.getByRole('button',{name:new RegExp(`^${name} ·`)}).click());
-  return serverChat(page,'이번 달 대화',text);
+async function storyConfirm(page: Page, name: string, part4 = false) {
+  await storySelect(page, name);
+  return serverAction(page, () => page.locator('dialog[open]').getByRole('button',
+    {name: part4 ? '결정 확정' : '확정하기', exact: true}).click());
 }
 
-test('첫 화면부터 24개월 계약 결말까지 실제 서버와 같은 ID·URL로 진행', async ({page},info) => {
-  const selected=info.project.name==='mobile'?'여울':'사야';
-  let creations=0; const errors:string[]=[];
-  page.on('request',r=>{if(r.method()==='POST' && /\/api\/games$/.test(r.url())) creations++;});
-  page.on('pageerror',e=>errors.push(e.message));
-  expect((await (await page.request.get('/api/health')).json()).provider).toBe('demo');
-  await prologue(page); await cast(page,selected); await monthOne(page,selected); await monthTwo(page,selected);
-  const id=await page.evaluate(()=>localStorage.getItem('prom-story-game'));
-  await sixMonths(page,selected);
-  await laterOpening(page);
-  await expect(page.getByRole('button',{name:'이번 달 활동·결정 →',exact:true})).toBeDisabled();
-  const narrow = page.viewportSize()!.width <= 900;
-  if (narrow) {
-    const dock = (await page.locator('.monthly-dock').boundingBox())!;
-    const info = (await page.locator('.monthly-info').boundingBox())!;
-    expect(dock.y + dock.height).toBeLessThanOrEqual(info.y);
+async function storyRead(page: Page, last: string) {
+  await storyStep(page, '다음 →');
+  return storyStep(page, last);
+}
+
+async function storyInterviews(page: Page, selected: string) {
+  for (const name of [selected, '리안', '도하', '세인']) {
+    const target = page.getByRole('navigation', {name: '이번 달 면담 상대'}).getByRole('button', {name: new RegExp(`^${name}`)});
+    if (await target.getAttribute('aria-pressed') !== 'true') await serverAction(page, () => target.click());
+    await serverChat(page, '멤버 면담', '이번 활동에 대한 생각을 들려줘.');
   }
-  await shot(page,'month-seven');
-  const progress = page.getByRole('list', {name:'월별 진행'});
-  const currentMonth = progress.locator('[aria-current="step"]');
-  await expect(currentMonth).toContainText('7개월');
-  expect(await currentMonth.evaluate(row => {
-    const item = row.getBoundingClientRect();
-    const list = row.parentElement!.getBoundingClientRect();
-    return item.top >= list.top - 1 && item.bottom <= list.bottom + 1;
-  })).toBe(true);
-  await monthlyInterview(page,selected);
-  await monthlyDecision(page,/법적 대응 · 개인 SNS 중단/);
-  await laterOpening(page);
-  await monthlyDecision(page,/휴가 제공/);
-  await laterOpening(page);
-  await monthlyDecision(page,/전원 광고로 협상/);
-  await laterOpening(page);
-  for(const name of [selected,'리안','도하','세인']) await monthlyInterview(page,name);
-  await shot(page,'month-ten-interviews');
-  await monthlyDecision(page,/리안을 센터로/);
-  await laterOpening(page);
-  const speech='함께한 멤버와 팬 여러분 감사합니다.';
-  const beforeAwards = await serverChat(page, '이번 달 대화', `수상 소감 확정: ${speech}`);
-  expect(beforeAwards.event.month).toBe(12);
-  expect(beforeAwards.stats.fans).toBe(50_000);
-  expect(beforeAwards.stats.awareness).toBeGreaterThanOrEqual(40);
-  await laterOpening(page);
-  await monthlyDecision(page,/시상식 결과 확인/);
+  return storyStep(page, '면담 마무리 →');
+}
+
+test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서버 저장으로 진행', async ({page}, info) => {
+  const overseas = info.project.name === 'desktop';
+  const selected = overseas ? '사야' : '여울';
+  let creations = 0;
+  const errors: string[] = [];
+  page.on('request', r => { if (r.method() === 'POST' && /\/api\/games$/.test(r.url())) creations++; });
+  page.on('pageerror', e => errors.push(e.message));
+  await prologue(page); await cast(page, selected); await monthOne(page, selected); await monthTwo(page, selected);
+  const id = await page.evaluate(() => localStorage.getItem('prom-story-game'));
+  await sixMonths(page, selected);
+  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.png/);
+  const initial = await storyStep(page, '다음 →');
+  await expect(page.getByRole('log')).toContainText('대표님, 상담할 게 있어서 왔어요');
+  await storyStep(page, '면담 시작 →');
+  await expect(page.getByRole('combobox', {name: '대화 상대'})).toHaveCount(0);
+  await expect(page.getByRole('button', {name: '면담 마무리 →'})).toBeDisabled();
+  await expect(page.locator('.scene-resource-status')).toHaveCount(0);
+  const interviewed = await serverChat(page, '멤버 면담', '어떤 점이 걱정돼?');
+  expect(interviewed.stats).toEqual(initial.stats);
   await resume(page);
-  const awardsResult = page.getByRole('region',{name:'이번 달 결과',exact:true});
-  await expect(awardsResult).toContainText('신인상 트로피를 받았습니다');
-  await expect(awardsResult).toContainText(speech);
-  const topbarTitle = page.locator('.intro-topbar > span');
-  await expect(topbarTitle).toHaveText('첫해의 마지막 무대');
-  if (narrow) {
-    const result = (await awardsResult.boundingBox())!;
-    const portrait = (await page.locator('.monthly-portrait').boundingBox())!;
-    expect(result.y + result.height).toBeLessThanOrEqual(portrait.y);
-  }
-  await shot(page,'month-twelve-awards');
-  const awards=await (await page.request.get(`/api/games/${id}`)).json();
-  expect(awards.event.month).toBe(13);
-  expect(awards.award_speech).toBe(speech);
-  expect(awards.comeback_center_id).toBe('dahyun');
-  expect(awards.completed_events.p2_m12).toBe('success');
-  expect(awards.stats.fans).toBe(100_000);
-  await laterOpening(page);
-  await expect(topbarTitle).toHaveText('소문 너머의 목소리');
-  for (const action of [/SNS 기록 확인/, /친구 하나에게 연락/]) {
-    await monthlyDecision(page, action);
-  }
-  const investigation = await serverChat(page, '이번 달 대화', '학교 상담 기록을 확인해줘');
-  expect(investigation.history.at(-1).analysis.action_id).toBe('check_school');
-  await monthlyDecision(page, /조사 결과로 신입 보호/);
-  for (const action of [/팀 단위 계약/, /자체 콘텐츠에 집중/]) {
-    await laterOpening(page);
-    await monthlyDecision(page, action);
-  }
-  await laterOpening(page);
-  const unclear = await serverChat(page, '이번 달 대화', '팬미팅을 1천 석으로 진행해줘');
-  expect(unclear.history.at(-1).analysis.needs_clarification).toBe(true);
-  await serverChat(page, '이번 달 대화', '팬미팅은 1천 석, 4만 원으로 진행해줘');
-  await laterOpening(page);
-  await monthlyDecision(page, /겹치는 일정 거절/);
-  await laterOpening(page);
-  await serverChat(page, '이번 달 대화', '유통사 평판을 조사해줘');
-  await monthlyDecision(page, /쇼케이스 비용 분담 협상/);
-  await serverChat(page, '이번 달 대화', '현지 활동 준비를 확정해줘');
-  await laterOpening(page);
-  await monthlyDecision(page, /어학·안무·휴식 균형/);
-  await laterOpening(page);
-  await monthlyDecision(page, /루머 출처 확인/);
-  await serverAction(page, () => page.getByRole('combobox',{name:'대화 상대',exact:true}).selectOption('dahyun'));
-  await serverChat(page, '이번 달 대화', '현지 무대가 어땠는지 이야기해줘.');
-  await serverAction(page, () => page.getByRole('combobox',{name:'대화 상대',exact:true}).selectOption('baek_hayeon'));
-  const response = await serverChat(page, '이번 달 대화', '확인한 사실 중심으로 해명해줘');
-  expect(response.history.at(-1).analysis.action_id).toBe('respond_facts');
-  for (const action of [/3천 석/, /팀 색을 살린 타이틀/]) {
-    await laterOpening(page);
-    await monthlyDecision(page, action);
-  }
-  await laterOpening(page);
-  await serverChat(page, '이번 달 대화', '마지막 인사: 함께해 줘서 고마워요.');
-  await laterOpening(page);
-  await serverChat(page, '이번 달 대화', '계약 결말을 보여줘');
-  await expect(page.getByRole('region',{name:'계약 결말',exact:true})).toBeVisible();
+  await expect(page.getByRole('status')).toContainText('1/8회');
+  await shot(page, 'month-seven-interview');
+  await storyStep(page, '면담 마무리 →');
+  await storyStep(page, '대응 방향 선택 →');
+  await storySelect(page, /^증거 확보·법적 대응/);
+  await storySelect(page, '공식 입장 발표·개인 SNS 잠시 중단');
+  const result7 = await storyConfirm(page, '선택 확정 →');
+  expect(result7.monthly_story.phase).toBe('result');
+  expect(result7.stats.funds_won).toBe(initial.stats.funds_won - 20_000_000);
+
+  await storyStep(page, '8개월차로 →');
+  await storyRead(page, '선택하기 →');
+  await storySelect(page, '컨디션 관리 선택 →');
+  await storySelect(page, /^휴가 제공/);
+  await storyConfirm(page, '선택 확인 →');
+  await storyStep(page, '9개월차로 →');
+  for (let i = 0; i < 3; i++) await storyStep(page, '다음 →');
+  await storyStep(page, '선택하기 →');
+  await storySelect(page, '전원 광고로 협상');
+  await storyConfirm(page, '선택 확정 →');
+  await storyStep(page, '10개월차로 →');
+  await storyRead(page, '면담 시작 →');
+  await shot(page, 'month-ten-interviews');
+  await storyInterviews(page, selected);
+  await storyStep(page, '센터 선택 →');
+  await storySelect(page, '리안 센터 선택');
+  await storyConfirm(page, '선택 확정 →');
+  await storyStep(page, '11개월차로 →');
+  await storyStep(page, '다음 →');
+  await storyRead(page, '수상 소감 작성 →');
+  const speech = '함께한 멤버와 팬 여러분 감사합니다.';
+  await page.getByRole('textbox', {name: /수상 소감을 입력/}).fill(speech);
   await resume(page);
-  await expect(page.getByRole('region',{name:'계약 결말',exact:true})).toBeVisible();
-  const saved=await (await page.request.get(`/api/games/${id}`)).json();
+  await expect(page.getByRole('textbox', {name: /수상 소감을 입력/})).toHaveValue(speech);
+  const prepared = await storyConfirm(page, '수상 소감 확정 →');
+  expect(prepared.award_speech).toBe(speech);
+  const awarded = await storyStep(page, '12개월차로 →');
+  expect(awarded.stats.fans - prepared.stats.fans).toBe(awarded.monthly_story.award_expected ? 50_000 : 10_000);
+  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /stage\.png/);
+  await resume(page);
+  await storyStep(page, '다음 →');
+  if (awarded.monthly_story.award_expected) {
+    await expect(page.getByRole('log')).toContainText(speech);
+    for (let i = 0; i < 3; i++) await storyStep(page, '다음 →');
+  }
+  await storyStep(page, '반기 결산 마치기 →');
+  await storyStep(page, '13개월차 · Part 4 시작 →');
+  await storyStep(page, '게시물 확인 →');
+  await expect(page.getByAltText(`${selected} 과거 논란 게시물`)).toBeVisible();
+  await storyStep(page, '백하연의 보고 듣기 →');
+  await storyStep(page, '여론 보기 →');
+  await expect(page.getByAltText(`${selected} 논란에 달린 댓글`)).toBeVisible();
+  await storyStep(page, '신입과 면담하기 →');
+  await serverChat(page, '멤버 면담');
+  await storyStep(page, '면담 마무리 →');
+  for (const evidence of [/^SNS 기록 확인/, /^친구 하나에게 연락/, /^학교 상담 기록 확인/]) await storyStep(page, evidence);
+  await storyStep(page, '조사 마무리 · 대응 선택 →');
+  await storySelect(page, /^조사 결과를 바탕으로 신입 보호/);
+  await storyConfirm(page, '선택 확인 →', true);
+
+  const choices: [number, (string | RegExp)[]][] = [
+    [14, ['기부 프로젝트']], [15, [/^단체 예능 출연하기/]], [16, ['1,000석', '4만원']],
+    [17, [/^겹치는 일정 거절/]], [18, [overseas ? /^제안 수락/ : /^제안 거절/]],
+  ];
+  for (const [month, options] of choices) {
+    await storyStep(page, `${month}개월차로 →`);
+    await storyRead(page, '선택하기 →');
+    for (const option of options) await storySelect(page, option);
+    await storyConfirm(page, '선택 확인 →', true);
+  }
+  await storyStep(page, '19개월차로 →');
+  await storyRead(page, '멤버 면담 시작 →');
+  await storyInterviews(page, selected);
+  if (overseas) {
+    await storySelect(page, /^훈련 실시/);
+    await storySelect(page, /^현지 감성/);
+  } else await storySelect(page, '몇 곳을 선택해서 간다');
+  await storyConfirm(page, '선택 확인 →', true);
+  await storyStep(page, '20개월차로 →');
+  if (overseas) {
+    await storyRead(page, '백하연과 대화하기 →');
+    const label = '백하연과 루머 대응 대화';
+    await serverChat(page, label, '감정적 대응은 하지 말고 공식 자료로 해명하자.');
+    await serverChat(page, label, '팬을 비난하면 어떨까요?');
+    const guidance = await serverChat(page, label, '멤버들과 같이 이야기하고 싶어요.');
+    expect(guidance.monthly_story.guidance).toBe('calm');
+    await storyStep(page, '대화 마무리 · 대응 선택 →');
+    await storySelect(page, '팩트 해명');
+    await storyConfirm(page, '선택 확인 →', true);
+  } else {
+    await storyRead(page, '선택하기 →');
+    await storySelect(page, '대표곡');
+    await page.getByLabel('콘서트 홍보 멘트').fill('팬은 멍청해');
+    const checked = await storyStep(page, '선택 확인 →');
+    expect(checked.monthly_story.promotion_warning).toBe(true);
+    await expect(page.locator('dialog[open]')).toContainText('그대로 확정하면 실패합니다');
+    await storySelect(page, '다시 선택');
+    await page.getByLabel('콘서트 홍보 멘트').fill('첫 단독 콘서트에서 함께 만나요!');
+    await storyStep(page, '선택 확인 →');
+    await serverAction(page, () => page.locator('dialog[open]').getByRole('button', {name:'결정 확정', exact:true}).click());
+  }
+  await storyStep(page, '21개월차로 →');
+  await storyRead(page, '선택하기 →');
+  await storySelect(page, /^3천 석/);
+  await storyConfirm(page, '선택 확인 →', true);
+  await storyStep(page, '22개월차로 →');
+  const album = await storyRead(page, '선택하기 →');
+  await storySelect(page, '대중 친화 콘셉트');
+  await storySelect(page, '밝은 팝 타이틀');
+  const funds = album.stats.funds_won;
+  const portion = Math.ceil(funds * .3);
+  await page.getByLabel('제작 (원)').fill(String(portion));
+  await page.getByLabel('홍보 (원)').fill(String(portion));
+  await page.getByLabel('예비비 (원)').fill(String(funds - 2 * portion));
+  await expect(page.getByRole('status')).toContainText('남은 배분 가능 자금 0원');
+  await shot(page, 'month-twenty-two-album');
+  await storyConfirm(page, '선택 확인 →', true);
+  await storyStep(page, '23개월차로 →');
+  for (let i = 0; i < 7; i++) {
+    if (i >= 3) await expect(page.locator('.dialogue-header h2')).toHaveText([selected, '리안', '도하', '세인'][i - 3]);
+    await storyStep(page, '다음 →');
+  }
+  await storyStep(page, '24개월차로 →');
+  await storyRead(page, '선택하기 →');
+  await storySelect(page, '그룹 활동을 마무리하고 싶다');
+  const ending = await storyConfirm(page, '선택 확인 →', true);
+  expect(ending.monthly_story.phase).toBe('flash');
+  await expect(page.locator('.part3-completion')).toBeVisible();
+  await resume(page);
+  await expect(page.locator('.part3-completion')).toBeVisible();
+  const saved = await (await page.request.get(`/api/games/${id}`)).json();
   expect(saved.game_id).toBe(id);
   expect(saved.character.name).toBe(selected);
-  expect(saved.event.month).toBe(24);
-  expect(saved.farewell).toBe('함께해 줘서 고마워요.');
-  expect(saved.ending.id).toMatch(/^contract_/);
-  expect(await page.evaluate(id=>localStorage.getItem(`prom-playthrough-v2:${id}`),id)).toBeNull();
-  expect(creations).toBe(1); expect(new URL(page.url()).search).toBe(''); expect(errors).toEqual([]);
-  await shot(page,'contract-complete');
+  expect(saved.monthly_story.phase).toBe('ending');
+  expect(saved.monthly_story.renew).toBe(false);
+  expect(saved.monthly_story.goal).toBe('national');
+  expect(saved.completed_events.p2_m20).toBe('success');
+  expect(await page.evaluate(id => localStorage.getItem(`prom-playthrough-v2:${id}`), id)).toBeNull();
+  expect(creations).toBe(1);
+  expect(new URL(page.url()).search).toBe('');
+  expect(errors).toEqual([]);
+  await shot(page, 'contract-complete');
 });
 
 // Explicit test samples for branches not naturally reachable with unfinished 4/5-month rules.
@@ -389,7 +445,7 @@ test('로컬 저장 실패·재시도·다른 화면 충돌·손상된 저장을
   expect(await page.evaluate(()=>localStorage.getItem('prom-playthrough-v2:e2e_award'))).toBe('{broken');
 });
 
-test('서버 2~6개월 실패·B트랙 비용·7개월 면담 상한과 실패 후 진행',async({page})=>{
+test('서버 2~6개월 실패·B트랙 비용·7개월 면담 상한과 조기 엔딩',async({page})=>{
   await page.goto('/');
   let game=await (await page.request.post('/api/games',{data:{character_id:'a',scenario:'part2'}})).json();
   async function act(action_id:string) {
@@ -408,15 +464,20 @@ test('서버 2~6개월 실패·B트랙 비용·7개월 면담 상한과 실패 �
   await resume(page);
   await page.getByRole('button',{name:/3개월차 안내 보기/}).click();
   await page.getByRole('button',{name:/3개월차 시작하기/}).click();
-  await sixMonths(page,'이도',true);await laterOpening(page);
-  await expect(page.getByRole('button',{name:'이번 달 활동·결정 →',exact:true})).toBeDisabled();
-  await monthlyInterview(page,'이도','이야기를 들어줄게 0');
-  for(let i=1;i<8;i++) await serverChat(page,'이번 달 대화',`이야기를 들어줄게 ${i}`);
-  await expect(page.getByRole('textbox',{name:'이번 달 대화',exact:true})).toBeDisabled();
-  const stored=await monthlyDecision(page,/경과 관찰 · SNS 유지/);
-  for(const id of ['p2_m02_center','p2_m03_rehearsal','p2_m04_showcase','p2_m05_promotion','p2_m06_variety','p2_m07']) {
-    expect(stored.completed_events[id]).toBe('failure');
+  await sixMonths(page, '이도', true);
+  await storyRead(page, '면담 시작 →');
+  for (let i = 0; i < 8; i++) await serverChat(page, '멤버 면담', `이야기를 들어줄게 ${i}`);
+  await expect(page.getByRole('textbox', {name: '멤버 면담', exact: true})).toBeDisabled();
+  await storyStep(page, '면담 마무리 →');
+  await storyStep(page, '대응 방향 선택 →');
+  await storySelect(page, /^법적 대응 없이 경과 관찰/);
+  await storySelect(page, '개인 SNS 활동 유지');
+  const stored = await storyConfirm(page, '선택 확정 →');
+  for (const event of ['p2_m02_center', 'p2_m03_rehearsal', 'p2_m04_showcase', 'p2_m05_promotion', 'p2_m06_variety', 'p2_m07']) {
+    expect(stored.completed_events[event]).toBe('failure');
   }
-  expect(stored.event.id).toBe('p2_m08');
-  expect(stored.history.filter(turn=>turn.event_id==='p2_m07' && turn.input_type==='chat')).toHaveLength(8);
+  const ended = await storyStep(page, '이야기 마무리 →');
+  expect(ended.event.id).toBe('p2_m07');
+  expect(ended.monthly_story.ending).toBe('forgotten');
+  expect(ended.history.filter(turn => turn.event_id === 'p2_m07' && turn.input_type === 'chat')).toHaveLength(8);
 });

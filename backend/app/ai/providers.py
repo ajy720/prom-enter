@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from app.ai.contracts import AnalysisContext, DialogueContext
 from app.ai.demo import DemoProvider
 from app.ai.validation import validate_analysis, validate_dialogue
-from app.models import Analysis, CenterAssessment, CenterChatInterpretation, Dialogue, Direction
+from app.models import Analysis, CenterAssessment, CenterChatInterpretation, Dialogue, Direction, StoryTextAssessment
 
 PROMPT_VERSION = 'part2-dialogue-6'
 PROMPTS = Path(__file__).parent / 'prompts'
@@ -13,6 +13,8 @@ ANALYSIS_PROMPT = (PROMPTS / 'analysis.txt').read_text()
 DIALOGUE_PROMPT = (PROMPTS / 'dialogue.txt').read_text()
 CENTER_PROMPT = (PROMPTS / 'center_selection.txt').read_text(encoding='utf-8')
 CENTER_CHAT_PROMPT = (PROMPTS / 'center_choice_chat.txt').read_text(encoding='utf-8')
+
+STORY_TEXT_PROMPT = (PROMPTS / 'story_text.txt').read_text(encoding='utf-8')
 
 
 def _serialize(value):
@@ -65,6 +67,9 @@ class OpenAIProvider:
 
     def interpret_center_choice(self, context: dict) -> CenterChatInterpretation:
         return self._parse(CenterChatInterpretation, CENTER_CHAT_PROMPT, context)
+
+    def assess_story_text(self, kind, text):
+        return self._parse(StoryTextAssessment, STORY_TEXT_PROMPT, {'kind': kind, 'user_text': text})
 
     def generate(self, text: str, actor: DialogueContext, direction: Direction,
                  facts: list[str], clarification: bool) -> Dialogue:

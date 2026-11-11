@@ -25,14 +25,18 @@ export const careOptions = [
 export function part3Members(s: Part3Save) {
   return [s.newcomer, { id: 'dahyun', name: '리안' }, { id: 'haram', name: '도하' }, { id: 'yuna', name: '세인' }];
 }
+export function part3PreviousResults(completed: Record<string, string>, known?: Partial<Record<number, Outcome>>) {
+  const results: Part3Save['results'] = {};
+  for (let m = 2; m <= 6; m++) {
+    const value = known?.[m] ?? Object.entries(completed).find(([id]) => id.startsWith(`p2_m0${m}_`))?.[1];
+    results[m] = value === 'success' ? 'success' : ['failure', 'neutral'].includes(value ?? '') ? 'failure' : null;
+  }
+  return results;
+}
 export function createPart3(source?: { game: Game; results?: Partial<Record<number, Outcome>> }): Part3Save {
   const game = source?.game;
   if (game && game.event.month !== 6 && game.event.id !== 'p2_complete') throw new Error('6개월차를 마친 저장에서 이어주세요.');
-  const results: Part3Save['results'] = {};
-  for (let m = 2; m <= 6; m++) {
-    const value = source?.results?.[m] ?? Object.entries(game?.completed_events ?? {}).find(([id]) => id.startsWith(`p2_m0${m}_`))?.[1];
-    results[m] = value === 'success' ? 'success' : ['failure', 'neutral'].includes(value ?? '') ? 'failure' : null;
-  }
+  const results = part3PreviousResults(game?.completed_events ?? {}, source?.results);
   const s: Part3Save = { schema: 1, sourceId: game?.game_id ?? null, month: 7, phase: 'intro', cursor: 0,
     newcomer: { id: game?.character.profile_id ?? ({ a: 'hyerin', b: 'seoyeon', c: 'jiwoo' }[game?.character.id ?? ''] ?? game?.character.id ?? 'hyerin'), name: game?.character.name ?? '이도' },
     stats: structuredClone(game?.stats ?? { teamwork: 55, fatigue: 45, trust: 40, awareness: 25, fans: 25000, funds_won: 1_000_000_000 }),

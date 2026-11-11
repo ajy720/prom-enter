@@ -1,4 +1,4 @@
-// Browser-demo metadata, scoped to one game; never added to server requests.
+// The recruitment screen stores the goal by game ID until the monthly story starts.
 export const gameGoals = [
   { id: 'national', label: '국민 그룹', description: '누구나 함께 부를 수 있는 노래로 더 많은 사람에게 다가갑니다.' },
   { id: 'global', label: '글로벌 스타', description: '국경을 넘어 우리만의 무대를 더 넓은 세상에 전합니다.' },

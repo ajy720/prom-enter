@@ -170,45 +170,42 @@ function decide(s: Part4Save) {
   if(s.phase!=='decision' || s.results[s.month] || !s.goal) throw new Error('현재 결정을 확정할 수 없습니다.');
   const d=s.draft, v=s.stats;
   const requireChoice=(choices:string[])=>{if(!d.choice || !choices.includes(d.choice)) throw new Error('선택 항목을 확인해주세요.');return d.choice;};
-  let outcome:Part4Outcome='success', delta:Partial<Stats>={}, text='', choice='';
+  let outcome:Part4Outcome='success', delta:Partial<Stats>={}, choice='', reasons: string[] = [];
   if(s.month===13) {
     choice=requireChoice(['protect','apology']);outcome=choice==='apology'||!s.evidence.length?'failure':s.evidence.length===3?'success':'partial';
     if(outcome==='success') s.newcomerGrowth.vocal++;
     delta=outcome==='success'?{awareness:-2,fans:15000,teamwork:5,trust:5}:outcome==='partial'?{awareness:-8,fans:-10000,teamwork:-2}:{awareness:-15,fans:-50000,teamwork:-10,funds_won:-150000000,fatigue:20};
-    text=outcome==='success'?'세 가지 기록이 서로 맞아떨어졌다. 공식 입장은 원치 않는 접근과 상담 사실을 차분하게 설명했고, 왜곡된 주장에 의문을 제기하는 목소리가 늘어났다. 신입은 혼자가 아니라는 안도감 속에서 다시 연습실로 돌아갔다.'
-      :outcome==='partial'?'확보한 기록으로 교제 의혹에는 선을 그었지만, 남은 의혹까지 완전히 해소하지는 못했다. 여론에는 여전히 의문이 남았다. 팀은 활동을 이어가되 잃어버린 신뢰를 천천히 회복하기로 했다.'
-      :'충분한 사실 확인 없이 내놓은 입장은 오히려 의혹을 굳혔다. 이어지는 비난 속에서 신입은 더는 무대에 설 수 없다고 말했다. 멤버들과 회사가 대화를 나눴지만, 결국 탈퇴를 받아들이기로 했다.';
   }
-  else if(s.month===14) {choice=requireChoice(['donation','volunteer','campaign']);delta={funds_won:100000000,awareness:5,fans:10000};text='카메라 앞의 약속은 꾸준한 실천으로 이어졌다. 멤버들의 진심이 담긴 콘텐츠가 조금씩 공유되며 차가웠던 반응도 누그러졌다. 광고 계약을 마친 팀은 다시 다음 활동을 준비할 여유를 얻었다.';}
-  else if(s.month===15) {choice=requireChoice(['variety','content']);outcome=choice==='content'?'neutral':v.awareness>=60&&v.teamwork>=60?'success':'failure';delta=outcome==='neutral'?{}:outcome==='success'?{awareness:10,fans:30000,funds_won:part4Income.variety}:{awareness:-8,fans:-10000};text=outcome==='neutral'?'멤버들은 익숙한 제작진과 자체 콘텐츠를 이어갔다. 큰 변화는 없었지만, 팬들과 나누는 작은 일상은 계속되었다.':outcome==='success'?'멤버들의 자연스러운 호흡과 서로 다른 매력이 방송을 채웠다. 매주 프로뮤를 기다리는 시청자가 늘었고, 무대 영상까지 찾아보는 새로운 팬들이 생겼다.':'낯선 방송 환경에서 대화가 자꾸 엇갈렸다. 분량은 기대보다 적었고, 어색한 장면이 화제가 되면서 팀의 이미지에도 아쉬움이 남았다.';}
+  else if(s.month===14) {choice=requireChoice(['donation','volunteer','campaign']);delta={funds_won:100000000,awareness:5,fans:10000};}
+  else if(s.month===15) {choice=requireChoice(['variety','content']);outcome=choice==='content'?'neutral':v.awareness>=60&&v.teamwork>=60?'success':'failure';delta=outcome==='neutral'?{}:outcome==='success'?{awareness:10,fans:30000,funds_won:part4Income.variety}:{awareness:-8,fans:-10000};}
   else if(s.month===16) {
     choice=requireChoice(['1000_40000','1000_70000','1000_100000','5000_40000','5000_70000','5000_100000','15000_40000','15000_70000','15000_100000']);const [capacity,price]=choice.split('_').map(Number);
-    const demand=fanmeetingDemand(v,price);outcome=capacity<=Math.max(1000,demand)?'success':'failure';delta=outcome==='success'?{fans:50000,teamwork:5,funds_won:fanmeetingProfit(v,capacity,price)}:{funds_won:-100000000};text=outcome==='success'?'객석을 채운 팬들의 응원 속에 팬미팅이 성공적으로 끝났다. 멤버들은 가까이서 만난 팬들의 표정과 목소리를 오래 기억하겠다고 약속했다.':'멤버들은 마지막까지 최선을 다해 팬미팅을 마쳤다. 다만 좌석과 가격에 비해 실제 수요가 부족했고, 빈자리를 메우지 못한 비용이 자금 손실로 남았다.';
+    const demand=fanmeetingDemand(v,price);outcome=capacity<=Math.max(1000,demand)?'success':'failure';delta=outcome==='success'?{fans:50000,teamwork:5,funds_won:fanmeetingProfit(v,capacity,price)}:{funds_won:-100000000};
   }
   else if(s.month===17) {
-    choice=requireChoice(['rest','reduce','keep']);apply(s,{fatigue:choice==='rest'?-20:choice==='reduce'?-10:5});outcome=s.stats.fatigue<60&&choice!=='keep'?'success':'failure';if(outcome==='success')s.newcomerGrowth.dance++;delta=outcome==='success'?{fatigue:-15,teamwork:5}:{fatigue:20,awareness:-5};text=outcome==='success'?'일정을 다시 정리하자 멤버들에게 오랜만에 빈 하루가 생겼다. 충분히 잠을 자고 목과 몸을 돌본 멤버들은, 서로의 상태를 살피며 연습실로 돌아왔다.':'달력의 빈칸은 끝내 생기지 않았다. 병원에 들렀다가 곧바로 촬영장으로 향하는 날도 있었고, 목 상태가 나빠진 신입의 음정 실수도 잦아졌다. 지친 얼굴을 감추기 어려워졌다.';
+    choice=requireChoice(['rest','reduce','keep']);apply(s,{fatigue:choice==='rest'?-20:choice==='reduce'?-10:5});outcome=s.stats.fatigue<60&&choice!=='keep'?'success':'failure';if(outcome==='success')s.newcomerGrowth.dance++;delta=outcome==='success'?{fatigue:-15,teamwork:5}:{fatigue:20,awareness:-5};
   }
   else if(s.month===18) {
-    choice=requireChoice(['accept','reject']);if(choice==='accept'&&v.funds_won<100000000) throw new Error('투자금 1억원이 부족합니다.');s.route=choice==='accept'?'overseas':'domestic';outcome='neutral';if(choice==='accept') {delta={fans:50000,funds_won:-100000000};s.overseasFansAdded+=50000;}text=choice==='accept'?'계약서에 서명을 마쳤다. 일본에서의 방송 두 차례와 현지어 곡, 공동 쇼케이스를 준비하는 일정이 달력에 새로 적혔다. 기대와 긴장이 함께 찾아왔다.':'이번 제안은 정중히 거절했다. 멤버들은 익숙한 언어와 무대에서 국내 팬들과 더 자주 만나기로 했다. 더 가까운 곳에도 아직 전하지 못한 고마움이 많았다.';
+    choice=requireChoice(['accept','reject']);if(choice==='accept'&&v.funds_won<100000000) throw new Error('투자금 1억원이 부족합니다.');s.route=choice==='accept'?'overseas':'domestic';outcome='neutral';if(choice==='accept') {delta={fans:50000,funds_won:-100000000};s.overseasFansAdded+=50000;}
   }
   else if(s.month===19 && s.route==='overseas') {
     if(!['yes','no'].includes(d.training??'') || !['local','identity'].includes(d.concept??'')) throw new Error('어학 훈련과 곡 콘셉트를 각각 선택해주세요.');
     if(d.training==='yes'&&v.funds_won<20000000) throw new Error('어학 훈련비 2천만원이 부족합니다.');
     choice=`${d.training==='yes'?'어학 훈련 실시':'어학 훈련 미실시'} · ${d.concept==='local'?'현지 감성':'팀 정체성 유지'}`;outcome='neutral';delta=d.concept==='local'?{awareness:5,fans:10000}:{teamwork:5,fans:5000};if(d.concept==='local') s.overseasFansAdded+=10000;
-    if(d.training==='yes') {delta.funds_won=-20000000;delta.fatigue=5;}text='각자의 걱정과 자신 있는 부분을 나누자 준비의 방향도 분명해졌다. 멤버들은 선택한 콘셉트로 곡을 맞추고, 팬들에게 전할 인사를 되뇌며 현지 무대를 준비했다. 이번 달은 별도의 성패 없이 준비를 마쳤다.';
+    if(d.training==='yes') {delta.funds_won=-20000000;delta.fatigue=5;}
   }
-  else if(s.month===19) {choice=requireChoice(['all','some','none']);outcome=choice==='none'?'failure':'success';delta=outcome==='success'?{teamwork:5,awareness:5,fatigue:5}:{fatigue:-10,awareness:-5};text=outcome==='success'?'카페에 놓인 사진과 손편지를 바라보던 도하가 한동안 말을 잇지 못했다. 함께 방문한 멤버들은 팬들에게 고맙다는 인사를 전했다. 이동으로 몸은 조금 지쳤지만, 서로를 바라보는 마음은 더 따뜻해졌다.':'멤버들은 방문 대신 휴식을 택했다. 몸은 한결 가벼워졌지만, 직접 만나기를 기대했던 팬들 사이에는 아쉬움이 남았다. 카페에서 전하고 싶었던 인사는 다음 기회로 미뤄졌다.';}
+  else if(s.month===19) {choice=requireChoice(['all','some','none']);outcome=choice==='none'?'failure':'success';delta=outcome==='success'?{teamwork:5,awareness:5,fatigue:5}:{fatigue:-10,awareness:-5};}
   else if(s.month===20 && s.route==='overseas') {
     choice=requireChoice(['legal','facts','silent']);const guidance=s.confirmedGuidance??s.guidance;if(guidance==='unclear') throw new Error('대응 지침이 불분명합니다. 백하연과 대화하거나 마지막 지침을 확인해주세요.');
-    outcome=guidance==='calm'&&choice!=='silent'?'success':'failure';delta=outcome==='success'?{awareness:-2,fans:10000,teamwork:5}:{awareness:-10,fans:-30000,fatigue:15};text=outcome==='success'?'대표의 지시에 따라 확인한 사실을 모으고 공식 절차로 대응했다. 자극적인 말 대신 자료가 공개되자, 과장된 소문은 힘을 잃었다. 멤버들은 더 이상의 설전 대신 다음 무대에 집중할 수 있었다.':'적절한 해명이 전달되지 못하면서 소문은 더 오래 남았다. 감정적인 지시가 있었다면 맞대응의 표현까지 새로운 논란이 되었고, 무대응을 택했다면 확인되지 않은 이야기가 여론을 채웠다.';
+    outcome=guidance==='calm'&&choice!=='silent'?'success':'failure';delta=outcome==='success'?{awareness:-2,fans:10000,teamwork:5}:{awareness:-10,fans:-30000,fatigue:15};
   }
   else if(s.month===20) {
     if(!['title','fan','acoustic'].includes(d.song??'') || !d.speech?.trim() || d.speech.length>500) throw new Error('노래를 선택하고 홍보 멘트를 1~500자로 작성해주세요.');
-    choice=`${({title:'대표곡',fan:'팬송',acoustic:'어쿠스틱 편곡'} as Record<string,string>)[d.song!]} · ${d.speech.trim()}`;outcome=inappropriatePromotion(d.speech)?'failure':'success';delta=outcome==='success'?{awareness:5,fans:5000}:{fans:-5000};text=outcome==='success'?'예고 없이 시작된 라이브에서 멤버들은 서로의 눈을 맞추며 호흡을 이어갔다. 이어진 콘서트 소개에는 청취자들의 응원이 쏟아졌다. 방송을 듣고 예매 일정을 찾아보는 팬들이 늘었다.':'라이브를 마친 뒤 전한 홍보 멘트가 팬들에게 상처를 남겼다. 방송의 좋은 순간보다 부적절한 표현이 더 크게 퍼졌고, 콘서트를 기다리던 일부 팬들도 발길을 돌렸다.';
+    choice=`${({title:'대표곡',fan:'팬송',acoustic:'어쿠스틱 편곡'} as Record<string,string>)[d.song!]} · ${d.speech.trim()}`;outcome=inappropriatePromotion(d.speech)?'failure':'success';delta=outcome==='success'?{awareness:5,fans:5000}:{fans:-5000};
   }
   else if(s.month===21) {
-    choice=requireChoice(concertPackages.map(p=>p.id));const p=concertPackages.find(p=>p.id===choice)!;const demand=Math.floor(v.fans*30*70000/(100*p.price));const reasons=[...(demand<p.capacity?['예상 관객보다 많은 좌석']:[]),...(p.cost*5>v.funds_won?['자금의 20%를 초과한 연출비']:[]),...(v.fatigue>=60?['피로도 60 이상']:[]),...(s.results[20]!=='success'?['전월 홍보·루머 대응 실패']:[])];
-    outcome=reasons.length?'failure':'success';delta=outcome==='success'?{fans:100000,funds_won:p.profit,awareness:10}:{funds_won:-200000000,fatigue:15,fans:-10000};text=outcome==='success'?'첫 곡이 시작되자 객석의 응원봉이 한꺼번에 빛났다. 멤버들은 준비한 무대를 끝까지 소화했고, 앙코르를 부르는 함성이 공연장에 오래 남았다. 첫 단독 콘서트는 성공적으로 마무리되었다.':`공연은 끝까지 진행했지만 준비의 빈틈이 드러났다. ${reasons.join(' · ')} 때문에 기대한 성과에는 닿지 못했다. 멤버들은 끝까지 객석을 향해 인사했고, 회사에는 이번 선택의 비용이 남았다.`;
+    choice=requireChoice(concertPackages.map(p=>p.id));const p=concertPackages.find(p=>p.id===choice)!;const demand=Math.floor(v.fans*30*70000/(100*p.price));reasons=[...(demand<p.capacity?['예상 관객보다 많은 좌석']:[]),...(p.cost*5>v.funds_won?['자금의 20%를 초과한 연출비']:[]),...(v.fatigue>=60?['피로도 60 이상']:[]),...(s.results[20]!=='success'?['전월 홍보·루머 대응 실패']:[])];
+    outcome=reasons.length?'failure':'success';delta=outcome==='success'?{fans:100000,funds_won:p.profit,awareness:10}:{funds_won:-200000000,fatigue:15,fans:-10000};
   }
   else if(s.month===22) {
     if(!albumConcepts.some(c=>c.id===d.concept) || !albumSongs.some(c=>c.id===d.song)) throw new Error('콘셉트와 타이틀곡을 선택해주세요.');
@@ -216,15 +213,33 @@ function decide(s: Part4Save) {
     if(![production,promotion,reserve].every(n=>Number.isSafeInteger(n)&&n>=0) || production+promotion+reserve!==total) throw new Error('현재 자금 전액을 원 단위 정수로 배분해주세요. 예비비는 지출하지 않습니다.');
     const min=albumMinimums[s.goal];outcome=total>0&&d.concept===s.goal&&d.song===s.goal&&v.teamwork>=80&&v.fatigue<50&&production*100>=total*min.production&&promotion*100>=total*min.promotion&&reserve*100>=total*10?'success':'failure';
     choice=`${albumConcepts.find(c=>c.id===d.concept)!.label} · ${albumSongs.find(c=>c.id===d.song)!.label} · 제작 ${production.toLocaleString()}원 / 홍보 ${promotion.toLocaleString()}원 / 예비비 ${reserve.toLocaleString()}원`;
-    apply(s,{funds_won:-production-promotion});delta=outcome==='success'?{awareness:10,fans:100000,funds_won:part4Income.album}:{awareness:3,fans:20000,funds_won:-100000000};text=outcome==='success'?'처음 정했던 목표가 이번 앨범 안에서 하나의 방향으로 모였다. 멤버들의 호흡과 준비한 곡, 필요한 곳에 쓴 예산이 맞물리며 팬들에게 오래 기다린 답을 전했다. 앨범 활동의 수익 10억원이 정산되었다. 제작·홍보 지출과 함께 이번 달 자금 변화에 반영된다.':'이번 앨범은 끝내 완성되었지만 목표와 준비 사이에 간격이 남았다. 곡의 방향이나 예산, 팀의 컨디션에서 아쉬움이 생겼다. 그래도 멤버들은 지금 할 수 있는 최선으로 마지막 무대를 준비했다.';
+    apply(s,{funds_won:-production-promotion});delta=outcome==='success'?{awareness:10,fans:100000,funds_won:part4Income.album}:{awareness:3,fans:20000,funds_won:-100000000};
   }
   else if(s.month===24) {
     choice=requireChoice(['renew','disband']);s.renew=choice==='renew';s.ending=part4Ending(s);s.phase='flash';s.records.push({month:24,name:'대표님',text:s.renew?'재계약 의향을 전했다.':'그룹 활동을 마무리할 의향을 전했다.',kind:'choice'});s.draft={};return;
   }
   else throw new Error('이번 달은 결정 단계가 아닙니다.');
+  const text = part4ResultText(s.month, outcome, s.route, choice, reasons);
   apply(s,delta);s.results[s.month]=outcome;s.resultText=text;s.phase='result';s.cursor=0;s.draft={};
   const label=s.month===16?`${Number(choice.split('_')[0]).toLocaleString()}석 · ${Number(choice.split('_')[1]).toLocaleString()}원`:s.month===21?concertPackages.find(p=>p.id===choice)!.label:choiceLabels[choice]??choice;
   s.records.push({month:s.month,name:'대표님',text:label,kind:'choice'},{month:s.month,name:'나레이션',text,kind:'result'});
+}
+export function part4ResultText(month: number, outcome: Part4Outcome, route: Part4Save['route'], choice: string, reasons: string[] = []) {
+  if (month === 13) return outcome==='success'?'세 가지 기록이 서로 맞아떨어졌다. 공식 입장은 원치 않는 접근과 상담 사실을 차분하게 설명했고, 왜곡된 주장에 의문을 제기하는 목소리가 늘어났다. 신입은 혼자가 아니라는 안도감 속에서 다시 연습실로 돌아갔다.'
+      :outcome==='partial'?'확보한 기록으로 교제 의혹에는 선을 그었지만, 남은 의혹까지 완전히 해소하지는 못했다. 여론에는 여전히 의문이 남았다. 팀은 활동을 이어가되 잃어버린 신뢰를 천천히 회복하기로 했다.'
+      :'충분한 사실 확인 없이 내놓은 입장은 오히려 의혹을 굳혔다. 이어지는 비난 속에서 신입은 더는 무대에 설 수 없다고 말했다. 멤버들과 회사가 대화를 나눴지만, 결국 탈퇴를 받아들이기로 했다.';
+  if (month === 14) return '카메라 앞의 약속은 꾸준한 실천으로 이어졌다. 멤버들의 진심이 담긴 콘텐츠가 조금씩 공유되며 차가웠던 반응도 누그러졌다. 광고 계약을 마친 팀은 다시 다음 활동을 준비할 여유를 얻었다.';
+  if (month === 15) return outcome==='neutral'?'멤버들은 익숙한 제작진과 자체 콘텐츠를 이어갔다. 큰 변화는 없었지만, 팬들과 나누는 작은 일상은 계속되었다.':outcome==='success'?'멤버들의 자연스러운 호흡과 서로 다른 매력이 방송을 채웠다. 매주 프로뮤를 기다리는 시청자가 늘었고, 무대 영상까지 찾아보는 새로운 팬들이 생겼다.':'낯선 방송 환경에서 대화가 자꾸 엇갈렸다. 분량은 기대보다 적었고, 어색한 장면이 화제가 되면서 팀의 이미지에도 아쉬움이 남았다.';
+  if (month === 16) return outcome==='success'?'객석을 채운 팬들의 응원 속에 팬미팅이 성공적으로 끝났다. 멤버들은 가까이서 만난 팬들의 표정과 목소리를 오래 기억하겠다고 약속했다.':'멤버들은 마지막까지 최선을 다해 팬미팅을 마쳤다. 다만 좌석과 가격에 비해 실제 수요가 부족했고, 빈자리를 메우지 못한 비용이 자금 손실로 남았다.';
+  if (month === 17) return outcome==='success'?'일정을 다시 정리하자 멤버들에게 오랜만에 빈 하루가 생겼다. 충분히 잠을 자고 목과 몸을 돌본 멤버들은, 서로의 상태를 살피며 연습실로 돌아왔다.':'달력의 빈칸은 끝내 생기지 않았다. 병원에 들렀다가 곧바로 촬영장으로 향하는 날도 있었고, 목 상태가 나빠진 신입의 음정 실수도 잦아졌다. 지친 얼굴을 감추기 어려워졌다.';
+  if (month === 18) return choice==='accept'?'계약서에 서명을 마쳤다. 일본에서의 방송 두 차례와 현지어 곡, 공동 쇼케이스를 준비하는 일정이 달력에 새로 적혔다. 기대와 긴장이 함께 찾아왔다.':'이번 제안은 정중히 거절했다. 멤버들은 익숙한 언어와 무대에서 국내 팬들과 더 자주 만나기로 했다. 더 가까운 곳에도 아직 전하지 못한 고마움이 많았다.';
+  if (month === 19 && route === 'overseas') return '각자의 걱정과 자신 있는 부분을 나누자 준비의 방향도 분명해졌다. 멤버들은 선택한 콘셉트로 곡을 맞추고, 팬들에게 전할 인사를 되뇌며 현지 무대를 준비했다. 이번 달은 별도의 성패 없이 준비를 마쳤다.';
+  if (month === 19) return outcome==='success'?'카페에 놓인 사진과 손편지를 바라보던 도하가 한동안 말을 잇지 못했다. 함께 방문한 멤버들은 팬들에게 고맙다는 인사를 전했다. 이동으로 몸은 조금 지쳤지만, 서로를 바라보는 마음은 더 따뜻해졌다.':'멤버들은 방문 대신 휴식을 택했다. 몸은 한결 가벼워졌지만, 직접 만나기를 기대했던 팬들 사이에는 아쉬움이 남았다. 카페에서 전하고 싶었던 인사는 다음 기회로 미뤄졌다.';
+  if (month === 20 && route === 'overseas') return outcome==='success'?'대표의 지시에 따라 확인한 사실을 모으고 공식 절차로 대응했다. 자극적인 말 대신 자료가 공개되자, 과장된 소문은 힘을 잃었다. 멤버들은 더 이상의 설전 대신 다음 무대에 집중할 수 있었다.':'적절한 해명이 전달되지 못하면서 소문은 더 오래 남았다. 감정적인 지시가 있었다면 맞대응의 표현까지 새로운 논란이 되었고, 무대응을 택했다면 확인되지 않은 이야기가 여론을 채웠다.';
+  if (month === 20) return outcome==='success'?'예고 없이 시작된 라이브에서 멤버들은 서로의 눈을 맞추며 호흡을 이어갔다. 이어진 콘서트 소개에는 청취자들의 응원이 쏟아졌다. 방송을 듣고 예매 일정을 찾아보는 팬들이 늘었다.':'라이브를 마친 뒤 전한 홍보 멘트가 팬들에게 상처를 남겼다. 방송의 좋은 순간보다 부적절한 표현이 더 크게 퍼졌고, 콘서트를 기다리던 일부 팬들도 발길을 돌렸다.';
+  if (month === 21) return outcome==='success'?'첫 곡이 시작되자 객석의 응원봉이 한꺼번에 빛났다. 멤버들은 준비한 무대를 끝까지 소화했고, 앙코르를 부르는 함성이 공연장에 오래 남았다. 첫 단독 콘서트는 성공적으로 마무리되었다.':`공연은 끝까지 진행했지만 준비의 빈틈이 드러났다. ${reasons.join(' · ')} 때문에 기대한 성과에는 닿지 못했다. 멤버들은 끝까지 객석을 향해 인사했고, 회사에는 이번 선택의 비용이 남았다.`;
+  if (month === 22) return outcome==='success'?'처음 정했던 목표가 이번 앨범 안에서 하나의 방향으로 모였다. 멤버들의 호흡과 준비한 곡, 필요한 곳에 쓴 예산이 맞물리며 팬들에게 오래 기다린 답을 전했다. 앨범 활동의 수익 10억원이 정산되었다. 제작·홍보 지출과 함께 이번 달 자금 변화에 반영된다.':'이번 앨범은 끝내 완성되었지만 목표와 준비 사이에 간격이 남았다. 곡의 방향이나 예산, 팀의 컨디션에서 아쉬움이 생겼다. 그래도 멤버들은 지금 할 수 있는 최선으로 마지막 무대를 준비했다.';
+  return '';
 }
 export function restorePart4(raw:string|null):Part4Save|null {
   if(!raw) return null;
@@ -243,4 +258,14 @@ export function restorePart4(raw:string|null):Part4Save|null {
     || (s.phase==='interviews'&&!interviewMembers(s).some(m=>m.id===s.target)) || (['post','comments','investigation'].includes(s.phase)&&s.month!==13)
     || (s.month>=19&&!s.route)||(['flash','ending'].includes(s.phase)&&!s.ending)||(s.phase==='flash'&&s.month!==24)||(s.phase==='result'&&!s.results[s.month])) return fail();
   return s;
+}
+
+export function displayPart4Choice(month: number, key: string, value: string) {
+  if(['production','promotion','reserve'].includes(key)) return `${Number(value).toLocaleString()}원`;
+  if(month===16) return key==='concept'?`${Number(value).toLocaleString()}석`:key==='song'?`${Number(value).toLocaleString()}원`:value;
+  if(key==='speech'||key==='text')return value;
+  if(month===22) return (key==='concept'?albumConcepts:albumSongs).find(c=>c.id===value)?.label??value;
+  if(month===21) return concertPackages.find(p=>p.id===value)?.label??value;
+  const names:Record<string,string>={protect:'조사 결과로 신입 보호',apology:'책임 인정 사과문',donation:'기부 프로젝트',volunteer:'봉사활동 자컨',campaign:'공익 캠페인',variety:'단체 예능 출연',content:'자체 콘텐츠',rest:'휴식일 확보',reduce:'필수 일정만 유지',keep:'전체 일정 강행',accept:'제안 수락 · 해외',reject:'제안 거절 · 국내',yes:'어학 훈련 실시',no:'어학 훈련 미실시',local:'현지 감성',identity:'팀 정체성 유지',all:'전체 카페 방문',some:'일부 카페 방문',none:'미방문',legal:'법적 대응',facts:'팩트 해명',silent:'무대응',title:'대표곡',fan:'팬송',acoustic:'어쿠스틱 편곡',renew:'재계약 의향',disband:'활동 마무리 의향'};
+  return names[value]??value;
 }

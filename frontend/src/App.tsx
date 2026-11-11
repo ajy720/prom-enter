@@ -7,12 +7,14 @@ import { ServerInterviewRoom } from './ServerInterviewRoom';
 import { ServerCasting } from './ServerCasting';
 import { ServerMonthOne } from './ServerMonthOne';
 import { ServerMonthly } from './ServerMonthly';
+import { ServerMonthlyStory } from './ServerMonthlyStory';
+import { readGameGoal } from './gameGoal';
 import { ServerPartTwo } from './ServerPartTwo';
 import { MonthTwoTransition } from './MonthTwoTransition';
 import { ContinuedPlay } from './ContinuedPlay';
 import { playthroughKey, readPlaythrough } from './playthroughState';
 import { interviewCandidateId, serverCandidates, storyGameKey } from './serverInterviewState';
-import type { CreateGameInput, Game, TurnInput, PromotionAllocation } from './types';
+import type { CreateGameInput, Game, TurnInput, PromotionAllocation, StoryCommand } from './types';
 
 export default function App() {
   const viewportRef = useSceneViewport();
@@ -55,6 +57,11 @@ export default function App() {
     if (!game || requestInFlight.current || (pending && !retry)) return false;
     if (game.ending && !(game.ending.id === 'part2_complete' && (retry?.action_id ?? actionId) === 'start_month_seven')) return false;
     if (retry) return submit(retry);
+    if (actionId === 'start_month_seven') {
+      let goal;
+      try { goal = readGameGoal(game.game_id) ?? undefined; } catch { /* The existing Part 4 goal step is available. */ }
+      return runStory({type: 'start', goal});
+    }
     const value = (question ?? text).trim();
     if (!actionId && !retry && !value) return false;
     // Preserve the payload on retry so the server can prevent duplicate turns.
@@ -64,6 +71,15 @@ export default function App() {
       action_id: actionId ?? null,
     };
     return submit({ ...input, ...(game.event.id === 'p2_m01_training' ? { stop_after_month_one: true } : {}) });
+  }
+
+  async function runStory(story_command: StoryCommand) {
+    if (!game || requestInFlight.current || pending) return false;
+    return submit({
+      request_id: crypto.randomUUID(), state_version: game.version, input_type: 'action',
+      action_id: story_command.type === 'start' ? 'start_month_seven' : 'monthly_story',
+      text: '', story_command,
+    });
   }
 
   async function allocatePromotion(promotion_allocation: PromotionAllocation) {
@@ -167,6 +183,10 @@ export default function App() {
   }
   if (!game) return null;
   if (localResume) return <ContinuedPlay key={game.game_id} source={game} onTitle={() => setView('title')}/>;
+  if (game.monthly_story) return <ServerMonthlyStory game={game} onTitle={() => setView('title')} controls={{
+    busy, locked: busy || !!pending, error, run: runStory,
+    retry: pending ? () => void send(undefined, pending) : undefined,
+  }}/>;
   const nickname = readIntroProgress()?.nickname ?? '';
   const interviewing = !!interviewCandidateId(game.event.id);
 

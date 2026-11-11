@@ -1,3 +1,27 @@
+import type { GameGoal } from './gameGoal';
+import type { Part3Save } from './part3State';
+import type { DemoGuidance, Part4Save } from './part4State';
+
+export type StoryCommand =
+  | {type: 'start'; goal?: GameGoal}
+  | {type: 'next' | 'finishInterviews' | 'enterPartFour' | 'finishInvestigation' | 'finishFlash'}
+  | {type: 'target' | 'investigate'; id: string}
+  | {type: 'chat'; text: string}
+  | {type: 'goal'; goal: GameGoal}
+  | {type: 'guidance'; value: 'calm' | 'emotional'}
+  | {type: 'decide' | 'reviewPromotion'; choices: Record<string, string>};
+
+export type MonthlyStory = {
+  month: number; phase: Part3Save['phase'] | Part4Save['phase']; cursor: number; target: string;
+  goal: GameGoal | null; last_delta: Partial<Stats>; fatigue_at_decision: number | null;
+  award_expected: boolean | null; route: Part4Save['route']; overseas_fans_added: number;
+  evidence: string[]; guidance: DemoGuidance; guidance_quote: string;
+  confirmed_guidance: Part4Save['confirmedGuidance']; promotion_text: string | null; promotion_warning: boolean;
+  award: Part4Save['award']; ending: Part4Save['ending']; renew: boolean | null;
+  scenes: {month: number; cursor: number}[];
+  decisions: Record<number, {choices: Record<string, string>; reasons: string[]}>;
+};
+
 export type CreateGameInput = {character_id: string; scenario?: 'demo' | 'part2'};
 export type Character = { id: string; name: string; tag: string; description: string; persona: string; color: string; profile_id?: string };
 export type Stats = { teamwork: number; fatigue: number; trust: number; awareness: number; fans: number; funds_won: number };
@@ -25,6 +49,8 @@ export type Analysis = {
   conversation_change?: {mode: 'public' | 'private' | null; target_character_id: string | null; quote: string; needs_clarification: boolean} | null;
 };
 export type Turn = {
+  state_version?: number;
+  story_assessment?: {verdict: DemoGuidance | 'appropriate' | 'inappropriate'; quote: string};
   month_completion?: {month: 2 | 3; reason: 'manual' | 'limit'; teamwork: number; teamwork_min: number; fatigue?: number; fatigue_max_exclusive?: number} | null;
   result_narration?: string | null;
   promotion_allocation?: PromotionAllocation;
@@ -43,6 +69,7 @@ export type Turn = {
 };
 export type Ability = 'vocal' | 'dance' | 'visual' | 'variety';
 export type Game = {
+  monthly_story?: MonthlyStory | null;
   member_abilities?: Record<string, Record<Ability, number>>;
   ability_growth?: {member_id: string; skill: Ability; event_id: string}[];
   monthly_interviews?: Record<string, number>;
@@ -67,6 +94,7 @@ export type Game = {
   completed_events: Record<string, string>; ending: {id: string; title: string; description: string} | null; history: Turn[];
 };
 export type TurnInput = {
+  story_command?: StoryCommand;
   promotion_allocation?: PromotionAllocation;
   center_member_id?: string; center_reason?: string;
   stop_after_month_one?: boolean;
