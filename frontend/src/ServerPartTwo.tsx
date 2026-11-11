@@ -106,7 +106,7 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
   if (boundary && ['success','failure'].includes(boundary.outcome) && boundary.event_id !== 'p2_m01_training' && !(month === 3 && boundary.event_id === 'p2_m02_center') && !resultRead) {
     const lines = [...(boundary.month_completion?.reason === 'limit' ? messageLines(game,boundary).filter(item => item.speakerId !== 'baek_hayeon') : []),
       {speakerId:'narrator',name:'나레이션',text:boundary.result_narration ?? boundary.facts.join(' ')}];
-    content = <Sequence key={resultKey} {...shared} lines={lines} storageKey={resultKey} disabled={locked} title="이번 달 결과" onDone={() => acknowledge(resultKey, () => setResultRead(true))} footer={<><p>{boundary.outcome === 'success' ? '성공' : '실패'}</p>{boundary.month_completion && <p>판정 시 팀워크 {boundary.month_completion.teamwork}{boundary.month_completion.month === 3 && ` · 피로도 ${boundary.month_completion.fatigue}`}</p>}<Delta delta={boundary.stat_delta}/></>}/>;
+    content = <Sequence key={resultKey} {...shared} lines={lines} storageKey={resultKey} disabled={locked} title="이번 달 결과" onDone={() => acknowledge(resultKey, () => setResultRead(true))} footer={<><p>{boundary.outcome === 'success' ? '성공' : '실패'}</p><Delta delta={boundary.stat_delta}/></>}/>;
   } else if (!complete && !openingRead && openingLines.length) {
     content = <Sequence key={prefix + ':opening'} {...shared} lines={openingLines} storageKey={prefix + ':opening'} disabled={locked} title="이번 달 이야기" onDone={() => acknowledge(prefix + ':opening', () => setOpeningRead(true))}/>;
   } else if (stopped && !stopRead) {

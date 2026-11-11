@@ -85,6 +85,7 @@ async function monthOne(page:Page,selected:string) {
     await expect(page.locator('.dialogue-header h2')).toHaveText(name);
     await expect(page.locator('.scene-resource-status')).toHaveCount(0);
   }
+  await expect(page.getByText(/1개월차 (?:데모|AI)/)).toHaveCount(0);
   await shot(page,'month-one');
   await page.getByRole('button',{name:/첫 달 계획 확인/}).click();
   await serverAction(page,()=>page.getByRole('button',{name:'첫 달 계획 확정',exact:true}).click());
@@ -98,6 +99,7 @@ async function monthTwo(page:Page,selected:string) {
     await serverChat(page,'2개월차 면담');
   }
   await serverAction(page,()=>page.getByRole('button',{name:'면담 완료',exact:true}).click());
+  await expect(page.getByText(/면담 종료 시 팀워크|성공 기준/)).toHaveCount(0);
   await shot(page,'month-two-result');
   await page.getByRole('button',{name:/3개월차 안내 보기/}).click();
   await resume(page);
@@ -132,11 +134,11 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   await shot(page,'month-three-interviews');
   await serverAction(page,()=>page.getByRole('button',{name:'면담 완료',exact:true}).click());
   await opening(page);
-  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.webp/);
   await page.getByRole('button',{name:failure?'기사 대응 지시':'신입에게 직접 격려',exact:false}).click();
   await serverAction(page,()=>page.locator('dialog[open]').getByRole('button',{name:'대응 확정',exact:true}).click());
   await opening(page);
-  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.server-part-two')).toHaveCSS('background-image', /office\.webp/);
   const discussion = await serverChat(page, '백하연과 대화', '홍보 예산 배분 확정');
   expect(discussion.event.id).toBe('p2_m05_promotion');
   expect(discussion.history.at(-1).analysis.action_id).toBe('talk');
@@ -201,7 +203,7 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   await prologue(page); await cast(page, selected); await monthOne(page, selected); await monthTwo(page, selected);
   const id = await page.evaluate(() => localStorage.getItem('prom-story-game'));
   await sixMonths(page, selected);
-  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.png/);
+  await expect(page.locator('.narration-scene')).toHaveCSS('background-image', /office\.webp/);
   const initial = await storyStep(page, '다음 →');
   await expect(page.getByRole('log')).toContainText('대표님, 상담할 게 있어서 왔어요');
   await storyStep(page, '면담 시작 →');

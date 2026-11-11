@@ -1,4 +1,5 @@
 import hashlib
+import re
 import uuid
 from app.ai.context import build_context, build_dialogue_context, scope_actor
 from app.ai.providers import PROMPT_VERSION, validate_analysis, validate_dialogue
@@ -43,15 +44,22 @@ class TurnService:
             history = [turn for turn in history if turn.get('state_version', 0) <= state.version]
             event['actions'] = []
             event.pop('chat_actions', None)
-        # Refresh the old offline fixture's awkward wording without rewriting
-        # saved turns or replacing responses produced by a real provider.
+        # Update stale plan-closing copy in the view without rewriting saved turns.
         for turn in history:
             if turn.get('event_id') == rehearsal.EVENT and turn.get('analysis', {}).get('action_id') == rehearsal.STOP:
                 turn['messages'] = rehearsal.ordered_messages(turn.get('messages', []))
-            if turn.get('event_id') == 'p2_m01_training' and turn.get('analysis',{}).get('action_id') == 'confirm_month_plan' and turn.get('ai_trace',{}).get('provider') == 'demo':
-                for message in turn.get('messages',[]):
-                    if message.get('speaker_id') == 'secretary':
+            if turn.get('event_id') == 'p2_m01_training' and turn.get('analysis', {}).get('action_id') == 'confirm_month_plan':
+                for message in turn.get('messages', []):
+                    if message.get('speaker_id') != 'secretary':
+                        continue
+                    if turn.get('ai_trace', {}).get('provider') == 'demo':
                         message['text'] = MONTH_ONE_COMPLETION_MESSAGE
+                    else:
+                        message['text'] = re.sub(
+                            r'2개월\s*차로 (?:이동하지|넘어가지) 않습니다[.]?',
+                            '준비되시면 2개월차 일정을 시작하겠습니다.',
+                            message['text'],
+                        )
         return {
             "game_id": state.game_id, "version": state.version, "provider": self.provider.name,
             "character": CHARACTERS[state.character_id], "event": event,
@@ -286,7 +294,7 @@ class TurnService:
             "facts": proposal.facts, "outcome": proposal.outcome,
             "new_evidence": proposal.new_evidence,
             "stat_delta": {k: v - state.stats.model_dump()[k] for k, v in proposal.state.stats.model_dump().items() if v != state.stats.model_dump()[k]},
-            'result_narration': monthly.result_narration(state.event_id, proposal.outcome) if proposal.outcome in {'success', 'failure'} else None,
+            'result_narration': monthly.result_narration(state, proposal.outcome) if proposal.outcome in {'success', 'failure'} else None,
             "image": f"/portraits/{direction.emotion}.svg",
             "ai_trace": {"prompt_version":PROMPT_VERSION,"provider":self.provider.name,
                          'analysis_calls':int(request.input_type=='chat'),
@@ -307,7 +315,7 @@ class TurnService:
                 'direction': character_direction(updated, outcome).model_dump(),
                 'facts': [message], 'outcome': outcome, 'new_evidence': [],
                 'month_completion': center.completion(state, 'manual') if outcome in {'success', 'failure'} else None,
-                'result_narration': monthly.result_narration(state.event_id, outcome) if outcome in {'success', 'failure'} else None,
+                'result_narration': monthly.result_narration(state, outcome) if outcome in {'success', 'failure'} else None,
                 'stat_delta': {key: value - state.stats.model_dump()[key] for key, value in updated.stats.model_dump().items()
                                if value != state.stats.model_dump()[key]}, 'image': '/portraits/hopeful.svg',
                 'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': 'system',
@@ -484,7 +492,7 @@ class TurnService:
                 'analysis': Analysis(action_id='allocate_promotion', needs_clarification=False, reference_turn_id=None, assessments=[]).model_dump(),
                 'direction': character_direction(updated, proposal.outcome).model_dump(),
                 'facts': proposal.facts, 'outcome': proposal.outcome, 'new_evidence': [],
-                'result_narration': monthly.result_narration(state.event_id, proposal.outcome),
+                'result_narration': monthly.result_narration(state, proposal.outcome),
                 'stat_delta': {key: value - state.stats.model_dump()[key] for key, value in updated.stats.model_dump().items() if value != state.stats.model_dump()[key]},
                 'image': '/portraits/hopeful.svg',
                 'ai_trace': {'prompt_version': PROMPT_VERSION, 'provider': 'system', 'analysis_calls': 0,

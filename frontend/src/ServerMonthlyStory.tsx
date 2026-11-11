@@ -97,7 +97,7 @@ function part4View(game: Game): Part4Save {
     save.records.push({month, name: '대표님', text: label, kind: 'choice'});
     const result = results[month];
     if (result) {
-      const text = part4ResultText(month, result, save.route, decision.choices.choice, decision.reasons);
+      const text = part4ResultText(month, result, save.route, decision.choices.choice, save.newcomer.name, decision.reasons);
       save.records.push({month, name: '나레이션', text, kind: 'result'});
       if (month === save.month) save.resultText = text;
     }

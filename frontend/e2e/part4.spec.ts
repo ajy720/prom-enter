@@ -12,7 +12,7 @@ async function read(page:Page) {
   for(let i=0;i<12;i++) {
     const s=await state(page);
     if(s.phase!=='intro')break;
-    if(s.month===23&&s.cursor===0)await expect(page.locator('.narration-scene')).toHaveCSS('background-image',/stage\.png/);
+    if(s.month===23&&s.cursor===0)await expect(page.locator('.narration-scene')).toHaveCSS('background-image',/stage\.webp/);
     if(s.month===23&&s.cursor===3)await expect(page.locator('.dialogue-header h2')).toHaveText(s.newcomer.name);
     await page.locator('.part-four .primary-button').filter({hasText:/^(다음|멤버 면담 시작|백하연과 대화하기|선택하기|24개월차로)/}).click();
   }

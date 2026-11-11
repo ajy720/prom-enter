@@ -67,7 +67,7 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
     <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(secretarySpeaking ? 'baek_hayeon' : portraitPerson.id, feedback?.speakerId ? undefined : displayed.expression)} name={secretarySpeaking ? '백하연' : portraitPerson.name}/></div>
     <div className="interview-dock">
       {!complete && <div className="month-people" aria-label="첫 달 대화 상대">{conversationTargets.map(person => <button key={person.id} aria-pressed={target?.id === person.id} disabled={locked} onClick={() => void onConversationChange(person.id)}>{person.name}<small>{`${monthOneInterviewCount(game,person.id)}/8회${hasMemberDiscussion(game,person.id) ? ' · 면담함' : ' · 면담 전'}`}</small></button>)}</div>}
-      {(displayed.text || busy) && <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.speakerId ? feedback.name : displayed.name}</h2><div className="dialogue-tools"><span className="mode-label">{complete ? '1개월차 완료' : game.provider === 'demo' ? '1개월차 데모' : '1개월차 AI'}</span><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>
+      {(displayed.text || busy) && <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.speakerId ? feedback.name : displayed.name}</h2><div className="dialogue-tools"><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>
         <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{!feedback?.speakerId && <p>{displayed.text}</p>}{feedback && <PendingResponse feedback={feedback}/>}</div>
       </section>}
       {!complete && <>

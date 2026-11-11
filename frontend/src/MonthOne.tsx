@@ -28,7 +28,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   const talked = ([...memberIds,'newcomer'] as MonthSpeaker[]).filter(id => hasDiscussion(state,id)).length;
   const scenes = [
     { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `프로뮤의 첫 합숙이 시작됐습니다.\n${candidate.name}, 리안, 도하, 세인. 서로 다른 시간을 지나온 네 사람이 같은 숙소에서 하루를 시작합니다. 익숙해지기까지는 조금 시간이 필요할 것 같습니다.` },
-    { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 신입은 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
+    { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 ${candidate.name} 씨는 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
     { speaker: candidate.name, portrait: characterPortraits[candidate.id], text: candidate.id === 'jiwoo' ? '혼자 연습할 때는 문제없었습니다. 그런데 같이 하니 자꾸 어긋납니다. 제가 이 자리에 맞는 사람인지……실력으로 보여드리고 싶습니다.' : candidate.id === 'hyerin' ? '저……다른 친구가 왔다면 더 잘했을까요? 제가 다른 사람의 자리를 가져간 것 같아서……자꾸 긴장이 돼요.' : '제가 자꾸 늦어서 언니들 연습까지 멈추는 것 같아요. 다른 친구가 왔으면 더 잘했을까요……아니에요, 저도 꼭 따라갈 거예요.' },
   ];
   const introductory = state.scene < scenes.length;

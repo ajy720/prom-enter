@@ -3,7 +3,7 @@ import re
 from app.models import Analysis, Assessment, Dialogue, Message
 from app.ai.routing import offline_intent
 
-MONTH_ONE_COMPLETION_MESSAGE = '대표님, 첫 달 계획을 정리했습니다. 정해주신 방향에 맞춰 멤버들의 훈련과 합숙 생활을 챙기겠습니다. 모두가 조금씩 호흡을 맞춰갈 수 있도록 저도 곁에서 돕겠습니다.'
+MONTH_ONE_COMPLETION_MESSAGE = '대표님, 첫 달 계획을 정리했습니다. 정해주신 방향에 맞춰 멤버들의 훈련과 합숙 생활을 챙기겠습니다. 준비되시면 2개월차 일정을 시작하겠습니다.'
 
 PATTERNS = {
     'finish_interview':r'면담.{0,8}(?:마치|마무리|종료|끝)|다음 후보',

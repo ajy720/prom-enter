@@ -10,7 +10,7 @@ export function centerInterviewDialogue(game: Game): Omit<InterviewFrame, 'id'> 
   const targetId = game.conversation.mode === 'private' ? game.conversation.target_character_id : null;
   const secretary = targetId === 'baek_hayeon';
   const member = status?.members.find(person => person.character_id === targetId);
-  if (secretary) return {speakerId: 'baek_hayeon', name: '백하연', text: status?.finish_notice ?? '면담 완료를 누르면 현재 팀워크로 이번 달 결과를 확인합니다.'};
+  if (secretary) return {speakerId: 'baek_hayeon', name: '백하연', text: status?.finish_notice ?? '모든 멤버의 이야기를 들었다면 면담을 마무리해주세요.'};
   if (status?.finish_notice) return { speakerId: 'baek_hayeon', name: '백하연', text: status.finish_notice };
 
   const history = game.history
