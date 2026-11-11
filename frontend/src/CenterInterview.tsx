@@ -10,7 +10,7 @@ export function centerInterviewDialogue(game: Game): Omit<InterviewFrame, 'id'> 
   const targetId = game.conversation.mode === 'private' ? game.conversation.target_character_id : null;
   const secretary = targetId === 'baek_hayeon';
   const member = status?.members.find(person => person.character_id === targetId);
-  if (secretary) return {speakerId: 'baek_hayeon', name: '백하연', text: status?.finish_notice ?? '모든 멤버의 이야기를 들었다면 면담을 마무리해주세요.'};
+  if (secretary) return {speakerId: 'baek_hayeon', name: '백하연', text: status?.finish_notice ?? '면담 완료를 누르면 현재 팀워크로 이번 달 결과를 확인합니다.'};
   if (status?.finish_notice) return { speakerId: 'baek_hayeon', name: '백하연', text: status.finish_notice };
 
   const history = game.history
@@ -79,7 +79,7 @@ export function CenterMonthSidebar({ game, onTitle, onRecords, disabled }: {
     <p className="section-kicker">PROMYOU · 2개월차</p><h1>함께 정하는 포지션</h1>
     <p>멤버들의 이야기를 듣고 이번 달 면담을 마무리해주세요.</p>
     <section className="team-status-summary" aria-label="팀 능력치"><div className="team-status-values">
-      {([['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', game.stats.awareness], ['팬 수', '-']] as const).map(([label,value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}
+      {([['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', '-'], ['팬 수', '-']] as const).map(([label,value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}
     </div></section>
     <ol className="month-checklist"><li>{heard === 4 ? '✓' : '○'} 멤버 면담 · {heard}/4명</li><li>○ 전체 면담 마무리</li></ol>
     <button className="operation-button" onClick={onRecords}><span>이번 달 면담 기록</span><span aria-hidden="true">→</span></button>

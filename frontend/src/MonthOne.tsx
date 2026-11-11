@@ -1,3 +1,4 @@
+import { secretaryText } from './narrationText';
 import { NarrationScene } from './NarrationScene';
 import { useSceneViewport } from './useSceneViewport';
 import { useState } from 'react';
@@ -28,7 +29,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   const talked = ([...memberIds,'newcomer'] as MonthSpeaker[]).filter(id => hasDiscussion(state,id)).length;
   const scenes = [
     { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `프로뮤의 첫 합숙이 시작됐습니다.\n${candidate.name}, 리안, 도하, 세인. 서로 다른 시간을 지나온 네 사람이 같은 숙소에서 하루를 시작합니다. 익숙해지기까지는 조금 시간이 필요할 것 같습니다.` },
-    { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 ${candidate.name} 씨는 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
+    { speaker: '이야기', portrait: characterPortraits[candidate.id], text: `${candidate.name}, 기존 멤버들의 연습에 합류합니다.\n오랫동안 호흡을 맞춰온 세 사람과 달리 신입은 동작과 타이밍을 맞추는 데 어려움을 겪습니다. 연습실에는 어색한 침묵이 흐릅니다.` },
     { speaker: candidate.name, portrait: characterPortraits[candidate.id], text: candidate.id === 'jiwoo' ? '혼자 연습할 때는 문제없었습니다. 그런데 같이 하니 자꾸 어긋납니다. 제가 이 자리에 맞는 사람인지……실력으로 보여드리고 싶습니다.' : candidate.id === 'hyerin' ? '저……다른 친구가 왔다면 더 잘했을까요? 제가 다른 사람의 자리를 가져간 것 같아서……자꾸 긴장이 돼요.' : '제가 자꾸 늦어서 언니들 연습까지 멈추는 것 같아요. 다른 친구가 왔으면 더 잘했을까요……아니에요, 저도 꼭 따라갈 거예요.' },
   ];
   const introductory = state.scene < scenes.length;
@@ -54,8 +55,8 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   const summary = <dl className="month-summary"><div><dt>합류 멤버</dt><dd>{candidate.name}</dd></div><div><dt>집중 훈련</dt><dd>{training?.label ?? '미지정'}</dd></div><div><dt>멤버 면담</dt><dd>{talked} / 4명</dd></div><div><dt>합숙 규칙</dt><dd>{rule?.label ?? '미지정'}</dd></div></dl>;
 
   return <div ref={viewportRef} className="prologue-shell">
-    <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span><button className="quiet-button" onClick={onTitle}>시작 화면</button></header>
-    {introductory && displayed.speaker === '이야기' ? <NarrationScene title="어색한 첫 합숙" location="1개월차 · 연습실" background={sceneBackgrounds.practice} text={displayed.text}><div className="intro-navigation"><button className="primary-button" onClick={() => history.reviewing ? history.next() : onUpdate(current => ({...current,scene:current.scene+1}))}>다음 →</button></div></NarrationScene> : <section className="interview-room month-one month-photo-stage month-one-photos" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
+    <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span></header>
+    {introductory && displayed.speaker === '이야기' ? <NarrationScene newcomerName={candidate.name} title="어색한 첫 합숙" location="1개월차 · 연습실" background={sceneBackgrounds.practice} text={displayed.text}><div className="intro-navigation"><button className="primary-button" onClick={() => history.reviewing ? history.next() : onUpdate(current => ({...current,scene:current.scene+1}))}>다음 →</button></div></NarrationScene> : <section className="interview-room month-one month-photo-stage month-one-photos" aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
       <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
 
         <TeamStatus/>
@@ -66,7 +67,7 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
       <div className="interview-dock">
         {!introductory && !state.completed && <div className="month-people" aria-label="대화 상대">{people.map(target => <button key={target.id} aria-pressed={speaker === target.id} onClick={() => { setSpeaker(target.id as MonthSpeaker); setText(''); }}>{target.name}<small>{target.id === 'newcomer' ? '신입' : hasDiscussion(state, target.id as MonthSpeaker) ? '면담 완료' : '면담 전'}</small></button>)}</div>}
         <section className="dialogue-box"><header className="dialogue-header"><h2>{displayed.speaker}</h2><div className="dialogue-tools"><span className="mode-label">1개월차 데모</span><button className="text-button" onClick={openRecords}>대화 기록 보기</button></div></header>
-          <div className="dialogue-content" role="log" aria-live="polite"><p>{displayed.text}</p></div>
+          <div className="dialogue-content" role="log" aria-live="polite"><p>{displayed.speaker === '백하연' ? secretaryText(displayed.text, candidate.name) : displayed.text}</p></div>
           {introductory ? <div className="intro-navigation"><button className="quiet-button" onClick={history.index === 0 ? onCasting : history.previous}>← 이전</button><span>{history.index + 1} / 3{history.reviewing ? ' · 지난 대화' : ''}</span><button className="primary-button" onClick={history.reviewing ? history.next : () => onUpdate(current => ({ ...current, scene: Math.min(3, current.scene + 1) }))}>{history.reviewing || state.scene < 2 ? '다음' : '첫 달 계획 세우기'} →</button></div>
             : null}
         </section>

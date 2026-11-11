@@ -87,7 +87,8 @@ def build_dialogue_context(state: State, history: list[dict], query: str = '', *
     following = EVENTS[state.event_id] if result_event_id and state.event_id != result_event_id else None
     return DialogueContext(
         character=character, speakers=speakers,
-        scene={k:event[k] for k in ('id','title','scene','briefing','goal')}, stats=state.stats,
+        scene={**{k:event[k] for k in ('id','title','scene','briefing','goal')},
+               **({'selected_member_name': character.name} if not state.event_id.startswith('p2_') or state.completed_events.get('p2_casting') else {})}, stats=state.stats,
         known_evidence=[EVIDENCE[e] for e in state.evidence_ids], knowledge=knowledge,
         recent_turns=recent_turns(history), memories=shared,
         related_turns=related_turns(history,query,{t.id for t in recent_turns(history)}),

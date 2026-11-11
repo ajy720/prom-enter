@@ -52,6 +52,12 @@ export const characterPortraits: Record<string, string> = {
   jiwoo: '/images/characters/saya/half-body-transparent.webp',
 };
 
+export const awardPortraits: Record<string, string> = {
+  hyerin: '/images/characters/ido/stage-moved.png',
+  seoyeon: '/images/characters/yeoul/stage-moved.png',
+  jiwoo: '/images/characters/saya/stage-moved.png',
+};
+
 const portraitExpressions = new Set(['excited', 'angry', 'happy', 'sad', 'surprised']);
 
 export function dialoguePhoto(characterId: string, expression?: string) {

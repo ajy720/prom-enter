@@ -259,6 +259,8 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
 .character-introduction .introduction-photo { background-size: cover; background-position: center; display: flex; align-items: flex-end; }
 .character-introduction .introduction-photo .photo-slot { height: clamp(500px, calc(100dvh - 120px), 820px); min-height: 0; }
 .character-introduction .introduction-photo .photo-slot > img { object-position: center top; transform: scale(1.25); transform-origin: center top; }
+.profiles-modal .profile-card .photo-slot { height: calc(100% - 90px); min-height: 0; }
+.profiles-modal .profile-card .photo-slot > img { object-fit: cover; object-position: center top; }
 .interview-hub .profile-card .photo-slot { height: calc(100% - 90px); min-height: 0; }
 .introduction-photo .photo-placeholder { background: transparent; }
 .introduction-photo .placeholder-person { transform: scale(1.5); margin-bottom: var(--space-7); }
@@ -296,7 +298,8 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
 .profile-detail .character-description { font-size: 14px; padding-top: var(--space-4); }
 .selection-confirmed { color: var(--accent); font-size: 12px; font-weight: 700; }
 .selection-invitation { border-left: 3px solid var(--pink); padding-left: var(--space-3); font-size: 14px; }
-.profiles-modal { width: min(1280px, calc(100% - 48px)); }
+.profiles-modal { width: min(1280px, calc(100% - 48px)); padding-top: var(--space-7); }
+.profiles-modal .profile-card { height: 400px; }
 .profile-abilities { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-top: var(--space-5); }
 .profile-abilities > div { padding: var(--space-2) 0; border-top: 1px solid var(--border); }
 .profile-abilities dt { color: var(--ink-muted); font-size: 10px; }
@@ -304,7 +307,7 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
 .profile-abilities dd span { font-size: 11px; font-weight: 400; }
 @media (max-width: 950px) {
   .gallery-layout { grid-template-columns: 1fr; }
-  .profile-card { height: 330px; }
+  .profile-card, .profiles-modal .profile-card { height: 330px; }
   .profile-detail { min-height: 200px; }
   .introduction-copy { padding: var(--space-6); }
 }
@@ -347,7 +350,7 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
   .selection-heading { margin-bottom: var(--space-5); }
   .selection-heading > p:last-child { font-size: 13px; }
   .profile-cards { gap: var(--space-2); }
-  .profile-card { height: 240px; }
+  .profile-card, .profiles-modal .profile-card { height: 240px; }
   .profile-card .placeholder-person { transform: scale(.55); flex-shrink: 0; }
   .profile-card .photo-placeholder { padding: 0; }
   .profile-card-label { padding: var(--space-2); min-height: 83px; }
@@ -356,7 +359,7 @@ button { border: 1px solid var(--border); border-radius: var(--radius-small); }
   .profile-number { font-size: 9px; top: var(--space-2); left: var(--space-2); }
   .profile-detail { padding: var(--space-4); }
   .profile-detail h2 { font-size: 26px; }
-  .profiles-modal { width: calc(100% - 24px); }
+  .profiles-modal { width: calc(100% - 24px); padding: var(--space-7) var(--space-3) var(--space-4); }
   .profile-open-button { font-size: 13px; }
 }
 

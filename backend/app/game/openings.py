@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import uuid
 from app.ai.profiles import DATA, character_profile
+from app.member_text import member_reference
 from app.content import EVENTS
 from app.models import EventOpening, OpeningChoice, OpeningMessage, State
 from app.game.interviews import is_interview
@@ -18,6 +19,19 @@ def training_status(state):
                 else '현재 기록에는 예능 훈련 이력이 없습니다.')
     return ('신입의 예능 능력치가 오른 기록이 있습니다.' if member_abilities.trained(state, 'variety')
             else '현재 기록에는 신입의 예능 성장 이력이 없습니다.')
+
+
+def personalize_opening(opening: EventOpening, state: State) -> EventOpening:
+    if opening.month < 1 or (state.event_id.startswith('p2_') and not state.completed_events.get('p2_casting')):
+        return opening
+    name = character_profile(state.character_id).name
+    def named(message):
+        if message.character_id not in (DATA['secretary_id'], 'secretary', 'narrator'):
+            return message
+        return message.model_copy(update={'text': member_reference(message.text, name, polite=message.character_id != 'narrator')})
+    return opening.model_copy(update={'narration': member_reference(opening.narration, name),
+                                     'messages': [named(message) for message in opening.messages],
+                                     'beats': [named(message) for message in opening.beats]})
 
 
 def make_opening(state: State, history: list[dict], *, after_turn_id: str | None = None) -> EventOpening:
@@ -47,9 +61,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
         messages = ([OpeningMessage(character_id=character.id,name=character.name,text=f'안녕하세요. {character.name}입니다. 잘 부탁드립니다.')]
                     if is_interview(state.event_id) else [OpeningMessage(character_id=secretary.id,name=secretary.name,text=template['secretary'].format(**values))])
     if state.event_id == 'p2_m07':
-        summary = (f'첫 예능의 반응은 좋았지만 {character.name} 씨를 겨냥한 악플이 이어집니다.'
+        summary = ('첫 예능의 반응은 좋았지만 신입을 겨냥한 악플이 이어집니다.'
                    if state.completed_events.get(monthly.VARIETY) == 'success' else
-                   f'첫 예능 이후 {character.name} 씨를 겨냥한 악플이 늘었습니다.')
+                   '첫 예능 이후 신입을 겨냥한 악플이 늘었습니다.')
         template = {**template, 'narration': summary}
     if state.event_id == 'p2_m16':
         previous = state.completed_events.get('p2_m15')
@@ -63,9 +77,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
     if state.event_id == monthly.SHOWCASE:
         beats = [beat('narrator', '나레이션', '오늘은 데뷔 쇼케이스 당일이다. 조명이 켜지고 멤버들이 무대에 오른다.'),
                  beat(character.id, character.name, '소중한 이야기 들려줄게에……! (목소리가 갈라진다)'),
-                 beat('narrator', '나레이션', f'{character.name} 씨는 당황해 다음 안무도 놓친다. 침울한 표정으로 무대를 이어간다.'),
+                 beat('narrator', '나레이션', f'{character.name}는 당황해 다음 안무도 놓친다. 침울한 표정으로 무대를 이어간다.'),
                  beat('reporter', '기자', '지금 삑사리 난 거 아니야?'),
-                 beat('narrator', '나레이션', f'객석이 술렁인다. 무대 앞 카메라가 일제히 {character.name} 씨를 향한다.'),
+                 beat('narrator', '나레이션', '객석이 술렁인다. 무대 앞 카메라가 일제히 신입을 향한다.'),
                  beat('reporter', '기자', '(찰칵찰칵)'),
                  beat('narrator', '나레이션', '쇼케이스가 끝나고 멤버들이 무대에서 내려왔다.'), *messages]
     if state.event_id == monthly.VARIETY:
@@ -83,11 +97,11 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
                   f'자금 {state.stats.funds_won:,}원입니다. ' + ' '.join(warnings or ['현재의 팀 호흡을 유지하며 다음 활동의 컨디션을 챙겨주세요.']))
         messages = [beat(secretary.id, secretary.name, report), *messages]
         beats = messages
-    return EventOpening(id=str(uuid.uuid5(uuid.NAMESPACE_URL,f'prom-enter:{state.game_id}:opening:{state.event_id}')),
+    return personalize_opening(EventOpening(id=str(uuid.uuid5(uuid.NAMESPACE_URL,f'prom-enter:{state.game_id}:opening:{state.event_id}')),
         event_id=state.event_id,after_turn_id=after_turn_id,month=event['month'],title=event['title'],scene=event['scene'],
         narration=(f'{character.name} 후보와 대표님의 면담을 시작합니다.' if is_interview(state.event_id) else template['narration'].format(**values)),
         messages=messages,
-        goal=event['goal'],choices=[OpeningChoice(id=a['id'],label=a['label']) for a in event['actions']], beats=beats)
+        goal=event['goal'],choices=[OpeningChoice(id=a['id'],label=a['label']) for a in event['actions']], beats=beats), state)
 
 
 def openings_for_view(state: State, history: list[dict]) -> list[EventOpening]:
@@ -98,8 +112,8 @@ def openings_for_view(state: State, history: list[dict]) -> list[EventOpening]:
                 if opening.event_id.startswith('p2_m0') and opening.month <= 6
                 and not (opening.event_id == monthly.VARIETY and opening.beats) else opening for opening in state.event_openings]
     if any(opening.event_id==state.event_id for opening in state.event_openings):
-        return openings
-    return [*openings,make_opening(state,history)]
+        return [personalize_opening(opening, state) for opening in openings]
+    return [*[personalize_opening(opening, state) for opening in openings],make_opening(state,history)]
 
 
 def ensure_opening(state: State, history: list[dict], *, after_turn_id: str | None = None):

@@ -239,3 +239,25 @@ def test_rumor_outcome_uses_evidence_count_and_only_failure_ends_early(session, 
     else:
         assert after['monthly_story']['phase'] == 'intro'
         assert after['event']['month'] == 14
+
+
+@pytest.mark.parametrize('slot,profile,name', [('a','hyerin','이도'),('b','seoyeon','여울'),('c','jiwoo','사야')])
+def test_month_nineteen_interviews_use_only_the_selected_members_language_background(session, slot, profile, name):
+    client, provider, game = at_month(session, 'p2_m19')
+    def setup(state):
+        state.character_id = slot
+        state.completed_events['p2_casting'] = 'success'
+        state.monthly_story = MonthlyStory(month=19, goal='national', route='overseas', phase='interviews', target=profile)
+        state.conversation = make_conversation(state)
+    game = seed(client, game, setup)
+    for target in (profile, 'dahyun', 'haram', 'yuna'):
+        game = command(client, game, 'target', id=target)['game']
+        game = command(client, game, 'chat', text='현지 활동에서 어떤 점이 걱정돼?')['game']
+        briefing = provider.views[-1].scene['briefing']
+        assert name in briefing and '리안, 도하, 세인' in briefing
+        if slot == 'c':
+            assert '사야는 일본어에 익숙' in briefing
+        else:
+            assert '사야' not in briefing
+            assert '일본어에 익숙' not in briefing
+            assert all('사야' not in message['text'] for message in game['history'][-1]['messages'])

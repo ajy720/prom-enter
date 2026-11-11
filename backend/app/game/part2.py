@@ -99,7 +99,7 @@ def resolve_part2(original, analysis, turn_id):
         support()
     elif action == 'confirm_month_plan':
         outcome = 'success'
-        facts.append('첫 달 계획을 확정했습니다. 훈련·합숙 규칙·대화 기록을 저장했습니다. 대표가 다음 달 시작을 선택하면 2개월차 일정이 이어집니다.')
+        facts.append('첫 달 계획을 확정했습니다. 훈련·합숙 규칙·대화 기록을 보존하고 1개월차에서 마무리합니다. 2개월차로 이동하지 않습니다.')
     elif action == 'start_month_two':
         if 'p2_m01_training:confirm_month_plan' not in state.applied_effects:
             raise GameError('첫 달 계획을 먼저 확정해주세요.', 422)

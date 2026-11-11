@@ -512,9 +512,7 @@ def test_month_one_completion_stops_without_second_month(session, command, actio
     assert next(a for a in completed['event']['actions'] if a['id'] == 'confirm_month_plan')['used']
     closing = next(message['text'] for message in completed['history'][-1]['messages'] if message['speaker_id'] == 'secretary')
     assert closing.startswith('대표님, 첫 달 계획을 정리했습니다.')
-    assert '준비되시면 2개월차 일정을 시작하겠습니다.' in closing
-    assert 'success' not in closing and '처리를 확정' not in closing
-    assert not any('2개월차로 이동하지' in fact for fact in completed['history'][-1]['facts'])
+    assert 'success' not in closing and '처리를 확정' not in closing and '2개월차' not in closing
     assert send(client, game, command, action=action, key='month-one-final', stop=True) == completed
     assert client.get(f"/api/games/{game['game_id']}").json() == completed
     send(client, completed, '안녕', status=409, stop=True)
@@ -624,7 +622,7 @@ def test_old_monthly_openings_refresh_without_exposing_rules_or_rewriting_save(s
     refreshed = openings_for_view(state, [])
     assert refreshed[0].id == 'legacy-opening' and refreshed[0].after_turn_id == 'legacy-transition'
     assert '42' not in refreshed[0].model_dump_json() and '판정' not in refreshed[0].model_dump_json()
-    assert '면담 완료' in refreshed[0].messages[0].text
+    assert '이번 달 팀의 방향을 함께 정해주세요.' in refreshed[0].messages[0].text
     assert '센터를 선택' not in refreshed[0].messages[0].text
     assert state.model_dump_json() == before
     for event in EVENTS.values():

@@ -93,7 +93,7 @@ test('10개월 광고 결과 나레이션→백하연 안내→전원 면담→�
     const s=at(10,{}, {9:result}); const lines=part3Intro(s);
     assert.equal(lines[0].speaker,'narrator');
     assert.match(lines[0].text,result==='success'?/광고의 효과/:/조용히 컴백/);
-    assert.match(lines[1].text,/두 번째 컴백.*신입과 리안, 도하, 세인/);
+    assert.match(lines[1].text,/두 번째 컴백.*이도 씨와 리안, 도하, 세인/);
     const started=read(s);
     assert.throws(()=>act(started,{type:'finishInterviews'}));
   }

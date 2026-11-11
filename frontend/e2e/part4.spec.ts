@@ -82,3 +82,38 @@ test('해외 20개월 7회 제한과 모호한 지침 확인 후 감정적 대�
 for(const ending of ['ordinary','forgotten'] as const)test(`${ending} 재계약 의향에도 다른 후일담으로 마무리`,async({page})=>{
   const s=createPart4(undefined,'national');await seed(page,{...s,month:24,route:'domestic',phase:'decision',stats:ending==='ordinary'?{...s.stats,funds_won:1800000000}:{...s.stats,funds_won:300000000,teamwork:30,awareness:20,fans:30000}});await select(page,'재계약하고 활동을 이어가고 싶다');await confirm(page);await expect(page.getByRole('heading',{name:ending==='ordinary'?'평범한 엔딩 · 각자의 다음 장':'잊혀진 그룹 엔딩 · 조용히 남은 이름'})).toBeVisible();expect((await state(page)).ending).toBe(ending);
 });
+
+
+test('22개월 예산 입력 중 스크롤 위치 유지', async ({page}) => {
+  await seed(page, {...createPart4(undefined,'national'), month:22, phase:'decision', route:'domestic'});
+  const field = page.getByLabel('제작 (원)', {exact:true});
+  await field.scrollIntoViewIfNeeded();
+  await field.click();
+  const initialY = await page.evaluate(()=>window.scrollY);
+  expect(initialY).toBeGreaterThan(0);
+  for (const digit of '100000000') {
+    await field.pressSequentially(digit);
+    await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+    expect(Math.abs(await page.evaluate(()=>window.scrollY) - initialY)).toBeLessThanOrEqual(2);
+  }
+  await expect(field).toHaveValue('100000000');
+  expect((await state(page)).draft.production).toBe('100000000');
+});
+
+
+for (const [id,name] of [['hyerin','이도'],['seoyeon','여울'],['jiwoo','사야']]) {
+  test(`19개월 선택 멤버 ${name}의 안내와 답변`, async ({page}) => {
+    await seed(page,{...createPart4(undefined,'national'),month:19,phase:'intro',cursor:1,route:'overseas',newcomer:{id,name},target:id});
+    const log=page.getByRole('log');
+    await expect(log).toContainText(`${name} 씨와 리안`);
+    if(id!=='jiwoo') await expect(log).not.toContainText('사야');
+    else await expect(log).toContainText('사야 씨는 일본어가 익숙');
+    await page.getByRole('button',{name:'멤버 면담 시작 →',exact:true}).click();
+    for (const member of [name,'리안','도하','세인']) {
+      await page.getByRole('navigation',{name:'이번 달 면담 상대'}).getByRole('button',{name:new RegExp(`^${member}`)}).click();
+      if(id!=='jiwoo') await expect(log).not.toContainText('사야');
+      await chat(page,'현지 활동에서 어떤 점이 걱정돼?');
+      if(id!=='jiwoo') await expect(log).not.toContainText('사야');
+    }
+  });
+}

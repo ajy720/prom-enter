@@ -1,3 +1,4 @@
+import { PlayModeInfo } from './PlayModeInfo';
 import { useState } from 'react';
 import { monthInterviewFrames, monthInterviewTargets } from './monthlyRecordState';
 import type { Game } from './types';
@@ -9,7 +10,7 @@ export function MonthlyInterviewRecords({ game }: { game: Game }) {
   const target = targets.find(person => person.id === selected) ?? targets[0];
   const frames = monthInterviewFrames(game, target?.id ?? 'public');
   return <section aria-label={`${game.event.month}개월차 면담 기록`}>
-    <h2>{game.event.month}개월차 면담 기록</h2>
+    <h2>{game.event.month}개월차 면담 기록</h2><PlayModeInfo provider={game.provider}/>
     <nav className="record-navigation monthly-record-members" aria-label="면담 기록 멤버">
       {targets.map(person => <button type="button" key={person.id} aria-pressed={target?.id === person.id} onClick={() => setSelected(person.id)}>{person.name}</button>)}
     </nav>

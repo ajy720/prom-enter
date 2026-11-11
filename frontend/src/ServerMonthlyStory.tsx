@@ -97,7 +97,7 @@ function part4View(game: Game): Part4Save {
     save.records.push({month, name: '대표님', text: label, kind: 'choice'});
     const result = results[month];
     if (result) {
-      const text = part4ResultText(month, result, save.route, decision.choices.choice, save.newcomer.name, decision.reasons);
+      const text = part4ResultText(month, result, save.route, decision.choices.choice, decision.reasons);
       save.records.push({month, name: '나레이션', text, kind: 'result'});
       if (month === save.month) save.resultText = text;
     }
@@ -109,6 +109,6 @@ export function ServerMonthlyStory({game, controls, onTitle}: {game: Game; contr
   const part3 = game.monthly_story!.month <= 12;
   const save = useMemo(() => part3 ? part3View(game) : part4View(game), [game, part3]);
   if (part3) return <PartThree key={game.game_id} server={{save: save as Part3Save, source: game, controls, onTitle}}/>;
-  return <PartFour key={game.game_id} server={{save: save as Part4Save, controls, onTitle,
+  return <PartFour key={game.game_id} server={{provider: game.provider, save: save as Part4Save, controls, onTitle,
     promotionText: game.monthly_story!.promotion_text, promotionWarning: game.monthly_story!.promotion_warning}}/>;
 }

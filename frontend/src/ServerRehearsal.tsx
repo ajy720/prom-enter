@@ -1,3 +1,4 @@
+import { secretaryText } from './narrationText';
 import { useEffect, useState } from 'react';
 import { ChatComposer } from './ChatComposer';
 import { DialogueNavigation } from './DialogueNavigation';
@@ -59,8 +60,8 @@ export function ServerRehearsal({ game, busy, pending, text, onTextChange, onSen
   return <section className="interview-room month-one month-photo-stage month-one-photos center-month rehearsal-month" aria-label={interviewing ? '3개월차 멤버 면담' : '3개월차 공개 질책'} style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={3}/></div>
     <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 3개월차</p><h1>{interviewing ? '다시, 함께하는 연습' : '리허설의 공개 질책'}</h1>
-      <p>{interviewing ? '신입과 기존 멤버의 이야기를 각각 들어주세요.' : '공개 질책을 중단시켜주세요.'}</p>
-      <section className="team-status-summary" aria-label="팀 능력치"><div className="team-status-values">{([['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', game.stats.awareness], ['팬 수', '-']] as const).map(([label,value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}</div></section>
+      <p>{interviewing ? `${game.character.name} 씨와 기존 멤버의 이야기를 각각 들어주세요.` : '공개 질책을 중단시켜주세요.'}</p>
+      <section className="team-status-summary" aria-label="팀 능력치"><div className="team-status-values">{([['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', '-'], ['팬 수', '-']] as const).map(([label,value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}</div></section>
       <ol className="month-checklist"><li>{interviewing ? '✓' : '○'} 공개 질책 중단</li>{interviewing && <li>멤버 면담 · {heard}/{members.length}명</li>}</ol>
       <button className="operation-button" onClick={() => setRecords(true)}>이번 달 면담 기록 →</button><button className="quiet-button" disabled={locked} onClick={onTitle}>← 시작 화면</button>
     </aside>
@@ -68,7 +69,7 @@ export function ServerRehearsal({ game, busy, pending, text, onTextChange, onSen
     <div className="interview-dock">
       {interviewing && <nav className="month-people center-member-tabs" aria-label="3개월차 면담 상대">{members.map(person => <button key={person.id} disabled={locked} aria-pressed={target?.id === person.id} onClick={() => void onConversationChange(person.id)}><strong>{person.name}</strong><small>{hasTalked(person.id) ? '면담 기록 있음' : '면담 전'}</small></button>)}</nav>}
       <section className="dialogue-box"><header className="dialogue-header"><h2>{feedback?.name ?? displayed.name}</h2><button className="text-button" onClick={() => setRecords(true)}>대화 기록</button></header>
-        <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{feedback ? <PendingResponse feedback={feedback}/> : <p>{displayed.text}</p>}</div>
+        <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{feedback ? <PendingResponse feedback={feedback}/> : <p>{['baek_hayeon','secretary'].includes(speakerId) ? secretaryText(displayed.text, game.character.name) : displayed.text}</p>}</div>
         {!interviewing && <DialogueNavigation index={index} count={frames.length} onPrevious={() => read(Math.max(0,index - 1))} onNext={() => read(Math.min(frames.length - 1,index + 1))} onLatest={() => read(frames.length - 1)} disabled={locked}/>}
       </section>
       <ChatComposer id="rehearsal-message" label={interviewing ? '리허설 면담 대화' : '공개 질책 중단 대화'} text={text} disabled={locked || reviewing} onTextChange={onTextChange} onSend={() => onSend()}

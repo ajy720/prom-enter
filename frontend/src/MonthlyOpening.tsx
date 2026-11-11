@@ -1,3 +1,4 @@
+import { secretaryText } from './narrationText';
 import { useState } from 'react';
 import { PhotoSlot } from './PhotoSlot';
 import { characterPortraits, sceneBackgrounds } from './introContent';
@@ -28,12 +29,12 @@ export function MonthlyOpening({ game, phase, onNext, disabled }: {
   const opening = game.event_openings.find(item => item.event_id === game.event.id);
   const briefing = phase === 'briefing';
   const monthOne = game.event.id === 'p2_m01_training';
-  if (!briefing) return <NarrationScene title={game.event.title} location={`${game.event.month}개월차 · ${game.event.scene}`} background={sceneBackgrounds.practice} text={opening?.narration ?? game.event.briefing}><div className="monthly-buttons"><button className="primary-button" disabled={disabled} onClick={onNext}>다음 →</button></div></NarrationScene>;
+  if (!briefing) return <NarrationScene newcomerName={game.character.name} title={game.event.title} location={`${game.event.month}개월차 · ${game.event.scene}`} background={sceneBackgrounds.practice} text={opening?.narration ?? game.event.briefing}><div className="monthly-buttons"><button className="primary-button" disabled={disabled} onClick={onNext}>다음 →</button></div></NarrationScene>;
   return <section className={`monthly-intro ${briefing ? 'is-briefing' : 'is-narration'}${monthOne ? ' month-one-photos' : ' month-two-photos'}`} aria-label={`${game.event.month}개월차 ${briefing ? '백하연 안내' : '나레이션'}`} style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
     <header><p className="section-kicker">{game.event.month}개월차 · {game.event.scene}</p><h1>{game.event.title}</h1></header>
     {briefing && <div className="monthly-intro-portrait"><PhotoSlot src={characterPortraits.baek_hayeon} name="백하연"/></div>}
     <div className="monthly-intro-copy"><section className="dialogue-box"><header className="dialogue-header"><h2>{briefing ? '백하연' : '나레이션'}</h2></header><div className="dialogue-content" aria-live="polite">{briefing
-      ? (opening?.messages.length ? opening.messages.map((message, index) => <p key={index}>{message.text}</p>) : <p>{game.event.briefing}</p>)
+      ? (opening?.messages.length ? opening.messages.map((message, index) => <p key={index}>{secretaryText(message.text, game.character.name)}</p>) : <p>{secretaryText(game.event.briefing, game.character.name)}</p>)
       : <p>{opening?.narration ?? '새로운 달의 이야기가 시작됩니다.'}</p>}</div></section><div className="monthly-buttons"><button className="primary-button" disabled={disabled} onClick={onNext}>{briefing ? '이야기 시작하기' : '다음'} →</button></div></div>
   </section>;
 }

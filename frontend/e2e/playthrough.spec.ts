@@ -4,7 +4,21 @@ import { advancePart3 } from '../src/part3State';
 import { createMonthlyFixture } from '../src/monthlyFixture';
 
 async function layout(page: Page) {
+  await expect(page.locator('.intro-topbar').getByRole('button',{name:'시작 화면',exact:true})).toHaveCount(0);
+  await expect(page.locator('.intro-topbar').getByRole('link',{name:'시작 화면',exact:true})).toHaveCount(0);
+  const brand = page.locator('.intro-topbar .intro-brand');
+  if (await brand.count()) await expect(brand).toHaveCSS('text-decoration-line', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  if ((await page.viewportSize())!.width >= 1001) {
+    const overlapping = await page.locator('.candidate-interview, .month-photo-stage, .monthly-stage, .monthly-intro').evaluateAll(stages => stages.some(stage => {
+      const info = stage.querySelector(':scope > .interview-info, :scope > .monthly-info, :scope > header');
+      const portrait = stage.querySelector(':scope > .interview-portrait:has(.dialogue-photo), :scope > .monthly-portrait:has(.dialogue-photo), :scope > .monthly-intro-portrait:has(.dialogue-photo)');
+      if (!info || !portrait) return false;
+      const a = info.getBoundingClientRect(), b = portrait.getBoundingClientRect();
+      return a.width > 0 && b.width > 0 && a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+    }));
+    expect(overlapping).toBe(false);
+  }
   const composer = page.locator('.chat-composer textarea:visible');
   if(await composer.count()) expect((await composer.boundingBox())!.height).toBeLessThanOrEqual(46);
   const progress=page.locator('.part3-stage .monthly-progress');
@@ -52,7 +66,7 @@ async function cast(page:Page, selected:string) {
   await page.locator('dialog[open]').getByRole('button',{name:/다음 이야기로/}).click();
   await page.locator('.intro-navigation').getByRole('button',{name:/다음/}).click();
   await page.locator('.intro-navigation').getByRole('button',{name:/다음/}).click();
-  await page.getByRole('button',{name:/2년 차 목표 선택/}).click();
+  await page.getByRole('button',{name:/활동 방향 선택/}).click();
   await page.getByRole('radio',{name:/국민 그룹/}).check();
   await page.getByRole('button',{name:/목표 확정 · 첫 합숙 시작/}).click();
 }
@@ -65,6 +79,10 @@ async function opening(page:Page) {
         if((await old.locator('.dialogue-header h2').textContent()) === '기자' || (await old.getByRole('log').textContent())?.includes('오늘은 데뷔 쇼케이스')) await expect(old).toHaveCSS('background-image', /stage\.webp/);
         expect(await old.locator('.dialogue-box').evaluate(e=>getComputedStyle(e).backgroundColor)).toBe('rgb(255, 255, 255)');
         await shot(page,'narration-'+(await old.locator('header h1').textContent()));
+      }
+      if ((await old.locator('.dialogue-header h2').textContent()) === '백하연') {
+        await expect(old.locator('.dialogue-content')).not.toContainText('신입');
+        await shot(page,'briefing-'+(await old.locator('header h1').textContent()));
       }
       await old.locator('button.primary-button').click(); continue;
     }
@@ -85,7 +103,6 @@ async function monthOne(page:Page,selected:string) {
     await expect(page.locator('.dialogue-header h2')).toHaveText(name);
     await expect(page.locator('.scene-resource-status')).toHaveCount(0);
   }
-  await expect(page.getByText(/1개월차 (?:데모|AI)/)).toHaveCount(0);
   await shot(page,'month-one');
   await page.getByRole('button',{name:/첫 달 계획 확인/}).click();
   await serverAction(page,()=>page.getByRole('button',{name:'첫 달 계획 확정',exact:true}).click());
@@ -94,12 +111,12 @@ async function monthOne(page:Page,selected:string) {
 }
 async function monthTwo(page:Page,selected:string) {
   await opening(page);
+  await expect(page.locator('.monthly-stats > div').filter({has:page.locator('dt', {hasText:'인지도'})}).locator('dd')).toHaveText('-');
   for(const name of [selected,'리안','도하','세인']) {
     await serverAction(page,()=>page.getByRole('navigation',{name:'2개월차 면담 상대'}).getByRole('button',{name:new RegExp(`^${name}`)}).click());
     await serverChat(page,'2개월차 면담');
   }
   await serverAction(page,()=>page.getByRole('button',{name:'면담 완료',exact:true}).click());
-  await expect(page.getByText(/면담 종료 시 팀워크|성공 기준/)).toHaveCount(0);
   await shot(page,'month-two-result');
   await page.getByRole('button',{name:/3개월차 안내 보기/}).click();
   await resume(page);
@@ -107,6 +124,7 @@ async function monthTwo(page:Page,selected:string) {
 }
 async function sixMonths(page:Page,selected:string,failure=false) {
   await opening(page);
+  await expect(page.locator('.monthly-stats > div').filter({has:page.locator('dt', {hasText:'인지도'})}).locator('dd')).toHaveText('-');
   const stopped=await serverChat(page,'공개 질책 중단 대화','공개 질책을 중단해줘');
   expect(stopped.history.at(-1).messages.map((m:{speaker_id:string})=>m.speaker_id)).toEqual(['newcomer','yuna','secretary']);
   if (!failure) {
@@ -147,7 +165,12 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   await page.getByRole('button',{name:/홍보 예산 배분하기/}).click();
   const budget=page.locator('dialog[open]');
   const total=failure?10000000:40000000;
-  await budget.getByLabel('숏폼 예산 (원)').fill(String(failure?0:total*.5));
+  const amount = budget.getByLabel('숏폼 예산 (원)');
+  await amount.fill('');
+  await expect(amount).toHaveValue('');
+  await amount.pressSequentially('100000');
+  await expect(amount).toHaveValue('100000');
+  await amount.fill(String(failure?0:total*.5));
   await budget.getByLabel('라디오 예산 (원)').fill(String(failure?total:total*.2));
   await budget.getByLabel('팬사인회 예산 (원)').fill(String(failure?0:total*.3));
   await shot(page,'month-five-budget');
@@ -193,6 +216,103 @@ async function storyInterviews(page: Page, selected: string) {
   return storyStep(page, '면담 마무리 →');
 }
 
+test('후보 완료 색상·전송 후 포커스·프로필 배치', async ({page}, info) => {
+  await page.goto('/');
+  await page.getByRole('button',{name:/^게임 시작/}).click();
+  for (let i = 0; i < 12; i++) {
+    const profiles = page.getByRole('button',{name:'데뷔조 프로필 보기',exact:true});
+    if (await profiles.isVisible()) {
+      await profiles.click();
+      const modal = page.getByRole('dialog',{name:'기존 데뷔조 프로필',exact:true});
+      await expect(modal).toBeVisible();
+      if (info.project.name === 'desktop') {
+        for (const viewport of [{width:1440,height:1000}, {width:1366,height:768}]) {
+          await page.setViewportSize(viewport);
+          for (const name of ['리안','도하','세인']) {
+            await modal.locator('.profile-card').filter({hasText:name}).click();
+            await expect(modal.locator('.profile-detail h2')).toContainText(name);
+            await expect(modal).toHaveCSS('overflow-y', 'auto');
+          }
+          await shot(page,`profiles-${viewport.width}`);
+        }
+        await page.setViewportSize({width:1440,height:1000});
+      }
+      await modal.getByRole('button',{name:'나가기',exact:true}).scrollIntoViewIfNeeded();
+      await shot(page,'profiles-scroll');
+      await modal.getByRole('button',{name:'나가기',exact:true}).click();
+      break;
+    }
+    if(await page.locator('#nickname').isVisible()) await page.locator('#nickname').fill('테스트');
+    const modal=page.locator('dialog[open]');
+    if(await modal.count()) await modal.getByRole('button',{name:/확인 · 안내 계속하기/}).click();
+    else await page.locator('.intro-navigation .primary-button').click();
+  }
+  // Continue the current prologue without resetting the save.
+  for (let i = 0; i < 20 && !await page.locator('.interview-hub').isVisible(); i++) {
+    const modal = page.locator('dialog[open]');
+    if(await modal.count()) await modal.getByRole('button',{name:/확인 · 안내 계속하기/}).click();
+    else await page.locator('.intro-navigation .primary-button').click();
+  }
+  const card = page.locator('.profile-card').filter({hasText:'이도'});
+  const before = await card.locator('.profile-number').evaluate(e=>getComputedStyle(e).backgroundColor);
+  await card.click(); await page.getByRole('button',{name:/면담 시작하기/}).click();
+  await serverChat(page,'면담 질문');
+  const input = page.getByRole('textbox',{name:'면담 질문',exact:true});
+  await expect(input).toBeFocused();
+  await input.fill('앞으로 어떤 무대를 하고 싶어?');
+  await serverAction(page,()=>input.press('Enter'));
+  await expect(input).toBeFocused();
+  await layout(page);
+  if (info.project.name === 'desktop') {
+    const dock = await page.locator('.interview-dock').boundingBox();
+    const person = await page.locator('.dialogue-photo').evaluate(photo => {
+      const pane = photo.getBoundingClientRect();
+      return {right: pane.right};
+    });
+    const info = await page.locator('.interview-info').boundingBox();
+    const portrait = await page.locator('.interview-portrait').boundingBox();
+    expect(info!.x + info!.width).toBeLessThanOrEqual(portrait!.x + 1);
+    expect(dock!.width).toBeGreaterThanOrEqual(340);
+    expect(dock!.x).toBeGreaterThanOrEqual(person.right);
+  }
+  await shot(page,'wide-interview');
+  await serverAction(page,()=>page.getByRole('button',{name:'면담 마무리',exact:true}).click());
+  await serverAction(page,()=>page.getByRole('button',{name:/면담 상대 목록으로/}).click());
+  await expect(card).toHaveClass(/interview-completed/);
+  expect(await card.locator('.profile-number').evaluate(e=>getComputedStyle(e).backgroundColor)).not.toBe(before);
+  await expect(card).toContainText('면담 완료');
+  await shot(page,'candidate-completed');
+  const brand = page.locator('.intro-topbar .intro-brand');
+  await brand.hover();
+  await expect(brand).toHaveCSS('text-decoration-line', 'none');
+  await brand.click();
+  await expect(page.getByRole('button',{name:/^게임 시작/})).toBeVisible();
+});
+
+test('안내 제목·인물 분리와 대화창 최대 폭', async ({page}, info) => {
+  await prologue(page);
+  await cast(page, '이도');
+  await page.locator('.narration-scene').getByRole('button',{name:'다음 →',exact:true}).click();
+  const scene = page.locator('.monthly-intro.is-briefing');
+  await expect(scene.getByRole('heading',{name:'백하연',exact:true})).toBeVisible();
+  const sizes = info.project.name === 'desktop'
+    ? [{width:2880,height:1406}, {width:1920,height:1080}, {width:1366,height:768}]
+    : [page.viewportSize()!];
+  for (const size of sizes) {
+    await page.setViewportSize(size);
+    await layout(page);
+    if (info.project.name === 'desktop') {
+      const heading = (await scene.locator(':scope > header').boundingBox())!;
+      const person = (await scene.locator('.monthly-intro-portrait').boundingBox())!;
+      expect(heading.y + heading.height).toBeLessThanOrEqual(person.y + 1);
+      const stage = (await scene.boundingBox())!;
+      expect(Math.abs(person.y + person.height - stage.y - stage.height)).toBeLessThanOrEqual(1);
+      expect((await scene.locator('.monthly-intro-copy').boundingBox())!.width).toBeLessThanOrEqual(681);
+    }
+    await shot(page,`briefing-separated-${size.width}`);
+  }
+});
+
 test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서버 저장으로 진행', async ({page}, info) => {
   const overseas = info.project.name === 'desktop';
   const selected = overseas ? '사야' : '여울';
@@ -224,8 +344,10 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   expect(result7.stats.funds_won).toBe(initial.stats.funds_won - 20_000_000);
 
   await storyStep(page, '8개월차로 →');
-  await storyRead(page, '선택하기 →');
-  await storySelect(page, '컨디션 관리 선택 →');
+  await storyStep(page, '다음 →');
+  await expect(page.getByRole('heading',{name:'백하연',exact:true})).toBeVisible();
+  await storyStep(page, '컨디션 관리 선택 →');
+  await expect(page.getByRole('dialog',{name:'컨디션 관리',exact:true})).toBeVisible();
   await storySelect(page, /^휴가 제공/);
   await storyConfirm(page, '선택 확인 →');
   await storyStep(page, '9개월차로 →');
@@ -258,7 +380,9 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
     await expect(page.getByRole('log')).toContainText(speech);
     for (let i = 0; i < 3; i++) await storyStep(page, '다음 →');
   }
+  await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /office\.webp/);
   await storyStep(page, '반기 결산 마치기 →');
+  await expect(page.locator('.part3-awards')).toHaveCSS('background-image', /office\.webp/);
   await storyStep(page, '13개월차 · Part 4 시작 →');
   await storyStep(page, '게시물 확인 →');
   await expect(page.getByAltText(`${selected} 과거 논란 게시물`)).toBeVisible();
@@ -308,7 +432,7 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
     await page.getByLabel('콘서트 홍보 멘트').fill('팬은 멍청해');
     const checked = await storyStep(page, '선택 확인 →');
     expect(checked.monthly_story.promotion_warning).toBe(true);
-    await expect(page.locator('dialog[open]')).toContainText('그대로 확정하면 실패합니다');
+    await expect(page.locator('dialog[open]')).toContainText('발표 전에 표현을 다시 살펴주세요');
     await storySelect(page, '다시 선택');
     await page.getByLabel('콘서트 홍보 멘트').fill('첫 단독 콘서트에서 함께 만나요!');
     await storyStep(page, '선택 확인 →');
@@ -324,7 +448,14 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   await storySelect(page, '밝은 팝 타이틀');
   const funds = album.stats.funds_won;
   const portion = Math.ceil(funds * .3);
-  await page.getByLabel('제작 (원)').fill(String(portion));
+  const production = page.getByLabel('제작 (원)');
+  await production.scrollIntoViewIfNeeded();
+  await production.click();
+  const budgetScroll = await page.evaluate(()=>window.scrollY);
+  expect(budgetScroll).toBeGreaterThan(0);
+  await production.fill(String(portion));
+  await page.evaluate(()=>new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve()))));
+  expect(Math.abs(await page.evaluate(()=>window.scrollY) - budgetScroll)).toBeLessThanOrEqual(2);
   await page.getByLabel('홍보 (원)').fill(String(portion));
   await page.getByLabel('예비비 (원)').fill(String(funds - 2 * portion));
   await expect(page.getByRole('status')).toContainText('남은 배분 가능 자금 0원');

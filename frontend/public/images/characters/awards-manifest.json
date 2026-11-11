@@ -1,0 +1,29 @@
+[
+  {
+    "character": "이도",
+    "source_filename": "이도_무대_감동.png",
+    "provided_on": "2026-11-11",
+    "sha256": "3e621905c8f5a9e323a7f9893af9e8e8bbb558e5a95c8c74e229a60bb00808e3",
+    "file": "ido/stage-moved.png",
+    "width": 2048,
+    "height": 2048
+  },
+  {
+    "character": "여울",
+    "source_filename": "여울_무대_감동.png",
+    "provided_on": "2026-11-11",
+    "sha256": "30df56c4770c8486ffe58d617d87124119833352323b8e9d0dd739c4829c3fbf",
+    "file": "yeoul/stage-moved.png",
+    "width": 2048,
+    "height": 2048
+  },
+  {
+    "character": "사야",
+    "source_filename": "사야_무대_감동.png",
+    "provided_on": "2026-11-11",
+    "sha256": "178dbead924c7098b34e739bd5a2dc3ae46beaefbe8e0e199c06fbeb6600e110",
+    "file": "saya/stage-moved.png",
+    "width": 2048,
+    "height": 2048
+  }
+]
