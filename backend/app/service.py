@@ -249,11 +249,19 @@ class TurnService:
         actor_context.input_kind = analysis.utterance_kind
         actor_context.clarification_question = analysis.clarification_question
         views = {role:scope_actor(actor_context,acting_state,text,role,history) for role in actor_context.allowed_speakers}
+        scripted_stop = (state.event_id == rehearsal.EVENT and request.input_type == 'action'
+                         and analysis.action_id == rehearsal.STOP)
         messages=[]
         # Even ordinary observations can be known to only one person. Never send
         # two characters' personas or knowledge in the same generation request.
         for role,view in views.items():
-            part = validate_dialogue(self.provider.generate(text,view,direction,proposal.facts,analysis.needs_clarification),view)
+            if scripted_stop:
+                reply = Dialogue(messages=[Message(
+                    speaker_id=role, text=rehearsal.STOP_REPLIES[role], emotion='neutral',
+                )])
+            else:
+                reply = self.provider.generate(text,view,direction,proposal.facts,analysis.needs_clarification)
+            part = validate_dialogue(reply, view)
             messages.extend(part.messages)
             record_dialogue(proposal.state,part,view,request.request_id)
         if auto_closed:
@@ -288,9 +296,9 @@ class TurnService:
             "stat_delta": {k: v - state.stats.model_dump()[k] for k, v in proposal.state.stats.model_dump().items() if v != state.stats.model_dump()[k]},
             'result_narration': monthly.result_narration(state.event_id, proposal.outcome) if proposal.outcome in {'success', 'failure'} else None,
             "image": f"/portraits/{direction.emotion}.svg",
-            "ai_trace": {"prompt_version":PROMPT_VERSION,"provider":self.provider.name,
+            "ai_trace": {"prompt_version":PROMPT_VERSION,"provider":'system' if scripted_stop else self.provider.name,
                          'analysis_calls':int(request.input_type=='chat'),
-                         "generation_calls":len(views),
+                         "generation_calls":0 if scripted_stop else len(views),
                          "phase":actor_context.phase,"profile_id":actor_context.character.id},
         }
         committed = self.repository.commit(proposal.state, owner, state.version, request.request_id, fingerprint, turn)

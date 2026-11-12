@@ -2,6 +2,11 @@
 EVENT = 'p2_m03_rehearsal'
 STOP = 'stop_reprimand'
 MARKER = f'{EVENT}:{STOP}'
+STOP_REPLIES = {
+    'newcomer': '대표님, 멈춰주셔서 감사해요. 조금 진정하고 면담에서 제 이야기도 말씀드릴게요.',
+    'yuna': '네, 대표님. 여기서 그만할게요. 제 말이 날카로웠어요. 면담에서 차분히 이야기하겠습니다.',
+    'secretary': '대표님, 먼저 신입 멤버의 이야기를 들어주세요. 그다음 기존 멤버들도 한 명씩 만나주세요.',
+}
 
 
 def ordered_messages(messages):

@@ -122,7 +122,7 @@ async function monthOne(page:Page,selected:string) {
 }
 async function monthTwo(page:Page,selected:string) {
   await opening(page);
-  await expect(page.locator('.monthly-stats > div').filter({has:page.locator('dt', {hasText:'인지도'})}).locator('dd')).toHaveText('-');
+  await expect(page.locator('.monthly-sidebar .team-status-value').filter({has:page.locator('span', {hasText:'인지도'})}).locator('strong')).toHaveText('-');
   for(const name of [selected,'리안','도하','세인']) {
     await serverAction(page,()=>page.getByRole('navigation',{name:'2개월차 면담 상대'}).getByRole('button',{name:new RegExp(`^${name}`)}).click());
     await serverChat(page,'2개월차 면담');
@@ -139,7 +139,7 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
   await expect(page.locator('.monthly-buttons > span')).toHaveText('3 / 3');
   await shot(page,'reprimand-stop-button');
-  await expect(page.locator('.monthly-stats > div').filter({has:page.locator('dt', {hasText:'인지도'})}).locator('dd')).toHaveText('-');
+  await expect(page.locator('.monthly-sidebar .team-status-value').filter({has:page.locator('span', {hasText:'인지도'})}).locator('strong')).toHaveText('-');
   const stopped=await serverAction(page,()=>page.getByRole('button',{name:'공개질책 중단하기 →',exact:true}).click());
   expect(stopped.history.at(-1).messages.map((m:{speaker_id:string})=>m.speaker_id)).toEqual(['newcomer','yuna','secretary']);
   if (!failure) {
@@ -500,9 +500,9 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   await storySelect(page, '그룹 활동을 마무리하고 싶다');
   const ending = await storyConfirm(page, '선택 확인 →', true);
   expect(ending.monthly_story.phase).toBe('flash');
-  await expect(page.locator('.part3-completion')).toBeVisible();
+  await expect(page.getByRole('region',{name:'엔딩',exact:true})).toBeVisible();
   await resume(page);
-  await expect(page.locator('.part3-completion')).toBeVisible();
+  await expect(page.getByRole('region',{name:'엔딩',exact:true})).toBeVisible();
   const saved = await (await page.request.get(`/api/games/${id}`)).json();
   expect(saved.game_id).toBe(id);
   expect(saved.character.name).toBe(selected);

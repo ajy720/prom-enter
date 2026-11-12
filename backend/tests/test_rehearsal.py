@@ -1,5 +1,6 @@
 """Month-three authored dialogue, interruption, private interviews and atomic saves."""
 import pytest
+from app.models import Dialogue, Message
 from test_part2 import session, send, complete_month_two, switch_month_room
 from test_center_selection import ready
 
@@ -28,24 +29,30 @@ def test_arrival_is_sein_dialogue_not_narration_and_no_turn_is_fabricated(sessio
     assert response.status_code==422
 
 
-def test_stop_button_bypasses_analysis_and_can_retry_without_duplicate_effects(session, monkeypatch):
+def test_stop_button_needs_no_provider_and_retries_without_duplicate_effects(session, monkeypatch):
     client, provider, game = month_three(session)
 
     def unexpected_analysis(*args):
         raise AssertionError('The stop button must not depend on model input analysis')
 
+    def invalid_generation(text, actor, *args):
+        message = Message(speaker_id=actor.allowed_speakers[0], text='알겠습니다.', emotion='neutral')
+        return Dialogue(messages=[message, message])
+
     monkeypatch.setattr(provider, 'analyze', unexpected_analysis)
-    provider.fail = True
-    send(client, game, 'stop_reprimand', action=True, key='stop-button', status=502)
-    assert client.get(f"/api/games/{game['game_id']}").json() == game
-    provider.fail = False
+    monkeypatch.setattr(provider, 'generate', invalid_generation)
     result = send(client, game, 'stop_reprimand', action=True, key='stop-button')
     assert result['rehearsal']['phase'] == 'interviews'
     assert result['stats'] == game['stats']
-    assert result['history'][-1]['ai_trace']['analysis_calls'] == 0
+    assert result['conversation']['mode'] == 'private'
+    assert result['conversation']['target_character_id'] == game['character']['profile_id']
+    trace = result['history'][-1]['ai_trace']
+    assert trace['provider'] == 'system'
+    assert trace['analysis_calls'] == trace['generation_calls'] == 0
     assert [m['speaker_id'] for m in result['history'][-1]['messages']] == ['newcomer', 'yuna', 'secretary']
     assert all(message['expression'] == 'sad' for message in result['history'][-1]['messages'][:2])
     assert send(client, game, 'stop_reprimand', action=True, key='stop-button') == result
+    assert client.get(f"/api/games/{game['game_id']}").json() == result
 
 
 @pytest.mark.parametrize('text',['공개 질책을 중단해줘','세인아, 공개적인 질책은 그만하고 각자 이야기를 듣자.','질책하지 마','그만해','멈춰',

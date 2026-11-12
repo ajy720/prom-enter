@@ -1,3 +1,4 @@
+import { MonthlySidebar, monthlyDescriptions } from './MonthlySidebar';
 import { MonthEndDeltas } from './MonthEndDeltas';
 import type { SceneLine } from './sixMonthDemoState';
 import { secretaryText } from './narrationText';
@@ -103,13 +104,12 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
     {error && <p className="error-banner" role="alert">{error}</p>}{storageError && <div className="error-banner" role="alert">{storageError}<button onClick={() => commit(current.current)}>저장 다시 시도</button></div>}
     {narration ? <NarrationScene newcomerName={save.game.character.name} title={save.game.event.title} location={`${month}개월차`} background={month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice} text={line.text}><div className="monthly-buttons"><button className="primary-button" onClick={() => run({type:'next'})}>다음 대화 →</button></div></NarrationScene> : <section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage${save.phase === 'result' ? ' month-end-scene' : ''}${narration ? ' six-demo-narration' : ''}`} aria-label={`${month}개월차 ${save.phase === 'result' ? '결과' : '데모'}`} style={{backgroundImage:`url("${save.phase === 'result' && month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice}")`}}>
       <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={month}/></div>
-      <aside className="interview-info month-tasks"><p className="section-kicker">PROMYOU · {month}개월차{month === 5 ? ` · ${track}트랙` : ''}</p><h1>{save.phase === 'complete' ? '첫 여섯 달의 기록' : game.event.title}</h1><p>{game.event.goal}</p>
-        <section className="team-status-summary" aria-label="현재 스탯"><div className="team-status-values">{(['teamwork','fatigue','trust','awareness'] as const).map(key => <div className="team-status-value" key={key}><span>{labels[key]}</span><strong>{key === 'awareness' && month < 4 ? '-' : game.stats[key]}</strong></div>)}</div><p>팬 수 {game.stats.fans.toLocaleString()}명</p></section>
+      <MonthlySidebar month={month} title={save.phase === 'complete' ? '첫 여섯 달의 기록' : game.event.title} description={monthlyDescriptions[month] ?? game.event.goal} stats={game.stats} tasks={memberMonth ? [{label:`멤버 면담 · ${4-missing.length}/4명`,done:!missing.length}] : [{label:'이번 달 활동 결정',done:save.phase==='result'||save.phase==='complete'}]}>
         {playing && memberMonth && <p>전원 최소 1회 · 멤버별 최대 8회<br/>면담 완료 {4-missing.length}/4명</p>}
         {month === 5 && <p>쇼케이스 비용 −1.50억원 정산 완료</p>}
         <button className="operation-button" onClick={() => setRecords(true)}>{memberMonth || encouraging ? '이번 달 면담 기록' : '이번 달 대화 기록'} →</button>
         {save.phase !== 'result' && Object.keys(save.lastDelta).length > 0 && <dl className="six-demo-deltas" aria-label="데모 스탯 변화">{Object.entries(save.lastDelta).map(([key,value]) => <div key={key}><dt>{labels[key as keyof Stats]}</dt><dd>{value! > 0 ? '+' : ''}{amount(key,value!)}</dd></div>)}</dl>}
-      </aside>
+      </MonthlySidebar>
       {!narration && <div className="interview-portrait"><PhotoSlot {...(month === 4 && save.phase === 'intro' && line.expression === 'surprised' ? showcaseMistakePhoto(line.speaker) : dialoguePhoto(save.phase === 'complete' ? 'baek_hayeon' : line.speaker, line.expression))} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
       <div className="interview-dock">
         {playing && memberMonth && <nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{members.map(person => <button key={person.id} aria-pressed={save.target === person.id} onClick={() => {run({type:'target',id:person.id}); setText('');}}><strong>{person.name}</strong><small>{interviewCount(save,person.id)}/8회 · {interviewCount(save,person.id) ? '면담함' : '면담 전'}</small></button>)}</nav>}
