@@ -1,4 +1,5 @@
 import { lazy, useRef, useState } from 'react';
+import { changeMonth } from './monthTransition';
 import SixMonthDemo from './SixMonthDemo';
 import PartThree from './PartThree';
 const PartFour=lazy(()=>import('./PartFour'));
@@ -18,7 +19,9 @@ export function ContinuedPlay({source, onTitle}: {source: Game; onTitle: () => v
   const [error, setError] = useState(initial.current.error);
   function commit(next: Playthrough) {
     const saved = savePlaythrough(localStorage, next, current.current!.revision);
-    current.current = saved; setSave(saved);
+    const changed = current.current?.stage !== saved.stage;
+    current.current = saved;
+    if (changed) changeMonth(() => setSave(saved)); else setSave(saved);
   }
   function continuePart3() {
     try { commit(beginPart3(current.current!)); setError(''); }

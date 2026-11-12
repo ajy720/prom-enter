@@ -52,9 +52,9 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
         after_turn_id=history[index-1]['id'] if index else None
     if state.event_id == rehearsal.EVENT:
         messages = [OpeningMessage(character_id='yuna', name=character_profile('yuna').name,
-                       text='잠깐, 또 같은 박자를 놓쳤잖아. 계속 이렇게 틀리면 다 같이 연습하기 어렵잖아.'),
+                       text='잠깐, 또 같은 박자를 놓쳤잖아. 계속 이렇게 틀리면 다 같이 연습하기 어렵잖아.', expression='angry'),
                     OpeningMessage(character_id=character.id, name=character.name,
-                       text='죄송해요…… 다시 맞춰볼게요.'),
+                       text='죄송해요…… 다시 맞춰볼게요.', expression='sad'),
                     OpeningMessage(character_id=secretary.id, name=secretary.name,
                        text='대표님, 먼저 공개적인 질책을 중단시켜주세요. 그 뒤 신입과 기존 멤버들을 각각 만나 이야기를 들어주셨으면 합니다.')]
     else:
@@ -72,11 +72,11 @@ def make_opening(state: State, history: list[dict], *, after_turn_id: str | None
                    'neutral': '자체 콘텐츠를 본 팬들이 오프라인 만남을 요청합니다.'}
         template = {**template, 'narration': summary.get(previous, template['narration'])}
     beats = []
-    def beat(person, name, text):
-        return OpeningMessage(character_id=person, name=name, text=text)
+    def beat(person, name, text, expression='neutral'):
+        return OpeningMessage(character_id=person, name=name, text=text, expression=expression)
     if state.event_id == monthly.SHOWCASE:
         beats = [beat('narrator', '나레이션', '오늘은 데뷔 쇼케이스 당일이다. 조명이 켜지고 멤버들이 무대에 오른다.'),
-                 beat(character.id, character.name, '소중한 이야기 들려줄게에……! (목소리가 갈라진다)'),
+                 beat(character.id, character.name, '널 잡은 손 끝에에……! (목소리가 갈라진다)', 'surprised'),
                  beat('narrator', '나레이션', f'{character.name}는 당황해 다음 안무도 놓친다. 침울한 표정으로 무대를 이어간다.'),
                  beat('reporter', '기자', '지금 삑사리 난 거 아니야?'),
                  beat('narrator', '나레이션', '객석이 술렁인다. 무대 앞 카메라가 일제히 신입을 향한다.'),

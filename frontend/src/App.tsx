@@ -1,4 +1,5 @@
 import { useSceneViewport } from './useSceneViewport';
+import { changeMonth } from './monthTransition';
 import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from './api';
 import { clearPending, rememberPending, restorePending } from './pendingTurn';
@@ -18,7 +19,7 @@ import type { CreateGameInput, Game, TurnInput, PromotionAllocation, StoryComman
 
 export default function App() {
   const viewportRef = useSceneViewport();
-  const [game, setGame] = useState<Game | null>(null);
+  const [game, commitGame] = useState<Game | null>(null);
   const [localResume, setLocalResume] = useState(false);
   const [interviewOpen, setInterviewOpen] = useState(false);
   const [formationReviewed, setFormationReviewed] = useState(false);
@@ -29,6 +30,14 @@ export default function App() {
   const [view, setView] = useState<'title' | 'intro' | 'game'>('title');
   const [introRun, setIntroRun] = useState({ fresh: false, key: 0 });
   const requestInFlight = useRef(false);
+
+  function setGame(next: Game) {
+    const changed = view === 'game' && game?.game_id === next.game_id && game.event.month !== next.event.month;
+    // Month two first shows its own result; its saved guide opens month three.
+    const monthTwoResult = game?.event.month === 2 && next.event.id === 'p2_m03_rehearsal';
+    if (changed && !monthTwoResult) changeMonth(() => commitGame(next));
+    else commitGame(next);
+  }
 
   const introServerId = useRef<string | null>(null);
   function rememberInterviewRoom(id: string, eventId: string, open: boolean) {

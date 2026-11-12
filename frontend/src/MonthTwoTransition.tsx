@@ -1,4 +1,5 @@
 import { narrationText, secretaryText } from './narrationText';
+import { changeMonth } from './monthTransition';
 import { useState, type ReactNode } from 'react';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
@@ -20,7 +21,7 @@ export function MonthTwoTransition({game, children, onTitle}: {game: Game; child
   const finalReplies = completed.messages.filter(message => !['secretary','baek_hayeon'].includes(message.speaker_id));
   function advance() {
     const next = result ? 'guide' : 'play';
-    try { localStorage.setItem(key,next); setError(''); setPhase(next); window.scrollTo({top:0,behavior:'instant'}); }
+    try { localStorage.setItem(key,next); setError(''); if (result) changeMonth(() => setPhase(next)); else setPhase(next); window.scrollTo({top:0,behavior:'instant'}); }
     catch { setError('안내 화면의 읽음 상태를 저장하지 못했습니다. 브라우저 저장소를 확인한 뒤 다시 눌러주세요.'); }
   }
   return <section className="interview-room month-one month-photo-stage month-one-photos center-month" aria-label={result ? '2개월차 면담 결과' : '3개월차 시작 안내'} style={{backgroundImage:`url("${sceneBackgrounds.practice}")`}}>

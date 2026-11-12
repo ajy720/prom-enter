@@ -1,4 +1,6 @@
+import type { SceneLine } from './sixMonthDemoState';
 import { secretaryText } from './narrationText';
+import { changeMonth } from './monthTransition';
 import { NarrationScene } from './NarrationScene';
 import { useRef, useState } from 'react';
 import { ChatComposer } from './ChatComposer';
@@ -6,7 +8,7 @@ import { Modal } from './Modal';
 import { MonthlyInterviewRecords } from './MonthlyInterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { characterPortraits, sceneBackgrounds } from './introContent';
+import { dialoguePhoto, sceneBackgrounds } from './introContent';
 import { advanceSixMonthDemo, createSixMonthDemo, sixMemberIds, interviewCount, introLines, missingInterviews, restoreSixMonthDemo, resultLines, showcaseChoices, sixMonthSaveKey } from './sixMonthDemoState';
 import type { DemoCommand, DemoOutcome, DemoTone, SixMonthSave } from './sixMonthDemoState';
 import type { Stats } from './types';
@@ -45,13 +47,16 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
   const track = save.results[4] === 'success' ? 'A' : 'B';
   const lines = introLines(save);
   const last = [...game.history].reverse().find(turn => turn.event_id === game.event.id && turn.conversation?.target_character_id === save.target);
-  const line = save.phase === 'intro' ? lines[Math.min(save.cursor,lines.length-1)] : save.phase === 'reprimand' ? lines.at(-1)!
+  const line: SceneLine = save.phase === 'intro' ? lines[Math.min(save.cursor,lines.length-1)] : save.phase === 'reprimand' ? lines.at(-1)!
     : save.phase === 'result' ? resultLines(save)[0] : { speaker:target.id, name:target.name, text:secretary && save.encouragement === 'done' ? '신입 격려 면담을 마쳤습니다. 남은 홍보 계획을 정리하고 이번 달 해결 방안을 확정해주세요.' : last?.messages.at(-1)?.text ?? (secretary ? '대표님, 이번 달 해결 방안을 함께 정해주세요.' : '지금의 마음과 필요한 도움에 대해 이야기를 나눠보세요.') };
   const narration = line.speaker === 'narrator';
   const result = save.results[month];
   function commit(next: SixMonthSave) {
     if (session) session.onChange(next);
-    current.current = next; setSave(next); setError('');
+    const changed = current.current.game.event.month !== next.game.event.month;
+    current.current = next;
+    if (changed) changeMonth(() => setSave(next)); else setSave(next);
+    setError('');
     if (session) return;
     try { localStorage.setItem(sixMonthSaveKey, JSON.stringify(next)); setStorageError(''); }
     catch { setStorageError('이 브라우저에 데모를 저장하지 못했습니다. 현재 화면은 유지되지만 새로고침하면 변경이 사라질 수 있습니다.'); }
@@ -75,14 +80,14 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
     commit({ ...current.current, game:{ ...current.current.game, stats:{ ...current.current.game.stats, [key]:value } } });
   }
   async function send() {
-    const ok = run(current.current.phase === 'reprimand' ? { type:'stop', text } : { type:'chat', text, requestId:crypto.randomUUID() });
+    const ok = run({ type:'chat', text, requestId:crypto.randomUUID() });
     if (ok) setText('');
     return ok;
   }
 
   return <main className="app-shell is-playing six-month-demo">
     {!session && <details className="six-demo-tools"><summary>프런트 데모 · 서버·AI 연결 없음 · 개발 도구</summary>
-      <div className="fixture-toolbar"><strong>3~6개월 화면 데모 · 실제 플레이 저장과 분리</strong><p>대화 의미를 분석하지 않습니다. 선택한 대화 효과 예시를 적용하며, 중단 단계의 채팅은 중단 실행 예시로 처리합니다. 4·5개월 판정은 검토용 결과를 직접 선택합니다.</p>
+      <div className="fixture-toolbar"><strong>3~6개월 화면 데모 · 실제 플레이 저장과 분리</strong><p>대화 의미를 분석하지 않습니다. 선택한 대화 효과 예시를 적용하며, 질책 중단은 버튼으로 실행합니다. 4·5개월 판정은 검토용 결과를 직접 선택합니다.</p>
         <label>검토 시작 월 <select value={reviewMonth} onChange={e => setReviewMonth(Number(e.target.value))}>{[3,4,5,6].map(m => <option key={m} value={m}>{m}개월차</option>)}</select></label>
         <label>검토용 이전 결과 <select value={reviewTrack} onChange={e => setReviewTrack(e.target.value as DemoOutcome)}><option value="success">성공 · 5개월 A트랙</option><option value="failure">실패 · 5개월 B트랙</option></select></label>
         <button onClick={newDemo}>새 검토 데모 시작</button><a href="/">실제 서버 플레이로 돌아가기</a>
@@ -105,13 +110,14 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
         <button className="operation-button" onClick={() => setRecords(true)}>{memberMonth || encouraging ? '이번 달 면담 기록' : '이번 달 대화 기록'} →</button>
         {Object.keys(save.lastDelta).length > 0 && <dl className="six-demo-deltas" aria-label="데모 스탯 변화">{Object.entries(save.lastDelta).map(([key,value]) => <div key={key}><dt>{labels[key as keyof Stats]}</dt><dd>{value! > 0 ? '+' : ''}{amount(key,value!)}</dd></div>)}</dl>}
       </aside>
-      {!narration && <div className="interview-portrait"><PhotoSlot src={characterPortraits[save.phase === 'complete' ? 'baek_hayeon' : line.speaker]} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
+      {!narration && <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(save.phase === 'complete' ? 'baek_hayeon' : line.speaker, line.expression)} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
       <div className="interview-dock">
         {playing && memberMonth && <nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{members.map(person => <button key={person.id} aria-pressed={save.target === person.id} onClick={() => {run({type:'target',id:person.id}); setText('');}}><strong>{person.name}</strong><small>{interviewCount(save,person.id)}/8회 · {interviewCount(save,person.id) ? '면담함' : '면담 전'}</small></button>)}</nav>}
         {save.phase === 'complete' ? <section aria-label="6개월 데모 결산"><h2>여섯 달의 활동을 마쳤습니다</h2><p>이번 검토에서 확인한 월별 결과입니다.</p><dl className="month-summary">{[3,4,5,6].map(m => <div key={m}><dt>{m}개월차</dt><dd>{save.results[m] === 'success' ? '성공' : '실패'}</dd></div>)}</dl><p className="monthly-note">{session ? '지금까지의 선택과 스텟으로 다음 반기를 이어갑니다.' : '브라우저 데모 저장이며 실제 서버 진행·24개월 엔딩이 아닙니다.'}</p>{session ? <><button className="primary-button" onClick={session.onPartThree}>7개월차로 →</button></> : <><a className="primary-button" href="/?part3Demo=1&from=six">7개월차로 · Part 3 시작 →</a></>}</section>
         : <><section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><span className="mode-label">{save.phase === 'result' ? result === 'success' ? '성공' : '실패' : '프런트 데모'}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{line.name === '백하연' ? secretaryText(line.text, game.character.name) : line.text}</p></div></section>
-          {save.phase === 'intro' && <button className="primary-button" onClick={() => run({type:'next'})}>{save.cursor < lines.length-1 ? '다음 대화' : month === 3 ? '질책 중단하기' : [4,5].includes(month) ? '백하연과 대화하기' : '멤버 면담 시작'} →</button>}
-          {(playing || save.phase === 'reprimand') && <ChatComposer id="six-demo-message" label={save.phase === 'reprimand' ? '공개 질책 중단 대화' : secretary ? '백하연과 해결 방안 대화' : '이번 달 면담 대화'} text={text} onTextChange={value=>{setText(value); if(session) patch({draftText:value});}} disabled={playing && !secretary && count >= 8} onSend={send} placeholder={playing ? `${target.name}에게 이야기하기` : '세인에게 질책을 멈추도록 이야기하기'} suggestions={playing ? secretary ? ['백하연 실장, 지금 어떤 대응이 필요할까요?', '이번 계획에서 우선할 부분을 함께 정리해보죠.'] : ['지금 어떤 마음인지 듣고 싶어.', '앞으로 함께 준비할 방법을 찾아보자.'] : ['세인아, 공개적인 질책은 멈추고 각자 이야기하자.']}/>}
+          {save.phase === 'intro' && <button className="primary-button" onClick={() => run({type:'next'})}>{save.cursor < lines.length-1 ? '다음 대화' : month === 3 ? '상황 확인하기' : [4,5].includes(month) ? '백하연과 대화하기' : '멤버 면담 시작'} →</button>}
+          {save.phase === 'reprimand' && <button className="primary-button" onClick={() => run({type:'stop',text:'공개 질책 중단'})}>공개 질책 중단하기</button>}
+          {playing && <ChatComposer id="six-demo-message" label={secretary ? '백하연과 해결 방안 대화' : '이번 달 면담 대화'} text={text} onTextChange={value=>{setText(value); if(session) patch({draftText:value});}} disabled={!secretary && count >= 8} onSend={send} placeholder={`${target.name}에게 이야기하기`} suggestions={secretary ? ['백하연 실장, 지금 어떤 대응이 필요할까요?', '이번 계획에서 우선할 부분을 함께 정리해보죠.'] : ['지금 어떤 마음인지 듣고 싶어.', '앞으로 함께 준비할 방법을 찾아보자.']}/>}
           {playing && !secretary && count >= 8 && <p className="monthly-note" role="status">이번 달 이 멤버의 면담 8회가 끝났습니다. 면담을 마무리하거나 다른 상대를 선택해주세요.</p>}
           {playing && secretary && [4,5].includes(month) && <div className="six-demo-task-link"><button className="operation-button" onClick={() => setTask(true)}>{month === 4 ? '백하연의 수습 제안 보기' : `${track}트랙 홍보 과제 작성`} →</button>{month === 4 && save.choice && <p className="monthly-note">선택함: {showcaseChoices.find(choice => choice.id === save.choice)?.label}</p>}</div>}
           {playing && month === 6 && <p>신입 예능 출연 제안 · 예능 능력 상승 이력 {save.varietyGrowth ? '있음' : '없음'}</p>}

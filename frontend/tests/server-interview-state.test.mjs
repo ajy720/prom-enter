@@ -8,6 +8,9 @@ test('이전 저장의 질책 중단 답변도 신입·세인·백하연 순서�
   assert.deepEqual(orderedTurnMessages(turn).map(message=>message.speaker_id),['newcomer','yuna','secretary']);
   assert.deepEqual(turn.messages.map(message=>message.speaker_id),['newcomer','secretary','yuna']);
   assert.equal(orderedTurnMessages({...turn,analysis:{action_id:'talk'}}),turn.messages);
+  const smiling = {...turn,messages:turn.messages.map(message => ({...message,expression:'happy'}))};
+  assert.deepEqual(orderedTurnMessages(smiling).map(message => message.expression),['sad','sad','happy']);
+  assert.ok(smiling.messages.every(message => message.expression === 'happy'));
 });
 
 test('면담 목록 복귀 시 자유로운 면담 순서대로 마지막 완료 후보를 선택한다', () => {

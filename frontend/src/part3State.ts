@@ -1,12 +1,12 @@
 import { narrationText, secretaryText } from './narrationText.ts';
-import type { Game, Stats } from './types.ts';
+import type { Expression, Game, Stats } from './types.ts';
 
 // Browser-only prototype rules. These are not API responses or server decisions.
 export const part3SaveKey = 'prom-part3-demo-v1';
 export const part3SourceKey = 'prom-part3-source-v1';
 export const part3Titles: Record<number, string> = { 7: '흔들리는 마음', 8: '다시 숨을 고르는 시간', 9: '우리에게 온 광고', 10: '두 번째 컴백의 센터', 11: '무대 위에서 전할 말', 12: '첫해의 마지막 무대' };
 export type Outcome = 'success' | 'failure';
-export type Line = { speaker: string; name: string; text: string };
+export type Line = { speaker: string; name: string; text: string; expression?: Expression };
 export type Part3Save = {
   schema: 1; sourceId: string | null; month: number;
   phase: 'intro' | 'interviews' | 'guidance' | 'decision' | 'result' | 'complete' | 'ending'; cursor: number;
@@ -15,7 +15,7 @@ export type Part3Save = {
   speech: string; center: string | null; lastDelta: Partial<Stats>; fatigueAtDecision: number | null;
   draft?: { text?: string; speech?: string; legal?: 'act' | 'observe'; sns?: 'pause' | 'continue'; choice?: string };
   records: { month: number; name: string; text: string; kind: 'intro' | 'guidance' | 'choice' | 'result' }[];
-  chats: { id: string; month: number; target: string; question: string; reply: string }[];
+  chats: { id: string; month: number; target: string; question: string; reply: string; expression?: Expression }[];
 };
 export const careOptions = [
   { id: 'vacation', label: '휴가 제공', cost: 0, fatigue: -25 },
@@ -48,8 +48,8 @@ export function createPart3(source?: { game: Game; results?: Partial<Record<numb
 }
 export function part3Intro(s: Part3Save): Line[] {
   const n = (text: string): Line => ({speaker:'narrator',name:'나레이션',text:narrationText(text,s.newcomer.name)});
-  const b = (text: string): Line => ({speaker:'baek_hayeon',name:'백하연',text:secretaryText(text,s.newcomer.name)});
-  const newLine = (text: string): Line => ({ speaker: s.newcomer.id, name: s.newcomer.name, text });
+  const b = (text: string): Line => ({speaker:'baek_hayeon',name:'백하연',text:secretaryText(text,s.newcomer.name),expression:s.month === 8 ? 'sad' : s.month === 11 || (s.month === 12 && s.results[11] === 'success') ? 'happy' : 'neutral'});
+  const newLine = (text: string): Line => ({ speaker: s.newcomer.id, name: s.newcomer.name, text, expression: s.month === 7 ? 'sad' : 'happy' });
   const center = part3Members(s).find(p => p.id === s.center)?.name ?? s.newcomer.name;
   switch (s.month) {
     case 7: return [n('첫 활동으로 조금씩 이름을 알리기 시작한 무렵, 신입을 향한 악성 게시물과 확인되지 않은 소문이 SNS에 번졌다. 연습실에서는 괜찮다며 웃던 신입이, 늦은 오후 조심스럽게 대표실 문을 두드렸다.'), newLine('대표님, 상담할 게 있어서 왔어요. 처음에는 안 보려고 했는데 자꾸 그 글들이 생각나요. 제가 뭘 잘못한 건지 모르겠어요. 잠깐 이야기해도 될까요?')];

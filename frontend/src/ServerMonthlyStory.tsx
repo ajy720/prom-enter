@@ -22,7 +22,7 @@ function storyChats(game: Game, first: number, last: number): Part3Save['chats']
     const month = Number(match[1]);
     const target = turn.conversation?.target_character_id;
     if (month < first || month > last || !target) return [];
-    return [{id: turn.id, month, target, question: turn.input, reply: turn.messages.map(message => message.text).join('\n')}];
+    return [{id: turn.id, month, target, question: turn.input, reply: turn.messages.map(message => message.text).join('\n'), expression: turn.messages.at(-1)?.expression}];
   });
 }
 

@@ -88,6 +88,17 @@ async function opening(page:Page) {
     }
     const next=page.locator('.server-part-two').getByRole('button',{name:/^(다음|계속하기|[4-6]개월차 시작하기|반기 결산 보기) →$/});
     if(!await next.count()) break;
+    const stage = page.locator('.server-part-two');
+    const copy = await stage.locator('.dialogue-content').textContent();
+    const expression = copy?.includes('잠깐, 또 같은 박자를') ? 'angry'
+      : copy?.includes('죄송해요…… 다시 맞춰볼게요.') ? 'sad'
+      : copy?.includes('(목소리가 갈라진다)') ? 'surprised' : null;
+    if (expression) {
+      const image = stage.locator('.interview-portrait img');
+      await expect(image).toHaveAttribute('src',new RegExp(`expression-${expression}\\.webp$`));
+      await expect.poll(() => image.evaluate(img => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      await shot(page,`authored-${expression}`);
+    }
     await next.click();
   }
 }
@@ -124,8 +135,12 @@ async function monthTwo(page:Page,selected:string) {
 }
 async function sixMonths(page:Page,selected:string,failure=false) {
   await opening(page);
+  await expect(page.getByRole('textbox',{name:'공개 질책 중단 대화',exact:true})).toHaveCount(0);
+  await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
+  await expect(page.locator('.monthly-buttons > span')).toHaveText('3 / 3');
+  await shot(page,'reprimand-stop-button');
   await expect(page.locator('.monthly-stats > div').filter({has:page.locator('dt', {hasText:'인지도'})}).locator('dd')).toHaveText('-');
-  const stopped=await serverChat(page,'공개 질책 중단 대화','공개 질책을 중단해줘');
+  const stopped=await serverAction(page,()=>page.getByRole('button',{name:'공개질책 중단하기 →',exact:true}).click());
   expect(stopped.history.at(-1).messages.map((m:{speaker_id:string})=>m.speaker_id)).toEqual(['newcomer','yuna','secretary']);
   if (!failure) {
     await page.evaluate(({id,turnId})=>{const key=`prom-server-monthly:${id}:p2_m03_rehearsal:stop:${turnId}`;localStorage.setItem(key,'read');localStorage.setItem(key+':cursor','1');},{id:stopped.game_id,turnId:stopped.history.at(-1).id});
@@ -139,8 +154,10 @@ async function sixMonths(page:Page,selected:string,failure=false) {
     await resume(page);
   }
   await expect(page.locator('.dialogue-header h2')).toHaveText(selected);
+  await expect(page.locator('.interview-portrait img')).toHaveAttribute('src',/expression-sad\.webp$/);
   await page.getByRole('button',{name:'다음 →',exact:true}).click();
   await expect(page.locator('.dialogue-header h2')).toHaveText('세인');
+  await expect(page.locator('.interview-portrait img')).toHaveAttribute('src',/expression-sad\.webp$/);
   await page.getByRole('button',{name:'다음 →',exact:true}).click();
   await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
   await opening(page);
@@ -419,6 +436,13 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   if (overseas) {
     await storyRead(page, '백하연과 대화하기 →');
     const label = '백하연과 루머 대응 대화';
+    const facts = await serverChat(page, label, '루머의 사실관계부터 확인해줘.');
+    const answer = facts.history.at(-1).messages[0].text;
+    expect(answer).toContain('립싱크');
+    expect(answer).toContain('원본 영상');
+    expect(answer).toContain('조사 중');
+    await expect(page.locator('.dialogue-content')).toContainText('조사 중');
+    await shot(page,'rumor-facts');
     await serverChat(page, label, '감정적 대응은 하지 말고 공식 자료로 해명하자.');
     await serverChat(page, label, '팬을 비난하면 어떨까요?');
     const guidance = await serverChat(page, label, '멤버들과 같이 이야기하고 싶어요.');

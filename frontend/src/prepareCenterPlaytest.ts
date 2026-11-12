@@ -41,6 +41,11 @@ export async function prepareCenterPlaytest(startAtMonthThree = false): Promise<
   await send('select_a');
   await send('train_variety');
   await send('rule_meeting');
+  for (const member of [game.character.profile_id!, 'dahyun', 'haram', 'yuna']) {
+    await send(null, { input_type: 'conversation', conversation_mode: 'private', target_character_id: member });
+    await send(null, { text: '첫 합숙에서 필요한 도움을 이야기해줘.' });
+  }
+  await send(null, { input_type: 'conversation', conversation_mode: 'public' });
   await send('confirm_month_plan', { stop_after_month_one: true });
   await send('start_month_two');
   for (const member of game.center_interviews!.members) {

@@ -15,6 +15,7 @@ def test_arrival_is_sein_dialogue_not_narration_and_no_turn_is_fabricated(sessio
     opening = next(o for o in game['event_openings'] if o['event_id'] == game['event']['id'])
     assert [m['character_id'] for m in opening['messages']] == ['yuna',game['character']['profile_id'],'baek_hayeon']
     assert opening['messages'][0]['name'] == '세인'
+    assert [m['expression'] for m in opening['messages']] == ['angry', 'sad', 'neutral']
     assert '중단' in opening['messages'][-1]['text'] and '각각' in opening['messages'][-1]['text']
     assert any(p['id']=='yuna' for p in game['conversation']['participants'])
     assert not any(t['event_id']==game['event']['id'] for t in game['history'])
@@ -25,6 +26,26 @@ def test_arrival_is_sein_dialogue_not_narration_and_no_turn_is_fabricated(sessio
         'request_id':'premature-private','state_version':game['version'],'input_type':'conversation',
         'conversation_mode':'private','target_character_id':'yuna'})
     assert response.status_code==422
+
+
+def test_stop_button_bypasses_analysis_and_can_retry_without_duplicate_effects(session, monkeypatch):
+    client, provider, game = month_three(session)
+
+    def unexpected_analysis(*args):
+        raise AssertionError('The stop button must not depend on model input analysis')
+
+    monkeypatch.setattr(provider, 'analyze', unexpected_analysis)
+    provider.fail = True
+    send(client, game, 'stop_reprimand', action=True, key='stop-button', status=502)
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    provider.fail = False
+    result = send(client, game, 'stop_reprimand', action=True, key='stop-button')
+    assert result['rehearsal']['phase'] == 'interviews'
+    assert result['stats'] == game['stats']
+    assert result['history'][-1]['ai_trace']['analysis_calls'] == 0
+    assert [m['speaker_id'] for m in result['history'][-1]['messages']] == ['newcomer', 'yuna', 'secretary']
+    assert all(message['expression'] == 'sad' for message in result['history'][-1]['messages'][:2])
+    assert send(client, game, 'stop_reprimand', action=True, key='stop-button') == result
 
 
 @pytest.mark.parametrize('text',['공개 질책을 중단해줘','세인아, 공개적인 질책은 그만하고 각자 이야기를 듣자.','질책하지 마','그만해','멈춰',
@@ -108,10 +129,13 @@ def test_old_saved_stop_reply_and_cached_response_restore_correct_order(session)
     turn = game['history'][-1]
     by_role = {message['speaker_id']:message for message in turn['messages']}
     turn['messages'] = [by_role[role] for role in ['newcomer','secretary','yuna']]
+    for message in turn['messages']:
+        message['expression'] = 'happy'
     with repo.connect() as db:
         db.execute('UPDATE turns SET data=? WHERE game_id=? AND request_id=?',(json.dumps(turn,ensure_ascii=False),game['game_id'],turn['id']))
     restored = client.get(f"/api/games/{game['game_id']}").json()
     assert [message['speaker_id'] for message in restored['history'][-1]['messages']] == ['newcomer','yuna','secretary']
+    assert [message['expression'] for message in restored['history'][-1]['messages']] == ['sad','sad','happy']
     response = client.post(f"/api/games/{game['game_id']}/turns",json={'request_id':'legacy-stop-order','state_version':original['version'],'input_type':'chat','action_id':None,'text':'공개 질책을 중단해줘'})
     assert response.status_code == 200
     assert [message['speaker_id'] for message in response.json()['turn']['messages']] == ['newcomer','yuna','secretary']

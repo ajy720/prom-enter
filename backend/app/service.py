@@ -377,6 +377,8 @@ class TurnService:
             view = scope_actor(actor, state, text, listeners[0], history)
             if story.month == 13 and listeners == ['newcomer']:
                 view.scene.update(monthly_story.RUMOR_INTERVIEW_ACCOUNT)
+            if story.month == 20 and listeners == ['secretary']:
+                view.scene.update(monthly_story.SHOWCASE_RUMOR_ACCOUNT)
             direction = character_direction(state, 'pending')
             dialogue = validate_dialogue(self.provider.generate(text, view, direction, facts, False), view)
             generation_calls = 1

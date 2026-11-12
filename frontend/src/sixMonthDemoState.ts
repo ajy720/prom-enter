@@ -1,3 +1,4 @@
+import type { Expression } from './types.ts';
 import { createMonthlyFixture } from './monthlyFixture.ts';
 import type { Game, Stats, Turn } from './types.ts';
 
@@ -6,7 +7,7 @@ export const sixMonthSaveKey = 'prom-six-month-demo-v1';
 export const demoMembers = ['hyerin', 'dahyun', 'haram', 'yuna'];
 export type DemoOutcome = 'success' | 'failure';
 export type DemoTone = 'support' | 'pressure' | 'unchanged';
-export type SceneLine = { speaker: string; name: string; text: string };
+export type SceneLine = { speaker: string; name: string; text: string; expression?: Expression };
 export type SixMonthSave = {
   schema: 1; playthroughId?: string; draftText?: string; game: Game; phase: 'intro' | 'reprimand' | 'interviews' | 'result' | 'complete'; cursor: number;
   target: string; tone: DemoTone; previewOutcome: DemoOutcome; varietyGrowth: number;
@@ -85,12 +86,12 @@ function applyDelta(save: SixMonthSave, delta: Partial<Stats>) {
   }
 }
 export function introLines(save: SixMonthSave): SceneLine[] {
-  const line = (speaker: string, name: string, text: string) => ({ speaker, name, text });
+  const line = (speaker: string, name: string, text: string, expression: Expression = 'neutral') => ({ speaker, name, text, expression });
   const n = (text: string) => line('narrator', '나레이션', text);
   const secretary = (text: string) => line('baek_hayeon', '백하연', text);
   switch (save.game.event.month) {
-    case 3: return [line('yuna','세인','잠깐, 또 같은 박자를 놓쳤잖아. 계속 이렇게 틀리면 다 같이 연습하기 어렵잖아.'), line(sixNewcomerId(save),save.game.character.name,'죄송해요…… 다시 맞춰볼게요.'), secretary('대표님, 먼저 공개적인 질책을 중단시켜주세요. 그 뒤 신입과 기존 멤버들을 각각 면담해주세요.')];
-    case 4: return [n(save.results[3] === 'failure' ? '위축된 신입이 쇼케이스 무대에 오른다. 리허설의 긴장이 아직 남아 있다.' : '리허설을 함께 넘긴 멤버들이 첫 쇼케이스 무대에 오른다.'), line(sixNewcomerId(save),save.game.character.name,'아…… 박자를 놓쳤어요.'), line('haram','도하','괜찮아. 내 동작 보고 다음 박자부터 맞춰.'), n('무대가 끝나자 기자들의 카메라가 실수 장면을 쫓는다. 멤버들이 대기실에 모였다.'), secretary('대표님, 지금 대응이 중요합니다. 저와 이야기하며 신입 격려와 멤버 지지 요청, 토크에서 설명, 기사 대응 중 방향을 정해주세요.')];
+    case 3: return [line('yuna','세인','잠깐, 또 같은 박자를 놓쳤잖아. 계속 이렇게 틀리면 다 같이 연습하기 어렵잖아.', 'angry'), line(sixNewcomerId(save),save.game.character.name,'죄송해요…… 다시 맞춰볼게요.', 'sad'), secretary('대표님, 먼저 공개적인 질책을 중단시켜주세요. 그 뒤 신입과 기존 멤버들을 각각 면담해주세요.')];
+    case 4: return [n(save.results[3] === 'failure' ? '위축된 신입이 쇼케이스 무대에 오른다. 리허설의 긴장이 아직 남아 있다.' : '리허설을 함께 넘긴 멤버들이 첫 쇼케이스 무대에 오른다.'), line(sixNewcomerId(save),save.game.character.name,'아…… 박자를 놓쳤어요.', 'surprised'), line('haram','도하','괜찮아. 내 동작 보고 다음 박자부터 맞춰.'), n('무대가 끝나자 기자들의 카메라가 실수 장면을 쫓는다. 멤버들이 대기실에 모였다.'), secretary('대표님, 지금 대응이 중요합니다. 저와 이야기하며 신입 격려와 멤버 지지 요청, 토크에서 설명, 기사 대응 중 방향을 정해주세요.')];
     case 5: return [n(save.results[4] === 'success' ? '팀이 신입을 감싸는 장면이 화제가 됐다. 음원이 차트 100위권에 진입하고 음악방송 기회가 생겼다.' : '실수 영상이 퍼지고 음원 성적도 기대에 못 미쳤다. 팀은 적은 예산으로 다시 기회를 만들어야 한다.'), secretary(`쇼케이스 비용 1.50억원을 정산했습니다. 현재 자금은 ${(save.game.stats.funds_won / 100000000).toFixed(2)}억원입니다.`), secretary(save.results[4] === 'success' ? 'A트랙입니다. 저와 이야기하며 숏폼·라디오·팬사인회 홍보 예산을 나눠주세요.' : 'B트랙입니다. 저와 저예산 홍보 계획을 정해주세요. 신입을 직접 격려하기로 결정하시면 신입 면담을 준비하겠습니다.')];
     default: return [secretary(`반기 현황을 보고드립니다. 팀워크 ${save.game.stats.teamwork}, 피로도 ${save.game.stats.fatigue}, 인지도 ${save.game.stats.awareness}, 팬 ${save.game.stats.fans.toLocaleString()}명입니다.`), secretary('방송사에서 신입의 예능 출연을 제안했습니다. 지금까지 예능 능력을 키운 경험과 멤버들의 의견을 살펴보고 결정해주세요.'), line(sixNewcomerId(save),save.game.character.name,'처음이라 떨리지만, 준비가 되어 있다면 도전해보고 싶어요.')];
   }
