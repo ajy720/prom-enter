@@ -4,6 +4,7 @@ import type { SceneLine } from './sixMonthDemoState';
 import { secretaryText } from './narrationText';
 import { changeMonth } from './monthTransition';
 import { NarrationScene } from './NarrationScene';
+import { ShowcaseVideo } from './ShowcaseVideo';
 import { useRef, useState } from 'react';
 import { ChatComposer } from './ChatComposer';
 import { Modal } from './Modal';
@@ -31,6 +32,7 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
   const [storageError, setStorageError] = useState('');
   const [text, setText] = useState(session?.initial.draftText ?? '');
   const [records, setRecords] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
   const [task, setTask] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [reviewMonth, setReviewMonth] = useState(3);
@@ -87,6 +89,7 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
   }
 
   return <main className="app-shell is-playing six-month-demo">
+    {videoOpen && <ShowcaseVideo characterId={game.character.profile_id ?? game.character.id} characterName={game.character.name} onDismiss={() => setVideoOpen(false)} onNext={() => {setVideoOpen(false); run({type:'next'});}}/>}
     {!session && <details className="six-demo-tools"><summary>프런트 데모 · 서버·AI 연결 없음 · 개발 도구</summary>
       <div className="fixture-toolbar"><strong>3~6개월 화면 데모 · 실제 플레이 저장과 분리</strong><p>대화 의미를 분석하지 않습니다. 선택한 대화 효과 예시를 적용하며, 질책 중단은 버튼으로 실행합니다. 4·5개월 판정은 검토용 결과를 직접 선택합니다.</p>
         <label>검토 시작 월 <select value={reviewMonth} onChange={e => setReviewMonth(Number(e.target.value))}>{[3,4,5,6].map(m => <option key={m} value={m}>{m}개월차</option>)}</select></label>
@@ -102,7 +105,7 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
     {session && <details className="six-demo-tools"><summary>현재 구간 · 임시 대사·브라우저 저장</summary><div className="fixture-toolbar"><p>같은 플레이의 멤버와 스텟을 이어갑니다. 4·5개월차의 성공 기준은 미확정이므로 기존 검토용 결과를 사용합니다.</p><label>면담 효과 예시<select disabled={!playing || secretary} value={save.tone} onChange={e=>patch({tone:e.target.value as DemoTone})}><option value="support">격려</option><option value="pressure">압박</option><option value="unchanged">변화 없음</option></select></label>{[4,5].includes(month) && <label>임시 결과<select disabled={save.phase === 'result'} value={save.previewOutcome} onChange={e=>patch({previewOutcome:e.target.value as DemoOutcome})}><option value="success">성공 상황</option><option value="failure">실패 상황</option></select></label>}</div></details>}
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={() => session ? session.onTitle() : location.assign('/')}>prom::enter.</button><span>{month}개월차 · {session ? '활동' : '프런트 데모'}</span><button className="quiet-button" onClick={() => setRecords(true)}>{memberMonth || encouraging ? '이번 달 면담 기록' : '이번 달 대화 기록'}</button></header>
     {error && <p className="error-banner" role="alert">{error}</p>}{storageError && <div className="error-banner" role="alert">{storageError}<button onClick={() => commit(current.current)}>저장 다시 시도</button></div>}
-    {narration ? <NarrationScene newcomerName={save.game.character.name} title={save.game.event.title} location={`${month}개월차`} background={month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice} text={line.text}><div className="monthly-buttons"><button className="primary-button" onClick={() => run({type:'next'})}>다음 대화 →</button></div></NarrationScene> : <section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage${save.phase === 'result' ? ' month-end-scene' : ''}${narration ? ' six-demo-narration' : ''}`} aria-label={`${month}개월차 ${save.phase === 'result' ? '결과' : '데모'}`} style={{backgroundImage:`url("${save.phase === 'result' && month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice}")`}}>
+    {narration ? <NarrationScene newcomerName={save.game.character.name} title={save.game.event.title} location={`${month}개월차`} background={month === 4 && save.phase === 'intro' ? sceneBackgrounds.stage : month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice} text={line.text}><div className="monthly-buttons"><button className="primary-button" onClick={() => month === 4 && save.phase === 'intro' && save.cursor === 0 ? setVideoOpen(true) : run({type:'next'})}>다음 대화 →</button></div></NarrationScene> : <section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage${save.phase === 'result' ? ' month-end-scene' : ''}${narration ? ' six-demo-narration' : ''}`} aria-label={`${month}개월차 ${save.phase === 'result' ? '결과' : '데모'}`} style={{backgroundImage:`url("${save.phase === 'result' && month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice}")`}}>
       <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={month}/></div>
       <MonthlySidebar month={month} title={save.phase === 'complete' ? '첫 여섯 달의 기록' : game.event.title} description={monthlyDescriptions[month] ?? game.event.goal} stats={game.stats} tasks={memberMonth ? [{label:`멤버 면담 · ${4-missing.length}/4명`,done:!missing.length}] : [{label:'이번 달 활동 결정',done:save.phase==='result'||save.phase==='complete'}]}>
         {playing && memberMonth && <p>전원 최소 1회 · 멤버별 최대 8회<br/>면담 완료 {4-missing.length}/4명</p>}

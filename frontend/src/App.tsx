@@ -47,11 +47,11 @@ export default function App() {
 
   const playtestStarted = useRef(false);
   useEffect(() => {
-    if (!import.meta.env.DEV || !['month1', 'center', 'month3'].includes(new URLSearchParams(location.search).get('playtest') ?? '') || playtestStarted.current) return;
+    if (!import.meta.env.DEV || !['month1', 'center', 'month3', 'month4'].includes(new URLSearchParams(location.search).get('playtest') ?? '') || playtestStarted.current) return;
     playtestStarted.current = true;
     requestInFlight.current = true; setBusy(true);
     const start = new URLSearchParams(location.search).get('playtest');
-    void import('./prepareCenterPlaytest').then(module => start === 'month1' ? module.prepareMonthOnePlaytest() : module.prepareCenterPlaytest(start === 'month3')).then(next => {
+    void import('./prepareCenterPlaytest').then(module => start === 'month1' ? module.prepareMonthOnePlaytest() : module.prepareCenterPlaytest(start === 'month3', start === 'month4')).then(next => {
       if (start === 'month1') { localStorage.setItem(storyGameKey,next.game_id); localStorage.setItem('prom-active-save','story'); }
       setGame(next); setFormationReviewed(true);
       const interrupted = restorePending(sessionStorage, next);
