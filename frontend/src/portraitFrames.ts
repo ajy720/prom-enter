@@ -1,6 +1,16 @@
-// Alpha bounds of the dialogue WebPs: left, top, right, bottom, width, height.
+// Visible alpha bounds of the dialogue WebPs: left, top, right, bottom, width, height.
 // Refresh these bounds when replacing cutouts; original files remain untouched.
+// The two stage cutouts contain near-transparent background residue. Ignore
+// alpha <= 16 only when measuring their display frames, not in the image files.
+export const portraitAlphaThresholds: Record<string, number> = {
+  'ido/stage-surprised.webp': 16,
+  'saya/stage-surprised.webp': 16,
+};
+
 export const portraitFrames: Record<string, readonly [number, number, number, number, number, number]> = {
+  "saya/stage-surprised.webp": [361, 93, 1215, 1440, 1440, 1440],
+  "yeoul/stage-surprised.webp": [299, 52, 1095, 1440, 1440, 1440],
+  "ido/stage-surprised.webp": [347, 124, 1169, 1440, 1440, 1440],
   "doha/expression-angry.webp": [364, 190, 1048, 1440, 1440, 1440],
   "doha/expression-excited.webp": [442, 250, 1032, 1440, 1440, 1440],
   "doha/expression-happy.webp": [332, 190, 1108, 1440, 1440, 1440],

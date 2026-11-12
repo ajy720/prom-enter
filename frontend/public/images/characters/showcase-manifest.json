@@ -1,0 +1,64 @@
+[
+  {
+    "character": "이도",
+    "source_filename": "이도_무대_놀람.png",
+    "provided_on": "2026-11-12",
+    "sha256": "39441927a3255ccb2af3f9f001bf2e639fdfb5128fcef11c9a0b2b1320d5f2a5",
+    "file": "ido/stage-surprised.png",
+    "webp": "ido/stage-surprised.webp",
+    "width": 1440,
+    "height": 1440,
+    "alpha_bounds": [
+      0,
+      114,
+      1415,
+      1440
+    ],
+    "display_alpha_threshold": 16,
+    "display_bounds": [
+      347,
+      124,
+      1169,
+      1440
+    ]
+  },
+  {
+    "character": "여울",
+    "source_filename": "여울_무대_놀람.png",
+    "provided_on": "2026-11-12",
+    "sha256": "45a544ee45369fee0c7ecd95fc4863b8f3772447ef55a1350e72b8e58a706ee3",
+    "file": "yeoul/stage-surprised.png",
+    "webp": "yeoul/stage-surprised.webp",
+    "width": 1440,
+    "height": 1440,
+    "alpha_bounds": [
+      299,
+      52,
+      1095,
+      1440
+    ]
+  },
+  {
+    "character": "사야",
+    "source_filename": "사야_무대_놀람.png",
+    "provided_on": "2026-11-12",
+    "sha256": "1817effe716e8b854c3bd245fb58285d14cb2550e4199b447310dfaf84546583",
+    "file": "saya/stage-surprised.png",
+    "webp": "saya/stage-surprised.webp",
+    "width": 1440,
+    "height": 1440,
+    "alpha_bounds": [
+      26,
+      85,
+      1415,
+      1440
+    ],
+    "display_alpha_threshold": 16,
+    "display_bounds": [
+      361,
+      93,
+      1215,
+      1440
+    ]
+  }
+]

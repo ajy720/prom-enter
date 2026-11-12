@@ -95,7 +95,7 @@ async function opening(page:Page) {
       : copy?.includes('(목소리가 갈라진다)') ? 'surprised' : null;
     if (expression) {
       const image = stage.locator('.interview-portrait img');
-      await expect(image).toHaveAttribute('src',new RegExp(`expression-${expression}\\.webp$`));
+      await expect(image).toHaveAttribute('src',new RegExp(`${expression === 'surprised' ? 'stage-surprised' : `expression-${expression}`}\\.webp$`));
       await expect.poll(() => image.evaluate(img => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
       await shot(page,`authored-${expression}`);
     }
