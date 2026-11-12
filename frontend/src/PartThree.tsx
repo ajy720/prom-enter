@@ -167,7 +167,6 @@ export default function PartThree({ session, server }: {
       {!interviews && !awardSpeech && <div className="scene-resource-status"><ResourceStatus compact fundsWon={save.stats.funds_won} month={month}/></div>}
       <aside className="interview-info month-tasks"><p className="section-kicker">{month}개월차 · {officeScene ? '대표실' : '무대'}</p><h1>{part3Titles[month]}</h1>
         <dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(k => <div key={k}><dt>{labels[k]}</dt><dd>{save.stats[k].toLocaleString()}{k === 'fans' ? <small>명</small> : <small> / 100</small>}</dd></div>)}</dl>
-        {save.visualGrowth > 0 && <p className="monthly-note">신입 비주얼 +{save.visualGrowth}</p>}
         <button className="operation-button" onClick={() => setModal('records')}>활동·면담 기록 보기 →</button>
 
       </aside>
