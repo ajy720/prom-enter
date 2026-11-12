@@ -305,3 +305,9 @@ button.modal-footer-close { display: block; width: fit-content; min-width: 120px
 /* The brand is the sole title navigation in the top bar. */
 .intro-topbar .intro-brand,
 .intro-topbar .intro-brand:is(:hover, :focus-visible, :visited) { text-decoration: none; }
+.intro-topbar .intro-brand:hover:not(:disabled) { text-decoration: none; }
+.intro-topbar .intro-brand { font-family: 'DM Serif Text', Georgia, serif; font-weight: 400; letter-spacing: -.055em; }
+.narration-typewriter { display: grid; }
+.narration-typewriter > .narration-reserve,
+.narration-typewriter > .narration-visible { grid-area: 1 / 1; }
+.narration-reserve { visibility: hidden; }
