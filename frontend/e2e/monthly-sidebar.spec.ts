@@ -33,4 +33,3 @@ test('7~24개월 정보는 동일한 제목·설명·네 스텟과 할 일을 �
     if ([7,13,22].includes(month)) await page.screenshot({path:info.outputPath(`month-${month}.png`),fullPage:true});
   }
 });
-
