@@ -1,3 +1,5 @@
+import type { Expression } from './types.ts';
+
 // Public introductions only. Hidden character settings stay out of this UI data.
 // Profiles checked against the current Notion on 2026-11-03. Legacy IDs preserve saves and match the AI profiles.
 // Producer photo mappings below preserve these legacy character IDs.
@@ -89,14 +91,14 @@ export const sceneBackgrounds = {
 export type IntroScene = {
   id: string; kind: 'story' | 'nickname' | 'profiles' | 'introduction' | 'selection';
   location: 'office' | 'corridor' | 'practice'; title: string; speaker: string;
-  text: string; characterId?: string; nextLabel?: string;
+  text: string; expression?: Expression; characterId?: string; nextLabel?: string;
 };
 
 // Adapted from the shared Notion scenario. Conflicting deadline/contract values omitted.
 export const introScenes: IntroScene[] = [
   { id: 'arrival', kind: 'story', location: 'office', title: '다시, 시작하는 회사', speaker: '이야기',
     text: '2026년 가을, 서울. 한때 무대를 빛내던 Prom::Enter는 오랜 침체를 겪고 있습니다.\n새 대표로 부임한 당신 앞에, 회사의 다음 이야기가 놓여 있습니다.' },
-  { id: 'welcome', kind: 'story', location: 'office', title: '대표님, 환영합니다', speaker: '백하연',
+  { id: 'welcome', expression: 'happy', kind: 'story', location: 'office', title: '대표님, 환영합니다', speaker: '백하연',
     text: '대표님, Prom::Enter에 오신 것을 환영합니다. 대표 비서실장 백하연입니다. 앞으로의 결정을 곁에서 돕겠습니다.' },
   { id: 'nickname', kind: 'nickname', location: 'office', title: '어떻게 불러드릴까요?', speaker: '백하연',
     text: '먼저, 대표님을 어떻게 불러드리면 좋을까요?' },
@@ -107,7 +109,7 @@ export const introScenes: IntroScene[] = [
   { id: 'practice', kind: 'story', location: 'practice', title: '새로운 가능성을 만나는 시간', speaker: '백하연',
     text: '이제 신입 연습생들을 만나보시죠. 아직 배울 것이 많지만, 서로 다른 가능성을 가진 세 사람입니다. 얘들아, 대표님께 인사드려.' },
   ...newcomers.map(character => ({ id: 'introduce-' + character.id, kind: 'introduction' as const, location: 'practice' as const,
-    title: '신입 연습생을 소개합니다', speaker: character.name, text: character.greeting, characterId: character.id })),
+    title: '신입 연습생을 소개합니다', speaker: character.name, text: character.greeting, characterId: character.id, expression: character.id === 'seoyeon' ? 'happy' as const : 'neutral' as const })),
   { id: 'interview-guide', kind: 'story', location: 'practice', title: '조금 더 가까이 알아가기', speaker: '백하연',
     text: '연습생을 대표실로 불러 일대일로 면담하실 수 있습니다. 누구의 이야기를 먼저 들어보시겠어요?', nextLabel: '면담 상대 고르기' },
   { id: 'selection', kind: 'selection', location: 'office', title: '누구와 먼저 이야기할까요?', speaker: '백하연', text: '대표실로 부를 연습생을 선택해주세요.' },

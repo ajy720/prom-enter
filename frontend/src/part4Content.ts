@@ -1,8 +1,9 @@
+import type { Expression } from './types.ts';
 import { narrationText, secretaryText } from './narrationText.ts';
 import { gameGoals } from './gameGoal.ts';
 import { part4Members, type Part4Save } from './part4State.ts';
 
-export type Part4Line = {speaker:string;name:string;text:string};
+export type Part4Line = {speaker:string;name:string;text:string;expression?:Expression};
 export const part4SocialPhotos:Record<string,{post:string;comments:string}>={
   hyerin:{post:'/images/characters/ido/past-rumor.webp',comments:'/images/characters/ido/rumor-comments.webp'},
   seoyeon:{post:'/images/characters/yeoul/past-rumor.webp',comments:'/images/characters/yeoul/rumor-comments.webp'},
@@ -10,7 +11,7 @@ export const part4SocialPhotos:Record<string,{post:string;comments:string}>={
 };
 export function part4Intro(s:Part4Save):Part4Line[] {
   const n=(text:string):Part4Line=>({speaker:'narrator',name:'나레이션',text:narrationText(text,s.newcomer.name)});
-  const b=(text:string):Part4Line=>({speaker:'baek_hayeon',name:'백하연',text:secretaryText(text,s.newcomer.name)});
+  const b=(text:string):Part4Line=>({speaker:'baek_hayeon',name:'백하연',text:secretaryText(text,s.newcomer.name),expression:s.month === 13 || s.month === 17 || (s.month === 20 && s.route === 'overseas') ? 'sad' : s.month === 15 || s.month === 16 || s.month === 18 ? 'happy' : 'neutral'});
   const success=(month:number)=>s.results[month]==='success';
   const goal=gameGoals.find(g=>g.id===s.goal)?.label??'아직 정하지 않은 목표';
   switch(s.month) {
@@ -30,10 +31,10 @@ export function part4Intro(s:Part4Save):Part4Line[] {
       const award=s.award==='song'?'올해의 노래':s.award==='main'?'본상':null;
       const members=part4Members(s);
       return [n(success(22)?'새 앨범이 팀의 커리어 하이를 새로 썼다. 음원과 무대에 쏟아진 관심 속에 프로뮤는 연말 시상식 후보 명단에 올랐다. 대기석에서 네 사람은 조용히 서로의 손을 잡았다.':'새 앨범은 또 하나의 활동 기록을 남겼다. 아쉬웠던 순간까지 품고 멤버들은 연말 시상식 후보로 참석했다. 대기석에서는 함께 지나온 무대들이 조용히 떠올랐다.'),n(award?`스크린에 후보들의 이름이 지나가고, 진행자가 잠시 말을 멈췄다. “${award}, 프로뮤!” 서로를 바라보던 멤버들이 눈물을 삼키며 무대로 향했다. 트로피의 무게에는 두 해 동안 쌓인 시간이 함께 담겨 있었다.`:'프로뮤의 이름은 끝내 수상자로 불리지 않았다. 멤버들은 아쉬움을 삼키고 수상한 팀에게 박수를 보냈다. 후보로 이 자리에 함께한 시간도, 다음 무대를 향한 마음도 사라지지 않았다.'),n('시상식의 조명이 꺼진 뒤, 익숙한 대표실 문이 조심스럽게 열렸다. 네 멤버는 나란히 서 있다가 한 명씩 대표에게 말을 건넸다. 계약의 마지막 달을 앞둔 인사였다.'),
-        {speaker:members[0].id,name:members[0].name,text:'처음 이 방에서 이야기했을 때가 아직 생각나요. 무서웠던 날에도 제 이야기를 들어주셔서 고마웠어요. 여기서 멤버들과 함께한 시간은 오래 기억할 거예요.'},
-        {speaker:'dahyun',name:'리안',text:'혼자 책임져야 한다고 생각한 순간도 있었는데, 함께 결정하고 견디는 법을 배웠습니다. 저희 네 사람의 무대를 지켜주셔서 감사합니다, 대표님.'},
-        {speaker:'haram',name:'도하',text:'연습만 잘하면 된다고 생각했는데, 무대 밖에서도 함께해야 할 일이 정말 많더라고요. 좋았던 날도 힘들었던 날도 여기서 배운 건 잊지 않을게요.'},
-        {speaker:'yuna',name:'세인',text:'웃었던 날들이 먼저 떠올라요. 팬들이랑 멤버들이랑, 대표님까지요. 앞으로 어디에 있든 우리 이야기를 따뜻하게 기억하고 싶어요.'},
+        {speaker:members[0].id,name:members[0].name,expression:'happy',text:'처음 이 방에서 이야기했을 때가 아직 생각나요. 무서웠던 날에도 제 이야기를 들어주셔서 고마웠어요. 여기서 멤버들과 함께한 시간은 오래 기억할 거예요.'},
+        {speaker:'dahyun',name:'리안',expression:'happy',text:'혼자 책임져야 한다고 생각한 순간도 있었는데, 함께 결정하고 견디는 법을 배웠습니다. 저희 네 사람의 무대를 지켜주셔서 감사합니다, 대표님.'},
+        {speaker:'haram',name:'도하',expression:'happy',text:'연습만 잘하면 된다고 생각했는데, 무대 밖에서도 함께해야 할 일이 정말 많더라고요. 좋았던 날도 힘들었던 날도 여기서 배운 건 잊지 않을게요.'},
+        {speaker:'yuna',name:'세인',expression:'happy',text:'웃었던 날들이 먼저 떠올라요. 팬들이랑 멤버들이랑, 대표님까지요. 앞으로 어디에 있든 우리 이야기를 따뜻하게 기억하고 싶어요.'},
         b('멤버들의 이야기를 모두 들으셨지요. 다음 달이면 계약이 끝납니다. 그동안 쌓인 성과와 팀의 마음을 돌아보시고, 프로뮤와 재계약할지 활동을 마무리할지 대표님의 뜻을 말씀해주세요.'),
       ];
     }
@@ -44,7 +45,7 @@ export function part4Intro(s:Part4Save):Part4Line[] {
 export function part4InterviewStart(s:Part4Save):Part4Line {
   const person=(s.month===20?[{id:'baek_hayeon',name:'백하연'}]:part4Members(s)).find(p=>p.id===s.target)!;
   const last=s.chats.filter(c=>c.month===s.month&&c.target===s.target).at(-1);
-  return {speaker:person.id,name:person.name,text:last?.reply??(s.month===13?'대표님, 그 게시물을 보셨어요? 사진에 담긴 것과 제가 겪었던 일은 달라요. 제 이야기를 먼저 들어주실 수 있을까요?':s.month===20?'루머 대응 방향을 함께 정리하겠습니다. 대표님이 어떤 방식으로 대응하고 싶으신지 말씀해주세요.':s.route==='domestic'?'팬들이 준비해주신 자리에 대해 같이 이야기하고 싶어요. 어떻게 감사의 마음을 전하면 좋을까요?':s.newcomer.id==='jiwoo'&&s.target===s.newcomer.id?'일본어는 익숙해서 언어 부담은 없어요. 다른 멤버들이 연습하는 것도 도울 수 있어요.':'일본 팬들과 직접 이야기할 수 있을지 조금 긴장돼요. 언어와 무대를 어떻게 준비하면 좋을까요?')};
+  return {speaker:person.id,name:person.name,expression:last?.expression ?? (s.month === 13 ? 'sad' : s.month === 19 && s.route === 'domestic' ? 'happy' : 'neutral'),text:last?.reply??(s.month===13?'대표님, 그 게시물을 보셨어요? 사진에 담긴 것과 제가 겪었던 일은 달라요. 제 이야기를 먼저 들어주실 수 있을까요?':s.month===20?'루머 대응 방향을 함께 정리하겠습니다. 대표님이 어떤 방식으로 대응하고 싶으신지 말씀해주세요.':s.route==='domestic'?'팬들이 준비해주신 자리에 대해 같이 이야기하고 싶어요. 어떻게 감사의 마음을 전하면 좋을까요?':s.newcomer.id==='jiwoo'&&s.target===s.newcomer.id?'일본어는 익숙해서 언어 부담은 없어요. 다른 멤버들이 연습하는 것도 도울 수 있어요.':'일본 팬들과 직접 이야기할 수 있을지 조금 긴장돼요. 언어와 무대를 어떻게 준비하면 좋을까요?')};
 }
 export function part4EndingCopy(s:Part4Save) {
   if(s.ending==='withdrawn') return {title:'끝내 지키지 못한 자리',text:`${s.newcomer.name}의 탈퇴가 공지되었다. 연습실에는 비어 있는 한 자리가 남았다. 함께 무대에 서기로 했던 약속은 여기서 멈췄다. 확인되지 않은 말 앞에서 누구의 목소리를 먼저 들어야 했는지, 오래 남을 질문이었다.`};

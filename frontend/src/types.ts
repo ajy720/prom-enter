@@ -38,9 +38,9 @@ export type Conversation = {
 };
 export type EventOpening = {
   id: string; event_id: string; after_turn_id: string | null; month: number; title: string; scene: string;
-  narration: string; messages: {character_id: string; name: string; text: string}[];
+  narration: string; messages: {character_id: string; name: string; text: string; expression?: Expression}[];
   goal: string; choices: {id: string; label: string}[];
-  beats?: {character_id: string; name: string; text: string}[];
+  beats?: {character_id: string; name: string; text: string; expression?: Expression}[];
 };
 export type Analysis = {
   action_id: string; needs_clarification: boolean; reference_turn_id: string | null; assessments: Assessment[];

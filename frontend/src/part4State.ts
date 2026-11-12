@@ -1,6 +1,6 @@
 import { isGameGoal, type GameGoal } from './gameGoal.ts';
 import type { Part3Save } from './part3State.ts';
-import type { Stats } from './types.ts';
+import type { Expression, Stats } from './types.ts';
 import type { Game } from './types.ts';
 
 // Explicit browser-only demo. No API response or real AI judgment is produced here.
@@ -22,7 +22,7 @@ export type Part4Save = {
   stats: Stats; results: Partial<Record<number, Part4Outcome>>; route: 'domestic' | 'overseas' | null;
   overseasFansAdded: number; target: string; evidence: string[]; lastDelta: Partial<Stats>; resultText: string;
   newcomerGrowth: {vocal:number;dance:number};
-  chats: { id: string; month: number; target: string; question: string; reply: string; guidance?: DemoGuidance }[];
+  chats: { id: string; month: number; target: string; question: string; reply: string; expression?: Expression; guidance?: DemoGuidance }[];
   records: { month: number; name: string; text: string; kind: 'story' | 'choice' | 'result' | 'evidence' | 'interview' }[];
   draft: Part4Draft; guidance: DemoGuidance; guidanceQuote: string; confirmedGuidance: 'calm' | 'emotional' | null;
   award: 'song' | 'main' | 'nominee' | null; ending: Part4Ending | null; renew: boolean | null;

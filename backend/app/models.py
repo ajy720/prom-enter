@@ -100,6 +100,7 @@ class OpeningMessage(Model):
     character_id: str
     name: str
     text: str
+    expression: Expression = "neutral"
 
 
 class OpeningChoice(Model):

@@ -89,8 +89,8 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
     catch { setStorageError('읽은 위치를 저장하지 못했습니다. 다시 시도해주세요.'); }
   }
   const opening = game.event_openings.find(item => item.event_id === game.event.id);
-  const openingLines: Line[] = opening?.beats?.length ? opening.beats.map(beat => ({speakerId:beat.character_id,name:beat.name,text:beat.text}))
-    : [...(month === 3 ? [] : [{speakerId:'narrator',name:'나레이션',text:opening?.narration ?? game.event.briefing}]), ...(opening?.messages ?? []).map(message => ({speakerId:message.character_id,name:message.name,text:message.text}))];
+  const openingLines: Line[] = opening?.beats?.length ? opening.beats.map(beat => ({speakerId:beat.character_id,name:beat.name,text:beat.text,expression:beat.expression}))
+    : [...(month === 3 ? [] : [{speakerId:'narrator',name:'나레이션',text:opening?.narration ?? game.event.briefing}]), ...(opening?.messages ?? []).map(message => ({speakerId:message.character_id,name:message.name,text:message.text,expression:message.expression}))];
   const targetId = game.conversation.target_character_id;
   const member = status?.members.find(person => person.character_id === targetId);
   const history = game.history.filter(turn => turn.event_id === game.event.id && turn.kind !== 'conversation_change' && (status ? turn.conversation?.target_character_id === targetId : true));

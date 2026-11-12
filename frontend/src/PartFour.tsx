@@ -6,11 +6,11 @@ import { Modal } from './Modal';
 import { NarrationScene } from './NarrationScene';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { characterPortraits, sceneBackgrounds } from './introContent';
+import { dialoguePhoto, sceneBackgrounds } from './introContent';
 import { gameGoals, readGameGoal, type GameGoal } from './gameGoal';
 import { restorePart3, part3SaveKey } from './part3State';
 import { albumConcepts, albumSongs, advancePart4, concertPackages, createPart4, createPart4FromServer, inappropriatePromotion, interviewMembers, part4Count, part4Evidence, part4Missing, part4ServerSourceKey, part4SourceKey, part4StorageKey, part4Titles, displayPart4Choice, restorePart4, type Part4Command, type Part4Draft, type Part4Save } from './part4State';
-import { part4EndingCopy, part4Intro, part4InterviewStart, part4SocialPhotos } from './part4Content';
+import { part4EndingCopy, part4Intro, part4InterviewStart, part4SocialPhotos, type Part4Line } from './part4Content';
 import { useSceneViewport } from './useSceneViewport';
 import type { Game, Stats } from './types';
 import type { StoryControls } from './ServerMonthlyStory';
@@ -117,7 +117,7 @@ export default function PartFour({session, server}:{
   const interviews=s.phase==='interviews';
   const count=part4Count(s,s.target),limit=month===20?7:8;
   const missing=part4Missing(s);
-  const line=interviews?part4InterviewStart(s):s.phase==='result'?{speaker:'narrator',name:'나레이션',text:s.resultText}:s.phase==='intro'?part4Intro(s)[s.cursor]:{speaker:'baek_hayeon',name:'백하연',text:s.phase==='goal'?'대표님, 앞으로 프로뮤가 나아갈 방향을 함께 정해볼까요? 어떤 그룹으로 성장하면 좋을지 말씀해주세요.':s.phase==='investigation'?'신입의 이야기를 들었습니다. 이제 확인 가능한 세 기록을 조사해주세요. 조사한 기록의 수에 따라 최종 대응 결과가 달라집니다.':month===13?'확보한 기록을 바탕으로 신입을 보호할지, 조사와 관계없이 책임을 인정하는 입장을 낼지 정해주세요.':month===19?'멤버들의 이야기를 모두 들었습니다. 이제 이번 달 활동 방향을 선택해주세요.':month===20&&s.route==='overseas'?'대표님과 나눈 지침을 바탕으로 대응하겠습니다. 법적 대응, 확인한 사실을 통한 해명, 무대응 중 하나를 정해주세요.':'준비 상황과 현재 스텟을 함께 살펴보고, 이번 달의 결정을 내려주세요.'};
+  const line: Part4Line=interviews?part4InterviewStart(s):s.phase==='result'?{speaker:'narrator',name:'나레이션',text:s.resultText}:s.phase==='intro'?part4Intro(s)[s.cursor]:{speaker:'baek_hayeon',name:'백하연',text:s.phase==='goal'?'대표님, 앞으로 프로뮤가 나아갈 방향을 함께 정해볼까요? 어떤 그룹으로 성장하면 좋을지 말씀해주세요.':s.phase==='investigation'?'신입의 이야기를 들었습니다. 이제 확인 가능한 세 기록을 조사해주세요. 조사한 기록의 수에 따라 최종 대응 결과가 달라집니다.':month===13?'확보한 기록을 바탕으로 신입을 보호할지, 조사와 관계없이 책임을 인정하는 입장을 낼지 정해주세요.':month===19?'멤버들의 이야기를 모두 들었습니다. 이제 이번 달 활동 방향을 선택해주세요.':month===20&&s.route==='overseas'?'대표님과 나눈 지침을 바탕으로 대응하겠습니다. 법적 대응, 확인한 사실을 통한 해명, 무대응 중 하나를 정해주세요.':'준비 상황과 현재 스텟을 함께 살펴보고, 이번 달의 결정을 내려주세요.'};
   const stage=month===23&&s.phase==='intro'&&s.cursor<2;
   const background=stage?sceneBackgrounds.stage:sceneBackgrounds.office;
   function draft(patch:Part4Draft) {run({type:'draft',patch});}
@@ -147,7 +147,7 @@ export default function PartFour({session, server}:{
     :<section className="interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage part3-stage part4-stage" aria-label={`${month}개월차 ${part4Titles[month]}`} style={{backgroundImage:`url("${sceneBackgrounds.office}")`}}>
       {!interviews&&s.phase!=='ending'&&<div className="scene-resource-status"><ResourceStatus compact fundsWon={s.stats.funds_won} month={month}/></div>}
       <aside className="interview-info month-tasks"><p className="section-kicker">{month}개월차 · 대표실</p><h1>{part4Titles[month]}</h1><dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(k=><div key={k}><dt>{labels[k]}</dt><dd>{s.stats[k].toLocaleString()}{k==='fans'?<small>명</small>:<small> / 100</small>}</dd></div>)}</dl><p>목표 · {gameGoals.find(g=>g.id===s.goal)?.label??'선택 전'}</p>{(s.newcomerGrowth.vocal>0||s.newcomerGrowth.dance>0)&&<p>이번 구간 신입 성장 · 보컬 +{s.newcomerGrowth.vocal} · 댄스 +{s.newcomerGrowth.dance}</p>}{s.route&&<p>{s.route==='overseas'?'해외':'국내'} 루트</p>}{s.overseasFansAdded>0&&<p>이번 구간 해외 팬 증가 {s.overseasFansAdded.toLocaleString()}명</p>}<button className="operation-button" onClick={()=>setModal('records')}>활동·면담 기록 보기 →</button></aside>
-      {s.phase!=='ending'&&<div className="interview-portrait"><PhotoSlot src={characterPortraits[line.speaker]} name={line.name}/></div>}
+      {s.phase!=='ending'&&<div className="interview-portrait"><PhotoSlot {...dialoguePhoto(line.speaker, line.expression)} name={line.name}/></div>}
       <div className="interview-dock">{s.phase==='ending'?<section className="part3-completion"><p className="section-kicker">ENDING</p><h2>{part4EndingCopy(s).title}</h2><p className="part4-ending-text">{part4EndingCopy(s).text}</p><dl className="month-summary"><div><dt>최종 자금 / 최초 자금</dt><dd>{amount('funds_won',s.stats.funds_won)} / 20.00억원</dd></div><div><dt>팀워크 · 인지도 · 팬</dt><dd>{s.stats.teamwork} · {s.stats.awareness} · {s.stats.fans.toLocaleString()}명</dd></div></dl></section>
       :<>{interviews&&month===19&&<nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{interviewMembers(s).map(m=><button key={m.id} aria-pressed={s.target===m.id} disabled={locked} onClick={()=>run({type:'target',id:m.id})}><strong>{m.name}</strong><small>{part4Count(s,m.id)}/8회</small></button>)}</nav>}
       <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2>{!server && <span className="mode-label">프런트 데모</span>}</header><div className="dialogue-content" role="log" aria-live="polite"><p>{line.speaker === 'baek_hayeon' ? secretaryText(line.text, s.newcomer.name) : line.text}</p></div></section>

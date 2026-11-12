@@ -69,14 +69,15 @@ export function orderedTurnMessages(turn: Turn) {
     const role = turn.conversation?.participants.find(person => person.id === id)?.role ?? id;
     return role === 'secretary' || id === 'baek_hayeon' ? 2 : role === 'yuna' ? 1 : 0;
   }
-  return [...turn.messages].sort((a,b) => rank(a.speaker_id) - rank(b.speaker_id));
+  return [...turn.messages].sort((a,b) => rank(a.speaker_id) - rank(b.speaker_id))
+    .map(message => rank(message.speaker_id) < 2 ? {...message, expression: 'sad' as const} : message);
 }
 
 // Display only server-confirmed turns for this interview, using each turn's own room.
 export function serverInterviewFrames(game: Pick<Game, 'event' | 'history' | 'event_openings' | 'conversation' | 'character'>): InterviewFrame[] {
   const opening = game.event_openings.find(item => item.event_id === game.event.id);
   const frames: InterviewFrame[] = opening?.messages.map((message, index) => ({
-    id: `${opening.id}-${index}`, speakerId: message.character_id, name: message.name, text: message.text,
+    id: `${opening.id}-${index}`, speakerId: message.character_id, name: message.name, text: message.text, expression: message.expression,
   })) ?? [];
   for (const turn of game.history.filter(item => item.event_id === game.event.id)) {
     if (turn.kind !== 'conversation_change') frames.push({ id: `${turn.id}-player`, speakerId: 'player', name: '대표님', text: turn.input });

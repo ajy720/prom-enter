@@ -5,8 +5,14 @@ MARKER = f'{EVENT}:{STOP}'
 
 
 def ordered_messages(messages):
+    """The interruption's authored reactions keep the members subdued."""
     order = {'newcomer': 0, 'yuna': 1, 'secretary': 2, 'baek_hayeon': 2}
-    return sorted(messages, key=lambda message: order.get(message['speaker_id'] if isinstance(message, dict) else message.speaker_id, 0))
+    members = {'newcomer', 'yuna', 'hyerin', 'seoyeon', 'jiwoo'}
+    def speaker(message):
+        return message['speaker_id'] if isinstance(message, dict) else message.speaker_id
+    return [({**message, 'expression': 'sad'} if isinstance(message, dict)
+             else message.model_copy(update={'expression': 'sad'})) if speaker(message) in members else message
+            for message in sorted(messages, key=lambda message: order.get(speaker(message), 0))]
 
 
 def phase(state):

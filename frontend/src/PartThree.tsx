@@ -6,11 +6,11 @@ import { ChatComposer } from './ChatComposer';
 import { Modal } from './Modal';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { awardPortraits, characterPortraits, sceneBackgrounds } from './introContent';
+import { awardPortraits, dialoguePhoto, sceneBackgrounds } from './introContent';
 import { useSceneViewport } from './useSceneViewport';
 import { restoreSixMonthDemo, sixMonthSaveKey, type SixMonthSave } from './sixMonthDemoState';
 import { advancePart3, careOptions, createPart3, part3Count, part3Guidance, part3Intro, part3Members, part3Missing, part3Result, part3SaveKey, part3SourceKey, part3Titles, restorePart3 } from './part3State';
-import type { Part3Command, Part3Save } from './part3State';
+import type { Line, Part3Command, Part3Save } from './part3State';
 import type { Game, Stats } from './types';
 import type { StoryControls } from './ServerMonthlyStory';
 import { StoryRequestError } from './StoryRequestError';
@@ -77,8 +77,8 @@ export default function PartThree({ session, server }: {
   const missing = part3Missing(save);
   const intro = part3Intro(save);
   const lastChat = save.chats.filter(c => c.month === month && c.target === save.target).at(-1);
-  const line = save.phase === 'intro' ? intro[save.cursor]
-    : interviews ? { speaker: target.id, name: target.name, text: lastChat?.reply ?? (month === 7 ? part3Intro(save)[1].text : '대표님의 생각도 듣고 싶어요. 이번 곡에서 제가 어떤 모습을 보여드릴 수 있을지 함께 이야기해주세요.') }
+  const line: Line = save.phase === 'intro' ? intro[save.cursor]
+    : interviews ? { speaker: target.id, name: target.name, expression: lastChat?.expression ?? (month === 7 ? 'sad' : 'neutral'), text: lastChat?.reply ?? (month === 7 ? part3Intro(save)[1].text : '대표님의 생각도 듣고 싶어요. 이번 곡에서 제가 어떤 모습을 보여드릴 수 있을지 함께 이야기해주세요.') }
     : save.phase === 'guidance' ? { speaker: 'baek_hayeon', name: '백하연', text: part3Guidance(save) }
     : save.phase === 'result' ? { speaker: 'narrator', name: '나레이션', text: part3Result(save) }
     : { speaker: 'baek_hayeon', name: '백하연', text: month === 8 ? intro.at(-1)!.text : month === 9 ? '단독 광고 수락, 전원 광고로 협상, 광고 거절 중 방향을 정해주세요.' : [7,10].includes(month) ? part3Guidance(save) : '수상 소감을 입력해주세요.' };
@@ -169,7 +169,7 @@ export default function PartThree({ session, server }: {
         <button className="operation-button" onClick={() => setModal('records')}>활동·면담 기록 보기 →</button>
         {!!Object.keys(save.lastDelta).length && <dl className="six-demo-deltas" aria-label="이번 달 스텟 변화">{Object.entries(save.lastDelta).map(([k,v]) => <div key={k}><dt>{labels[k as keyof Stats]}</dt><dd>{v! > 0 ? '+' : ''}{amount(k,v!)}</dd></div>)}</dl>}
       </aside>
-      {!narration && !['ending','complete'].includes(save.phase) && <div className="interview-portrait"><PhotoSlot src={awardSpeech ? awardPortraits[save.newcomer.id] : characterPortraits[line.speaker]} name={line.name}/></div>}
+      {!narration && !['ending','complete'].includes(save.phase) && <div className="interview-portrait"><PhotoSlot {...(awardSpeech ? {src: awardPortraits[save.newcomer.id]} : dialoguePhoto(line.speaker, line.expression))} name={line.name}/></div>}
       <div className="interview-dock">
         {save.phase === 'ending' ? <section className="part3-completion"><p className="section-kicker">ENDING</p><h2>잊혀진 그룹</h2><p>반복된 어려움 속에서 그룹은 끝내 다시 일어설 기회를 얻지 못했다. 2~7개월차의 모든 사건이 실패 또는 거절로 끝나며, 멤버들은 무대에서 내려와 각자의 길을 준비했다.</p><p>한때 함께 꿈꾸었던 무대는 기록 속에 남았다.</p></section>
         : save.phase === 'complete' ? <section className="part3-completion"><p className="section-kicker">PART 3 COMPLETE</p><h2>우리의 첫해를 마치며</h2><p>{save.results[12] === 'success' ? '신인상 트로피와 함께 첫해의 활동을 마쳤습니다.' : '아쉬움과 다음 무대를 향한 약속을 남기며 첫해의 활동을 마쳤습니다.'}</p><p>이제 13~24개월차의 이야기로 이어집니다. 현재 신입과 스텟, 지난 기록을 그대로 이어갑니다.</p><button className="primary-button" disabled={locked} onClick={continuePartFour}>13개월차 · Part 4 시작 →</button></section>

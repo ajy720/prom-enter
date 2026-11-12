@@ -69,7 +69,7 @@ def test_full_part2_free_chat_and_restore(session,slot):
         'p2_m04_showcase', 'p2_m06_variety',
     }
     expressions = {message['expression'] for turn in generated_turns for message in turn['messages']}
-    assert expressions == {'neutral', 'happy'}
+    assert expressions == {'neutral', 'happy', 'sad'}
     assert client.get(f"/api/games/{game['game_id']}").json()==game
     assert all(len(view.allowed_speakers) == 1 for view in provider.views)
     send(client,game,'안녕',status=409)

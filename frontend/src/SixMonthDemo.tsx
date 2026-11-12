@@ -1,3 +1,4 @@
+import type { SceneLine } from './sixMonthDemoState';
 import { secretaryText } from './narrationText';
 import { NarrationScene } from './NarrationScene';
 import { useRef, useState } from 'react';
@@ -6,7 +7,7 @@ import { Modal } from './Modal';
 import { MonthlyInterviewRecords } from './MonthlyInterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { characterPortraits, sceneBackgrounds } from './introContent';
+import { dialoguePhoto, sceneBackgrounds } from './introContent';
 import { advanceSixMonthDemo, createSixMonthDemo, sixMemberIds, interviewCount, introLines, missingInterviews, restoreSixMonthDemo, resultLines, showcaseChoices, sixMonthSaveKey } from './sixMonthDemoState';
 import type { DemoCommand, DemoOutcome, DemoTone, SixMonthSave } from './sixMonthDemoState';
 import type { Stats } from './types';
@@ -45,7 +46,7 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
   const track = save.results[4] === 'success' ? 'A' : 'B';
   const lines = introLines(save);
   const last = [...game.history].reverse().find(turn => turn.event_id === game.event.id && turn.conversation?.target_character_id === save.target);
-  const line = save.phase === 'intro' ? lines[Math.min(save.cursor,lines.length-1)] : save.phase === 'reprimand' ? lines.at(-1)!
+  const line: SceneLine = save.phase === 'intro' ? lines[Math.min(save.cursor,lines.length-1)] : save.phase === 'reprimand' ? lines.at(-1)!
     : save.phase === 'result' ? resultLines(save)[0] : { speaker:target.id, name:target.name, text:secretary && save.encouragement === 'done' ? '신입 격려 면담을 마쳤습니다. 남은 홍보 계획을 정리하고 이번 달 해결 방안을 확정해주세요.' : last?.messages.at(-1)?.text ?? (secretary ? '대표님, 이번 달 해결 방안을 함께 정해주세요.' : '지금의 마음과 필요한 도움에 대해 이야기를 나눠보세요.') };
   const narration = line.speaker === 'narrator';
   const result = save.results[month];
@@ -105,7 +106,7 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
         <button className="operation-button" onClick={() => setRecords(true)}>{memberMonth || encouraging ? '이번 달 면담 기록' : '이번 달 대화 기록'} →</button>
         {Object.keys(save.lastDelta).length > 0 && <dl className="six-demo-deltas" aria-label="데모 스탯 변화">{Object.entries(save.lastDelta).map(([key,value]) => <div key={key}><dt>{labels[key as keyof Stats]}</dt><dd>{value! > 0 ? '+' : ''}{amount(key,value!)}</dd></div>)}</dl>}
       </aside>
-      {!narration && <div className="interview-portrait"><PhotoSlot src={characterPortraits[save.phase === 'complete' ? 'baek_hayeon' : line.speaker]} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
+      {!narration && <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(save.phase === 'complete' ? 'baek_hayeon' : line.speaker, line.expression)} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
       <div className="interview-dock">
         {playing && memberMonth && <nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{members.map(person => <button key={person.id} aria-pressed={save.target === person.id} onClick={() => {run({type:'target',id:person.id}); setText('');}}><strong>{person.name}</strong><small>{interviewCount(save,person.id)}/8회 · {interviewCount(save,person.id) ? '면담함' : '면담 전'}</small></button>)}</nav>}
         {save.phase === 'complete' ? <section aria-label="6개월 데모 결산"><h2>여섯 달의 활동을 마쳤습니다</h2><p>이번 검토에서 확인한 월별 결과입니다.</p><dl className="month-summary">{[3,4,5,6].map(m => <div key={m}><dt>{m}개월차</dt><dd>{save.results[m] === 'success' ? '성공' : '실패'}</dd></div>)}</dl><p className="monthly-note">{session ? '지금까지의 선택과 스텟으로 다음 반기를 이어갑니다.' : '브라우저 데모 저장이며 실제 서버 진행·24개월 엔딩이 아닙니다.'}</p>{session ? <><button className="primary-button" onClick={session.onPartThree}>7개월차로 →</button></> : <><a className="primary-button" href="/?part3Demo=1&from=six">7개월차로 · Part 3 시작 →</a></>}</section>

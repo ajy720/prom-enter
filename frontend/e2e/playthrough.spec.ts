@@ -88,6 +88,17 @@ async function opening(page:Page) {
     }
     const next=page.locator('.server-part-two').getByRole('button',{name:/^(다음|계속하기|[4-6]개월차 시작하기|반기 결산 보기) →$/});
     if(!await next.count()) break;
+    const stage = page.locator('.server-part-two');
+    const copy = await stage.locator('.dialogue-content').textContent();
+    const expression = copy?.includes('잠깐, 또 같은 박자를') ? 'angry'
+      : copy?.includes('죄송해요…… 다시 맞춰볼게요.') ? 'sad'
+      : copy?.includes('(목소리가 갈라진다)') ? 'surprised' : null;
+    if (expression) {
+      const image = stage.locator('.interview-portrait img');
+      await expect(image).toHaveAttribute('src',new RegExp(`expression-${expression}\\.webp$`));
+      await expect.poll(() => image.evaluate(img => (img as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+      await shot(page,`authored-${expression}`);
+    }
     await next.click();
   }
 }
@@ -143,8 +154,10 @@ async function sixMonths(page:Page,selected:string,failure=false) {
     await resume(page);
   }
   await expect(page.locator('.dialogue-header h2')).toHaveText(selected);
+  await expect(page.locator('.interview-portrait img')).toHaveAttribute('src',/expression-sad\.webp$/);
   await page.getByRole('button',{name:'다음 →',exact:true}).click();
   await expect(page.locator('.dialogue-header h2')).toHaveText('세인');
+  await expect(page.locator('.interview-portrait img')).toHaveAttribute('src',/expression-sad\.webp$/);
   await page.getByRole('button',{name:'다음 →',exact:true}).click();
   await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
   await opening(page);
