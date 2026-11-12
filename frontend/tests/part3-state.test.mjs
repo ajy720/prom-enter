@@ -84,7 +84,7 @@ test('9개월 팀워크 59·60과 광고 수락·협상·거절의 보상', () =
     assert.equal(s.results[9],success?'success':'failure');
     assert.equal(s.stats.funds_won-1e9,choice==='reject'?0:teamwork>=60?12e7:choice==='group'?10e7:15e7);
     assert.equal(s.visualGrowth,teamwork>=60 && choice!=='reject'?1:0);
-    if(choice==='reject') assert.match(part3Result(s),/거절했다/);
+    if(choice==='reject') assert.match(part3Result(s),/거절한 것으로/);
   }
 });
 

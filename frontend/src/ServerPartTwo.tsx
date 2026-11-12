@@ -1,3 +1,4 @@
+import { monthEndGuide } from './monthEndGuide.ts';
 import { secretaryText } from './narrationText';
 import { useState, type ReactNode } from 'react';
 import { ChatComposer } from './ChatComposer';
@@ -23,13 +24,14 @@ function messageLines(game: Game, turn: Turn): Line[] {
 }
 
 function Delta({delta}: {delta: Partial<Stats>}) {
+  if (!Object.keys(delta).length) return <p className="monthly-note">스텟 변화 없음</p>;
   return <dl className="monthly-deltas" aria-label="결과 스텟 변화">{(Object.entries(delta) as [keyof Stats, number][]).map(([key,value]) => <div key={key}><dt>{labels[key]}</dt><dd>{value > 0 ? '+' : ''}{value.toLocaleString()}{key === 'funds_won' ? '원' : key === 'fans' ? '명' : ''}</dd></div>)}</dl>;
 }
 
 // Uses the same portrait and single white dialogue dock as the intro interview.
-function Scene({game, line, children, onTitle, onRecords, background = game.event.month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice}: {game: Game; line: Line; children: ReactNode; onTitle: () => void; onRecords: () => void; background?: string}) {
+function Scene({game, line, children, onTitle, onRecords, background = game.event.month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice, result = false}: {result?: boolean; game: Game; line: Line; children: ReactNode; onTitle: () => void; onRecords: () => void; background?: string}) {
   const portrait = !['narrator','reporter','player'].includes(line.speakerId);
-  return <section className="interview-room candidate-interview interview-refined part-one-photos server-part-two" aria-label={`${game.event.month}개월차 ${game.event.title}`} style={{backgroundImage:`url("${background}")`}}>
+  return <section className={`interview-room candidate-interview interview-refined part-one-photos server-part-two ${result ? 'month-end-scene' : ''}`} aria-label={`${game.event.month}개월차 ${game.event.title}`} style={{backgroundImage:`url("${background}")`}}>
     {game.event.month >= 4 && <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div>}
     <aside className="interview-info"><p className="section-kicker">PROM::ENTER · {game.event.month}개월차</p><h1>{game.event.title}</h1>
       <dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(key => <div key={key}><dt>{labels[key]}</dt><dd>{(key === 'fans' && !game.completed_events.p2_m04_showcase) || (key === 'awareness' && game.event.month < 4) ? '-' : game.stats[key].toLocaleString()}</dd></div>)}</dl>
@@ -49,9 +51,8 @@ function Sequence({game, lines, storageKey, onDone, disabled, title, footer, onT
   const background = stage ? sceneBackgrounds.stage : game.event.month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice;
   const navigation = <><div className="monthly-buttons"><button className="text-button" disabled={disabled || cursor === 0} onClick={() => move(cursor - 1)}>이전</button><span>{cursor + 1} / {lines.length}</span><button className="primary-button" disabled={disabled} onClick={() => cursor < lines.length - 1 ? move(cursor + 1) : onDone()}>{cursor < lines.length - 1 ? '다음' : doneLabel ?? (title === '이번 달 결과' ? game.event.id === 'p2_complete' ? '반기 결산 보기' : `${game.event.month}개월차 시작하기` : '계속하기')} →</button></div>{error && <p role="alert">{error}</p>}</>;
   if (line.speakerId === 'narrator' || (game.event.month === 4 && line.speakerId === 'reporter')) return <NarrationScene newcomerName={game.character.name} speaker={line.name} title={game.event.title} location={`${game.event.month}개월차 · ${stage ? '쇼케이스 무대' : game.event.month >= 4 ? '대표실' : game.event.scene}`} background={background} text={line.text} className="server-part-two">{cursor === lines.length - 1 && footer}{navigation}</NarrationScene>;
-  return <Scene game={game} line={line} background={background} onTitle={onTitle} onRecords={onRecords}>
-    <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><span>{title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{['baek_hayeon', 'secretary'].includes(line.speakerId) ? secretaryText(line.text, game.character.name) : line.text}</p></div></section>
-    {cursor === lines.length - 1 && footer}
+  return <Scene game={game} line={line} result={title === '이번 달 결과'} background={background} onTitle={onTitle} onRecords={onRecords}>
+    <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><span>{title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{['baek_hayeon', 'secretary'].includes(line.speakerId) ? secretaryText(line.text, game.character.name) : line.text}</p></div>{cursor === lines.length - 1 && footer}</section>
     {navigation}
   </Scene>;
 }
@@ -108,9 +109,9 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
   const validBudget = !!budget && total === budget.budget_won && Object.values(allocation).every(value => /^\d*$/.test(value)) && Object.values(allocationValues).every(value => Number.isSafeInteger(value) && value >= 0) && game.stats.funds_won >= total;
   let content: ReactNode;
   if (boundary && ['success','failure'].includes(boundary.outcome) && boundary.event_id !== 'p2_m01_training' && !(month === 3 && boundary.event_id === 'p2_m02_center') && !resultRead) {
-    const lines = [...(boundary.month_completion?.reason === 'limit' ? messageLines(game,boundary).filter(item => item.speakerId !== 'baek_hayeon') : []),
-      {speakerId:'narrator',name:'나레이션',text:boundary.result_narration ?? boundary.facts.join(' ')}];
-    content = <Sequence key={resultKey} {...shared} lines={lines} storageKey={resultKey} disabled={locked} title="이번 달 결과" onDone={() => acknowledge(resultKey, () => setResultRead(true))} footer={<><p>{boundary.outcome === 'success' ? '성공' : '실패'}</p><Delta delta={boundary.stat_delta}/></>}/>;
+    const resultMonth = Number(boundary.event_id.match(/m(\d+)/)?.[1] ?? month - 1);
+    const lines: Line[] = [{speakerId:'baek_hayeon',name:'백하연',expression:boundary.outcome === 'success' ? 'happy' : 'neutral',text:monthEndGuide(resultMonth,boundary.outcome)}];
+    content = <Sequence key={resultKey} {...shared} lines={lines} storageKey={resultKey} disabled={locked} title="이번 달 결과" onDone={() => acknowledge(resultKey, () => setResultRead(true))} footer={<Delta delta={boundary.stat_delta}/>}/>;
   } else if (!complete && (!openingRead || isReprimand) && !stopped && openingLines.length) {
     content = <Sequence key={prefix + ':opening'} {...shared} lines={openingLines} storageKey={prefix + ':opening'} disabled={locked} title="이번 달 이야기" doneLabel={isReprimand ? '공개질책 중단하기' : undefined} onDone={async () => {
       if (isReprimand && !await onSend('stop_reprimand')) return;

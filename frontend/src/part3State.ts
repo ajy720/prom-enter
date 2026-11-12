@@ -1,3 +1,4 @@
+import { monthEndGuide } from './monthEndGuide.ts';
 import { narrationText, secretaryText } from './narrationText.ts';
 import type { Expression, Game, Stats } from './types.ts';
 
@@ -61,7 +62,7 @@ export function part3Intro(s: Part3Save): Line[] {
   }
 }
 function summary(s: Part3Save) {
-  return `대표님, 지난 반기를 정리해드리겠습니다. 어려운 대응부터 컨디션 관리, 광고와 두 번째 컴백까지 함께 지나왔습니다. 현재 팀워크 ${s.stats.teamwork}, 피로도 ${s.stats.fatigue}, 인지도 ${s.stats.awareness}, 팬 ${s.stats.fans.toLocaleString()}명, 자금 ${(s.stats.funds_won / 1e8).toFixed(2)}억원입니다. ${s.results[11] === 'success' ? '오늘 받은 트로피는 모두가 함께 만든 성과입니다.' : '오늘의 아쉬움도 다음 무대를 준비하는 힘으로 삼겠습니다.'} 지난 선택들을 돌아보며 다음 활동을 준비하겠습니다.`;
+  return `대표님, 어려운 대응부터 광고와 두 번째 컴백까지 함께 지나왔네요. ${s.results[11] === 'success' ? '오늘 받은 트로피는 모두가 함께 만든 성과입니다.' : '오늘은 아쉽지만, 여기까지 함께 온 시간도 소중하다고 생각해요.'} 멤버들과 지난 활동을 돌아보면서 다음 무대를 준비하겠습니다.`;
 }
 function recordIntro(s: Part3Save) { s.records.push(...part3Intro(s).map(l => ({ month: s.month, name: l.name, text: l.text, kind: 'intro' as const }))); }
 export function part3Count(s: Part3Save, target: string) { return s.chats.filter(c => c.month === s.month && c.target === target).length; }
@@ -148,7 +149,7 @@ export function advancePart3(original: Part3Save, command: Part3Command): Part3S
     } else throw new Error('이번 달에는 선택할 결정이 없습니다.');
     s.results[s.month] = outcome; apply(s, delta); s.phase = 'result'; s.cursor = 0;
     s.records.push({ month: s.month, name: '대표님', text: s.month === 11 ? `${label}\n${s.speech}` : label, kind: 'choice' });
-    s.records.push({ month: s.month, name: '나레이션', text: part3Result(s), kind: 'result' });
+    s.records.push({ month: s.month, name: '백하연', text: part3Result(s), kind: 'result' });
   }
   return s;
 }
@@ -156,16 +157,8 @@ export function part3Guidance(s: Part3Save) {
   return secretaryText(s.month === 7 ? '신입과의 면담을 마쳤습니다. 이제 법적 대응 여부와 SNS 관리 방향을 각각 선택해주세요. 결정한 뒤 이번 달의 결과를 확인하겠습니다.' : '네 멤버의 이야기를 모두 들었습니다. 각자의 마음과 현재 팀의 호흡을 고려해, 이번 두 번째 컴백의 센터를 선택해주세요.', s.newcomer.name);
 }
 export function part3Result(s: Part3Save) {
-  const ok = s.results[s.month] === 'success';
-  if (s.month === 11) return '수상 소감 대본을 준비했다. 멤버들은 마지막까지 연습을 이어가며 시상식 날을 기다렸다. 수상 여부는 다음 달 무대에서 확인한다.';
-  const texts: Record<number, [string, string]> = {
-    7: ['공식 대응과 멤버 보호가 힘을 발휘했다. 신입은 혼자가 아니라는 사실에 안도했고, 팀은 조금씩 평온을 되찾았다.', '대응 이후에도 불안과 혼선이 남았다. 신입은 여전히 사람들의 시선을 두려워했고, 멤버들의 피로도 깊어졌다.'],
-    8: ['충분히 쉬고 몸을 돌본 멤버들의 표정이 한결 밝아졌다. 멤버들은 여유를 되찾았고, 서로를 챙기며 다음 일정을 준비했다.', '관리를 마쳤지만 쌓인 피로는 쉽게 가시지 않았다. 컨디션을 충분히 회복하지 못한 채 일정을 앞두자 팀의 분위기도 가라앉았다.'],
-    9: ['광고는 팀을 알리는 새로운 기회가 되었다. 멤버들은 함께 성과를 나누며 다음 컴백을 향한 기대를 키웠다.', '이번 제안은 팀의 성과로 이어지지 못했다. 단독 광고를 수락했다면 관심의 편중이 갈등을 남겼고, 거절했다면 새로운 노출 기회 없이 컴백을 준비하게 됐다.'],
-    10: ['멤버들은 센터 결정을 받아들이고 각자의 자리에서 곡을 완성해나갔다. 함께 맞춘 호흡이 두 번째 컴백 무대에 힘을 더했다.', '신입의 센터 발탁에 멤버들의 마음이 엇갈렸다. 충분한 팀의 지지를 얻지 못한 채 컴백 준비가 이어졌다.'],
-  };
-  if (s.month === 9 && !ok) return s.records.filter(r => r.month === 9 && r.name === '대표님').at(-1)?.text === '광고 거절' ? '광고 제안을 거절했다. 새로운 노출 기회를 얻지는 못했지만, 그룹은 다음 컴백 준비에 집중하기로 했다.' : '단독 광고로 자금은 확보했지만, 한 멤버에게 기회가 집중되자 팀 안에 소외감이 남았다. 컴백 준비에 앞서 서로의 마음을 살필 필요가 생겼다.';
-  return texts[s.month]?.[ok ? 0 : 1] ?? '';
+  const choice = s.records.filter(r => r.month === 9 && r.name === '대표님').at(-1)?.text === '광고 거절' ? 'reject' : 'solo';
+  return monthEndGuide(s.month, s.results[s.month] ?? '', undefined, choice);
 }
 export function restorePart3(raw: string | null): Part3Save | null {
   if (!raw) return null;

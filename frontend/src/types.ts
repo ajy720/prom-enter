@@ -52,6 +52,7 @@ export type Turn = {
   state_version?: number;
   story_assessment?: {verdict: DemoGuidance | 'appropriate' | 'inappropriate'; quote: string};
   month_completion?: {month: 2 | 3; reason: 'manual' | 'limit'; teamwork: number; teamwork_min: number; fatigue?: number; fatigue_max_exclusive?: number} | null;
+  // Legacy narrative stays in the response/history; month-end UI uses the secretary guide.
   result_narration?: string | null;
   promotion_allocation?: PromotionAllocation;
   promotion_track?: 'A' | 'B';

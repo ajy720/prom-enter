@@ -34,7 +34,7 @@ for(const [id,name] of [['hyerin','이도'],['seoyeon','여울'],['jiwoo','사�
     assert.equal(introLines(play.six)[1].name,name);assert.equal(introLines(play.six)[1].speaker,id);
     assert.equal(play.six.varietyGrowth,1);
     play.six=sixAll(play.six,success);
-    assert.equal(resultLines(play.six)[0].name,name);
+    assert.equal(resultLines(play.six)[0].name,'백하연');
     const stats=structuredClone(play.six.game.stats);
     play=beginPart3(play);
     assert.equal(play.part3.sourceId,game.game_id);assert.equal(play.part3.newcomer.id,id);

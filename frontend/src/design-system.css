@@ -329,3 +329,9 @@ button.modal-footer-close { display: block; width: fit-content; min-width: 120px
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(root) { animation: none; }
 }
+
+/* 월말은 현재 수치를 반복하지 않고 안내와 실제 변화량에 집중한다. */
+.month-end-scene .interview-info > button:disabled,
+.month-end-scene .interview-info > :not(h1):not(.section-kicker):not(button) { display: none; }
+.dialogue-box > .monthly-deltas,
+.dialogue-box > .six-demo-deltas { margin: 16px 0 0; padding-top: 16px; border-top: 1px solid var(--border); }

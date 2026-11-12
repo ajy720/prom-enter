@@ -1,3 +1,4 @@
+import { monthEndGuide } from './monthEndGuide.ts';
 import type { Expression } from './types.ts';
 import { createMonthlyFixture } from './monthlyFixture.ts';
 import type { Game, Stats, Turn } from './types.ts';
@@ -97,9 +98,7 @@ export function introLines(save: SixMonthSave): SceneLine[] {
   }
 }
 export function resultLines(save: SixMonthSave): SceneLine[] {
-  const success = save.results[save.game.event.month] === 'success';
-  const texts: Record<number, [string, string]> = { 3: ['내 말이 너무 심했어. 미안해. 다음 연습은 같이 맞춰보자.', '다음에는…… 더 잘해야 할 텐데. 무대에 서는 게 조금 무서워요.'], 4: ['우리가 함께 수습하는 모습이 전해졌어요. 팀을 응원하는 반응이 늘고 있습니다.', '실수 영상이 퍼지고 있습니다. 저예산 홍보와 신입의 자신감 회복이 필요합니다.'], 5: ['홍보를 계기로 우리 음악을 새로 들어주는 분들이 생겼어요.', '이번 홍보는 기대만큼 닿지 못했어요. 다음 활동을 차분히 준비하겠습니다.'], 6: ['준비했던 이야기를 방송에서 잘 전했어요. 다음에도 팀을 알리고 싶어요.', '너무 긴장해서 말이 꼬였어요. 부족했던 부분을 더 준비하고 싶어요.'] };
-  return [{ speaker: save.game.event.month === 3 && success ? 'yuna' : [4,5].includes(save.game.event.month) ? 'baek_hayeon' : sixNewcomerId(save), name: save.game.event.month === 3 && success ? '세인' : [4,5].includes(save.game.event.month) ? '백하연' : save.game.character.name, text: texts[save.game.event.month][success ? 0 : 1] }];
+  return [{ speaker: 'baek_hayeon', name: '백하연', text: monthEndGuide(save.game.event.month, save.results[save.game.event.month] ?? '') }];
 }
 export type DemoCommand = { type: 'next' } | { type: 'stop'; text: string } | { type: 'target'; id: string } | { type: 'chat'; text: string; requestId: string }
   | { type: 'choose'; id: string } | { type: 'finish' } | { type: 'encourage_newcomer' } | { type: 'finish_encouragement' };
