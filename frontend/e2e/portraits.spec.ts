@@ -3,11 +3,11 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync } from 'node:fs';
 import { PhotoSlot } from '../src/PhotoSlot';
-import { portraitFrames } from '../src/portraitFrames';
+import { portraitAlphaThresholds, portraitFrames } from '../src/portraitFrames';
 
 // Exercise the real component and stylesheet cascade with every supplied pose.
 // Pixel bounds are measured independently from the WebP alpha channel in-browser.
-test('42종 대화 사진은 장면·화면 크기와 무관하게 잘림 없이 같은 높이를 유지한다', async ({ page }) => {
+test('45종 대화 사진은 장면·화면 크기와 무관하게 잘림 없이 같은 높이를 유지한다', async ({ page }) => {
   const css = ['style.css', 'design-system.css', 'part2.css', 'part3.css', 'part4.css', 'portraits.css']
     .map(file => readFileSync(new URL(`../src/${file}`, import.meta.url), 'utf8')).join('\n');
   const scenes = [
@@ -25,7 +25,7 @@ test('42종 대화 사진은 장면·화면 크기와 무관하게 잘림 없이
   await page.locator('img').evaluateAll(async images => { await Promise.all(images.map(image => (image as HTMLImageElement).decode())); });
   for (const viewport of [{ width: 1920, height: 1080 }, { width: 1440, height: 900 }, { width: 1440, height: 600 }, { width: 1200, height: 1000 }, { width: 1001, height: 600 }, { width: 950, height: 600 }, { width: 760, height: 800 }, { width: 390, height: 844 }, { width: 320, height: 568 }]) {
     await page.setViewportSize(viewport);
-    const result = await page.locator('.dialogue-photo').evaluateAll(slots => {
+    const result = await page.locator('.dialogue-photo').evaluateAll((slots, thresholds) => {
       const cache = new Map<string, number[]>();
       return slots.map(slot => {
         const img = slot.querySelector('img')!;
@@ -35,7 +35,8 @@ test('42종 대화 사진은 장면·화면 크기와 무관하게 잘림 없이
           const context = canvas.getContext('2d')!; context.drawImage(img, 0, 0);
           const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
           let left = canvas.width, top = canvas.height, right = 0, bottom = 0;
-          for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) if (data[(y * canvas.width + x) * 4 + 3]) {
+          const threshold = thresholds[img.alt] ?? 0;
+          for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) if (data[(y * canvas.width + x) * 4 + 3] > threshold) {
             left = Math.min(left, x); top = Math.min(top, y); right = Math.max(right, x + 1); bottom = Math.max(bottom, y + 1);
           }
           bounds = [left, top, right, bottom]; cache.set(img.src, bounds);
@@ -46,7 +47,7 @@ test('42종 대화 사진은 장면·화면 크기와 무관하게 잘림 없이
           clipped: image.left + bounds[0] * scale < frame.left - 1 || image.right - (img.naturalWidth - bounds[2]) * scale > frame.right + 1
             || image.top + bounds[1] * scale < frame.top - 1 || image.top + bounds[3] * scale > frame.bottom + 1 };
       });
-    });
+    }, portraitAlphaThresholds);
     expect(result.filter(item => item.clipped), JSON.stringify(viewport)).toEqual([]);
     expect(Math.max(...result.map(item => item.height)) - Math.min(...result.map(item => item.height))).toBeLessThan(1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), JSON.stringify(viewport)).toBe(true);

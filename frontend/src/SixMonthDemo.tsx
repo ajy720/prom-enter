@@ -9,7 +9,7 @@ import { Modal } from './Modal';
 import { MonthlyInterviewRecords } from './MonthlyInterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
 import { ResourceStatus } from './ResourceStatus';
-import { dialoguePhoto, sceneBackgrounds } from './introContent';
+import { dialoguePhoto, sceneBackgrounds, showcaseMistakePhoto } from './introContent';
 import { advanceSixMonthDemo, createSixMonthDemo, sixMemberIds, interviewCount, introLines, missingInterviews, restoreSixMonthDemo, resultLines, showcaseChoices, sixMonthSaveKey } from './sixMonthDemoState';
 import type { DemoCommand, DemoOutcome, DemoTone, SixMonthSave } from './sixMonthDemoState';
 import type { Stats } from './types';
@@ -110,7 +110,7 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
         <button className="operation-button" onClick={() => setRecords(true)}>{memberMonth || encouraging ? '이번 달 면담 기록' : '이번 달 대화 기록'} →</button>
         {save.phase !== 'result' && Object.keys(save.lastDelta).length > 0 && <dl className="six-demo-deltas" aria-label="데모 스탯 변화">{Object.entries(save.lastDelta).map(([key,value]) => <div key={key}><dt>{labels[key as keyof Stats]}</dt><dd>{value! > 0 ? '+' : ''}{amount(key,value!)}</dd></div>)}</dl>}
       </aside>
-      {!narration && <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(save.phase === 'complete' ? 'baek_hayeon' : line.speaker, line.expression)} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
+      {!narration && <div className="interview-portrait"><PhotoSlot {...(month === 4 && save.phase === 'intro' && line.expression === 'surprised' ? showcaseMistakePhoto(line.speaker) : dialoguePhoto(save.phase === 'complete' ? 'baek_hayeon' : line.speaker, line.expression))} name={save.phase === 'complete' ? '백하연' : line.name}/></div>}
       <div className="interview-dock">
         {playing && memberMonth && <nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{members.map(person => <button key={person.id} aria-pressed={save.target === person.id} onClick={() => {run({type:'target',id:person.id}); setText('');}}><strong>{person.name}</strong><small>{interviewCount(save,person.id)}/8회 · {interviewCount(save,person.id) ? '면담함' : '면담 전'}</small></button>)}</nav>}
         {save.phase === 'complete' ? <section aria-label="6개월 데모 결산"><h2>여섯 달의 활동을 마쳤습니다</h2><p>대표님, 첫 여섯 달의 활동을 마쳤습니다. 멤버들과 나눈 이야기를 바탕으로 다음 반기도 함께 준비하겠습니다.</p><p className="monthly-note">{session ? '지금까지의 선택과 스텟으로 다음 반기를 이어갑니다.' : '브라우저 데모 저장이며 실제 서버 진행·24개월 엔딩이 아닙니다.'}</p>{session ? <><button className="primary-button" onClick={session.onPartThree}>7개월차로 →</button></> : <><a className="primary-button" href="/?part3Demo=1&from=six">7개월차로 · Part 3 시작 →</a></>}</section>

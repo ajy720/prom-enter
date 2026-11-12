@@ -62,6 +62,14 @@ export const awardPortraits: Record<string, string> = {
 
 const portraitExpressions = new Set(['excited', 'angry', 'happy', 'sad', 'surprised']);
 
+// Only the month-four opening mistake uses the producer's stage-costume cutouts.
+export function showcaseMistakePhoto(characterId: string) {
+  const photo = dialoguePhoto(characterId, 'surprised');
+  return ['hyerin', 'seoyeon', 'jiwoo'].includes(characterId)
+    ? { ...photo, src: characterPortraits[characterId].replace('half-body-transparent.webp', 'stage-surprised.webp') }
+    : photo;
+}
+
 export function dialoguePhoto(characterId: string, expression?: string) {
   const fallbackSrc = characterPortraits[characterId];
   const src = fallbackSrc && expression && portraitExpressions.has(expression)

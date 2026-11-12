@@ -7,7 +7,7 @@ import { MonthlyInterviewRecords } from './MonthlyInterviewRecords';
 import { PhotoSlot } from './PhotoSlot';
 import { PendingResponse } from './PendingResponse';
 import { ResourceStatus } from './ResourceStatus';
-import { dialoguePhoto, sceneBackgrounds } from './introContent';
+import { dialoguePhoto, sceneBackgrounds, showcaseMistakePhoto } from './introContent';
 import { pendingFeedback } from './pendingFeedback';
 import { monthlyBoundary } from './monthlyState';
 import { NarrationScene } from './NarrationScene';
@@ -37,7 +37,7 @@ function Scene({game, line, children, onTitle, onRecords, background = game.even
       <dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(key => <div key={key}><dt>{labels[key]}</dt><dd>{(key === 'fans' && !game.completed_events.p2_m04_showcase) || (key === 'awareness' && game.event.month < 4) ? '-' : game.stats[key].toLocaleString()}</dd></div>)}</dl>
       <button className="text-button" onClick={onRecords}>이번 달 대화 기록</button><button className="text-button" onClick={onTitle}>시작 화면</button>
     </aside>
-    {portrait && <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(line.speakerId, line.expression)} name={line.name}/></div>}
+    {portrait && <div className="interview-portrait"><PhotoSlot {...(background === sceneBackgrounds.stage && game.event.month === 4 && line.expression === 'surprised' ? showcaseMistakePhoto(line.speakerId) : dialoguePhoto(line.speakerId, line.expression))} name={line.name}/></div>}
     <div className="interview-dock">{children}</div>
   </section>;
 }
