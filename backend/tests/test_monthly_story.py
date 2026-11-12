@@ -9,6 +9,29 @@ from test_monthly_decisions import at_month, seed
 from test_part2 import session
 
 
+def test_showcase_rumor_questions_have_facts_and_pending_investigation_without_resolving_event(session):
+    client, provider, game = at_month(session, 'p2_m20')
+
+    def setup(state):
+        state.monthly_story = MonthlyStory(month=20, phase='interviews', target='baek_hayeon',
+                                           goal='global', route='overseas')
+
+    game = seed(client, game, setup)
+    before = game['stats']
+    response = command(client, game, 'chat', text='루머의 사실관계부터 확인해줘.', request_id='showcase-facts')
+    message, = response['turn']['messages']
+    assert message['speaker_id'] == 'secretary'
+    for detail in ('립싱크', '관객', '원본 영상', '음향 기록', '정산 자료', '조사 중', '입증할 자료', '아직 실행하지'):
+        assert detail in message['text']
+    assert 'showcase_facts' in provider.views[-1].scene
+    assert 'rumor_photo' not in provider.views[-1].scene
+    assert response['game']['monthly_story']['phase'] == 'interviews'
+    assert response['game']['monthly_story']['guidance'] == 'calm'
+    assert response['game']['stats'] == before
+    assert response['game']['evidence'] == game['evidence']
+    assert command(client, game, 'chat', text='루머의 사실관계부터 확인해줘.', request_id='showcase-facts') == response
+
+
 def command(client, game, kind, *, expected=200, request_id=None, **fields):
     data = {'request_id': request_id or str(uuid4()), 'state_version': game['version'],
             'input_type': 'action', 'action_id': 'start_month_seven' if kind == 'start' else 'monthly_story',

@@ -436,6 +436,13 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   if (overseas) {
     await storyRead(page, '백하연과 대화하기 →');
     const label = '백하연과 루머 대응 대화';
+    const facts = await serverChat(page, label, '루머의 사실관계부터 확인해줘.');
+    const answer = facts.history.at(-1).messages[0].text;
+    expect(answer).toContain('립싱크');
+    expect(answer).toContain('원본 영상');
+    expect(answer).toContain('조사 중');
+    await expect(page.locator('.dialogue-content')).toContainText('조사 중');
+    await shot(page,'rumor-facts');
     await serverChat(page, label, '감정적 대응은 하지 말고 공식 자료로 해명하자.');
     await serverChat(page, label, '팬을 비난하면 어떨까요?');
     const guidance = await serverChat(page, label, '멤버들과 같이 이야기하고 싶어요.');

@@ -285,6 +285,9 @@ class DemoProvider:
     def generate(self, text, actor, direction, facts, clarification):
         profile = actor['character']
         scene = actor['scene']
+        if 'showcase_rumor' in scene and not clarification:
+            body = f"{scene['showcase_rumor']} {scene['showcase_facts']} {scene['showcase_investigation']}"
+            return Dialogue(messages=[Message(speaker_id='secretary', text=body, emotion=direction.emotion)])
         if 'rumor_photo' in scene and not clarification:
             if re.search(r'사진|하굣길|하교', text):
                 body = f"{scene['rumor_photo']} {scene['rumor_relationship']}"
