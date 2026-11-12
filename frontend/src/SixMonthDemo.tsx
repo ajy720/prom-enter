@@ -1,5 +1,6 @@
 import type { SceneLine } from './sixMonthDemoState';
 import { secretaryText } from './narrationText';
+import { changeMonth } from './monthTransition';
 import { NarrationScene } from './NarrationScene';
 import { useRef, useState } from 'react';
 import { ChatComposer } from './ChatComposer';
@@ -52,7 +53,10 @@ export default function SixMonthDemo({ session }: { session?: SixMonthSession } 
   const result = save.results[month];
   function commit(next: SixMonthSave) {
     if (session) session.onChange(next);
-    current.current = next; setSave(next); setError('');
+    const changed = current.current.game.event.month !== next.game.event.month;
+    current.current = next;
+    if (changed) changeMonth(() => setSave(next)); else setSave(next);
+    setError('');
     if (session) return;
     try { localStorage.setItem(sixMonthSaveKey, JSON.stringify(next)); setStorageError(''); }
     catch { setStorageError('이 브라우저에 데모를 저장하지 못했습니다. 현재 화면은 유지되지만 새로고침하면 변경이 사라질 수 있습니다.'); }

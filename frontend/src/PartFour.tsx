@@ -1,4 +1,5 @@
 import { secretaryText } from './narrationText';
+import { changeMonth } from './monthTransition';
 import { PlayModeInfo } from './PlayModeInfo';
 import { useEffect, useRef, useState } from 'react';
 import { ChatComposer } from './ChatComposer';
@@ -93,7 +94,10 @@ export default function PartFour({session, server}:{
         if((stored?.revision??0)!==current.current.revision) throw new Error('다른 화면에서 진행이 바뀌었습니다. 새로고침해 최신 저장을 불러와주세요.');
         localStorage.setItem(key,JSON.stringify(next));
       }
-      current.current=next;setSave(next);setError('');return true;
+      const changed=current.current.month!==next.month;
+      current.current=next;
+      if(changed) changeMonth(()=>setSave(next)); else setSave(next);
+      setError('');return true;
     } catch(e) {setError(e instanceof Error?e.message:'진행을 저장하지 못했습니다. 같은 동작을 다시 시도해주세요.');return false;}
   }
   useEffect(()=>{if(save?.phase!=='flash') return;const timer=window.setTimeout(()=>run({type:'finishFlash'}),1000);return()=>clearTimeout(timer);},[save?.phase]);

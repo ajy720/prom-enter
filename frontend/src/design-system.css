@@ -311,3 +311,21 @@ button.modal-footer-close { display: block; width: fit-content; min-width: 120px
 .narration-typewriter > .narration-reserve,
 .narration-typewriter > .narration-visible { grid-area: 1 / 1; }
 .narration-reserve { visibility: hidden; }
+
+/* Month boundaries dim and then brighten, showing one snapshot at a time. */
+::view-transition-old(root) {
+  mix-blend-mode: normal;
+  animation: month-dim-out 140ms ease-in-out both, month-hide 280ms steps(1, end) both;
+}
+::view-transition-new(root) {
+  mix-blend-mode: normal;
+  animation: month-light-in 140ms 140ms ease-in-out both, month-show 280ms steps(1, end) both;
+}
+::view-transition-group(root) { animation-duration: 280ms; }
+@keyframes month-dim-out { from { filter: brightness(1); } to { filter: brightness(.72); } }
+@keyframes month-light-in { from { filter: brightness(.72); } to { filter: brightness(1); } }
+@keyframes month-hide { 0% { visibility: visible; } 50%, 100% { visibility: hidden; } }
+@keyframes month-show { 0% { visibility: hidden; } 50%, 100% { visibility: visible; } }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(root) { animation: none; }
+}

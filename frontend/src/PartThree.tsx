@@ -1,4 +1,5 @@
 import { secretaryText } from './narrationText';
+import { changeMonth } from './monthTransition';
 import { PlayModeInfo } from './PlayModeInfo';
 import { NarrationScene } from './NarrationScene';
 import { useEffect, useRef, useState } from 'react';
@@ -87,7 +88,10 @@ export default function PartThree({ session, server }: {
     : month === 11 ? !!speech.trim() && speech.length <= 500 : !!choice;
   function commit(next: Part3Save) {
     if (session) session.onChange(next);
-    current.current = next; setSave(next); setError('');
+    const changed = current.current.month !== next.month;
+    current.current = next;
+    if (changed) changeMonth(() => setSave(next)); else setSave(next);
+    setError('');
     if(session) return;
     try { localStorage.setItem(part3SaveKey, JSON.stringify(next)); setStorageError(''); }
     catch { setStorageError('브라우저에 저장하지 못했습니다. 현재 화면은 유지되지만 새로고침하면 진행을 잃을 수 있습니다.'); }
