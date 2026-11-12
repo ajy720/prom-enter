@@ -12,6 +12,7 @@ import { dialoguePhoto, sceneBackgrounds, showcaseMistakePhoto } from './introCo
 import { pendingFeedback } from './pendingFeedback';
 import { monthlyBoundary } from './monthlyState';
 import { NarrationScene } from './NarrationScene';
+import { ShowcaseVideo } from './ShowcaseVideo';
 import { orderedTurnMessages, turnSpeaker } from './serverInterviewState';
 import type { Action, Expression, Game, PromotionAllocation, Stats, Turn, TurnInput } from './types';
 
@@ -45,12 +46,17 @@ function Scene({game, line, children, onTitle, onRecords, background = game.even
 
 function Sequence({game, lines, storageKey, onDone, disabled, title, footer, onTitle, onRecords, doneLabel}: {game: Game; lines: Line[]; storageKey: string; onDone: () => void; disabled: boolean; title: string; footer?: ReactNode; onTitle: () => void; onRecords: () => void; doneLabel?: string}) {
   const [cursor,setCursor] = useState(() => savedCursor(storageKey, lines.length));
+  const [videoOpen,setVideoOpen] = useState(false);
   const [error,setError] = useState('');
   const line = lines[cursor];
   function move(index: number) { try { localStorage.setItem(storageKey + ':cursor', String(index)); setCursor(index); setError(''); } catch { setError('읽은 위치를 저장하지 못했습니다. 다시 시도해주세요.'); } }
   const stage = game.event.month === 4 && storageKey.endsWith(':opening') && !lines.slice(0,cursor + 1).some(item => item.speakerId === 'baek_hayeon');
   const background = stage ? sceneBackgrounds.stage : game.event.month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice;
-  const navigation = <><div className="monthly-buttons"><button className="text-button" disabled={disabled || cursor === 0} onClick={() => move(cursor - 1)}>이전</button><span>{cursor + 1} / {lines.length}</span><button className="primary-button" disabled={disabled} onClick={() => cursor < lines.length - 1 ? move(cursor + 1) : onDone()}>{cursor < lines.length - 1 ? '다음' : doneLabel ?? (title === '이번 달 결과' ? game.event.id === 'p2_complete' ? '반기 결산 보기' : `${game.event.month}개월차 시작하기` : '계속하기')} →</button></div>{error && <p role="alert">{error}</p>}</>;
+  const navigation = <><div className="monthly-buttons"><button className="text-button" disabled={disabled || cursor === 0} onClick={() => move(cursor - 1)}>이전</button><span>{cursor + 1} / {lines.length}</span><button className="primary-button" disabled={disabled} onClick={() => {
+    if (stage && cursor === 0 && line.speakerId === 'narrator') setVideoOpen(true);
+    else if (cursor < lines.length - 1) move(cursor + 1);
+    else onDone();
+  }}>{cursor < lines.length - 1 ? '다음' : doneLabel ?? (title === '이번 달 결과' ? game.event.id === 'p2_complete' ? '반기 결산 보기' : `${game.event.month}개월차 시작하기` : '계속하기')} →</button></div>{error && <p role="alert">{error}</p>}{videoOpen && <ShowcaseVideo characterId={game.character.profile_id ?? game.character.id} characterName={game.character.name} onDismiss={() => setVideoOpen(false)} onNext={() => {setVideoOpen(false); move(cursor + 1);}}/>}</>;
   if (line.speakerId === 'narrator' || (game.event.month === 4 && line.speakerId === 'reporter')) return <NarrationScene newcomerName={game.character.name} speaker={line.name} title={game.event.title} location={`${game.event.month}개월차 · ${stage ? '쇼케이스 무대' : game.event.month >= 4 ? '대표실' : game.event.scene}`} background={background} text={line.text} className="server-part-two">{cursor === lines.length - 1 && footer}{navigation}</NarrationScene>;
   return <Scene game={game} line={line} result={title === '이번 달 결과'} background={background} onTitle={onTitle} onRecords={onRecords}>
     <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><span>{title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{['baek_hayeon', 'secretary'].includes(line.speakerId) ? secretaryText(line.text, game.character.name) : line.text}</p></div>{cursor === lines.length - 1 && footer}</section>

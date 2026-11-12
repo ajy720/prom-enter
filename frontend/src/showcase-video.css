@@ -1,0 +1,22 @@
+.showcase-video-dialog { width: min(1120px, calc(100vw - 32px)); max-width: none; max-height: calc(100svh - 32px); padding: 20px; border: 1px solid var(--border); border-radius: 16px; color: var(--ink); background: white; animation: showcase-open .4s ease-out; }
+.showcase-video-dialog::backdrop { background: rgb(0 0 0 / .85); animation: showcase-dim .4s ease-out; }
+.showcase-video-heading, .showcase-video-dialog footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.showcase-video-heading { margin-bottom: 16px; }
+.showcase-video-heading p { margin: 0 0 4px; font-size: 11px; letter-spacing: .12em; color: var(--ink-muted); }
+.showcase-video-heading h2 { margin: 0; font-size: 21px; }
+.showcase-video-screen { position: relative; background: #000; }
+.showcase-video-screen video { display: block; width: 100%; aspect-ratio: auto 16 / 9; max-height: calc(100svh - 240px); object-fit: contain; }
+.showcase-video-screen.is-unstarted video { opacity: 0; }
+.showcase-video-play { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 80px; height: 80px; padding: 12px; border: 0; border-radius: 0; background: transparent; color: var(--pink); box-shadow: none; }
+.showcase-video-play svg { display: block; width: 48px; height: 56px; }
+.showcase-video-play:hover:not(:disabled) { background: transparent; color: var(--rose); }
+.showcase-video-dialog footer { margin-top: 16px; }
+.showcase-video-dialog footer p { margin: 0; font-size: 13px; color: var(--ink-muted); }
+.showcase-video-dialog.is-leaving { position: fixed; inset: 0; margin: 0; width: 100vw; height: 100svh; max-height: none; border: 0; border-radius: 0; padding: 24px; background: #000; color: #fff; animation: showcase-open .4s ease-out; }
+.showcase-video-bridge { height: 100%; display: grid; place-items: center; text-align: center; font-size: clamp(18px, 3vw, 28px); }
+.showcase-video-bridge p { animation: showcase-bridge 2.2s ease-in-out both; }
+@keyframes showcase-open { from { opacity: 0; } to { opacity: 1; } }
+@keyframes showcase-dim { from { background: transparent; } to { background: rgb(0 0 0 / .85); } }
+@keyframes showcase-bridge { 0%, 18% { opacity: 0; } 38%, 80% { opacity: 1; } 100% { opacity: 0; } }
+@media (max-width: 600px) { .showcase-video-dialog { padding: 14px; } .showcase-video-dialog footer { align-items: flex-end; } .showcase-video-heading h2 { font-size: 18px; } }
+@media (prefers-reduced-motion: reduce) { .showcase-video-dialog, .showcase-video-dialog::backdrop, .showcase-video-bridge p { animation: none; } }
