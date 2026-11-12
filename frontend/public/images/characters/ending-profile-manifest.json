@@ -1,0 +1,79 @@
+{
+  "source": "사용자 직접 첨부",
+  "verifiedOn": "2026-11-12",
+  "note": "첨부 원본과 기존 profile-2.png의 SHA-256이 모두 일치하여 원본을 재사용한다. 기존 WebP는 유지하고 없는 신입 WebP 세 장만 원본 해상도로 변환했다. 기존 출처 이력과 다른 화면의 사진 대응은 유지한다.",
+  "assets": [
+    {
+      "id": "hyerin",
+      "name": "이도",
+      "sourceFile": "이도_프로필2.png",
+      "path": "/images/characters/ido/profile-2.png",
+      "webPath": "/images/characters/ido/profile-2.webp",
+      "width": 1312,
+      "height": 1199,
+      "webWidth": 1312,
+      "webHeight": 1199,
+      "sha256": "9cae3e8d700e934443d13a564199ece84f43597f4e4b163767e21e85db46fe05"
+    },
+    {
+      "id": "seoyeon",
+      "name": "여울",
+      "sourceFile": "여울_프로필2.png",
+      "path": "/images/characters/yeoul/profile-2.png",
+      "webPath": "/images/characters/yeoul/profile-2.webp",
+      "width": 1312,
+      "height": 1199,
+      "webWidth": 1312,
+      "webHeight": 1199,
+      "sha256": "f03f90dda05f27c883d7b83152dbe201121073e1d6df8755ba4fc2574d0f0af2"
+    },
+    {
+      "id": "jiwoo",
+      "name": "사야",
+      "sourceFile": "사야_프로필2.png",
+      "path": "/images/characters/saya/profile-2.png",
+      "webPath": "/images/characters/saya/profile-2.webp",
+      "width": 1312,
+      "height": 1199,
+      "webWidth": 1312,
+      "webHeight": 1199,
+      "sha256": "e03ea3c6c492b8c178e91552191d7ba4c7d4d6a6961f081d5e35e9aa9e43685d"
+    },
+    {
+      "id": "dahyun",
+      "name": "리안",
+      "sourceFile": "리안_프로필2.png",
+      "path": "/images/characters/rian/profile-2.png",
+      "webPath": "/images/characters/rian/profile-2.webp",
+      "width": 1312,
+      "height": 1199,
+      "webWidth": 1050,
+      "webHeight": 960,
+      "sha256": "f2e2b473be0d715376cfd8b4721d24acf73d3937fc426e5164783281cb948737"
+    },
+    {
+      "id": "haram",
+      "name": "도하",
+      "sourceFile": "도하_프로필2.png",
+      "path": "/images/characters/doha/profile-2.png",
+      "webPath": "/images/characters/doha/profile-2.webp",
+      "width": 1312,
+      "height": 1199,
+      "webWidth": 1050,
+      "webHeight": 960,
+      "sha256": "2f4457a18ba85e939c8763a880bad26440b23597dfd8fa3a654ec7022761ed83"
+    },
+    {
+      "id": "yuna",
+      "name": "세인",
+      "sourceFile": "세인_프로필2.png",
+      "path": "/images/characters/sein/profile-2.png",
+      "webPath": "/images/characters/sein/profile-2.webp",
+      "width": 1312,
+      "height": 1199,
+      "webWidth": 1050,
+      "webHeight": 960,
+      "sha256": "c670f533afa077561f034190e96a3eb446b95e7b6ff32854e4acb41db15f63d2"
+    }
+  ]
+}

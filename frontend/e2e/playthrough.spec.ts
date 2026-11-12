@@ -500,9 +500,9 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   await storySelect(page, '그룹 활동을 마무리하고 싶다');
   const ending = await storyConfirm(page, '선택 확인 →', true);
   expect(ending.monthly_story.phase).toBe('flash');
-  await expect(page.locator('.part3-completion')).toBeVisible();
+  await expect(page.getByRole('region',{name:'엔딩',exact:true})).toBeVisible();
   await resume(page);
-  await expect(page.locator('.part3-completion')).toBeVisible();
+  await expect(page.getByRole('region',{name:'엔딩',exact:true})).toBeVisible();
   const saved = await (await page.request.get(`/api/games/${id}`)).json();
   expect(saved.game_id).toBe(id);
   expect(saved.character.name).toBe(selected);
