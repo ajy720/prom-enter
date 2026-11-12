@@ -1,3 +1,4 @@
+import { MonthlySidebar, monthlyDescriptions, serverMonthTasks } from './MonthlySidebar';
 import { monthEndGuide } from './monthEndGuide.ts';
 import { secretaryText } from './narrationText';
 import { useState, type ReactNode } from 'react';
@@ -33,10 +34,10 @@ function Scene({game, line, children, onTitle, onRecords, background = game.even
   const portrait = !['narrator','reporter','player'].includes(line.speakerId);
   return <section className={`interview-room candidate-interview interview-refined part-one-photos server-part-two ${result ? 'month-end-scene' : ''}`} aria-label={`${game.event.month}개월차 ${game.event.title}`} style={{backgroundImage:`url("${background}")`}}>
     {game.event.month >= 4 && <div className="scene-resource-status"><ResourceStatus compact fundsWon={game.stats.funds_won} month={game.event.month}/></div>}
-    <aside className="interview-info"><p className="section-kicker">PROM::ENTER · {game.event.month}개월차</p><h1>{game.event.title}</h1>
-      <dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(key => <div key={key}><dt>{labels[key]}</dt><dd>{(key === 'fans' && !game.completed_events.p2_m04_showcase) || (key === 'awareness' && game.event.month < 4) ? '-' : game.stats[key].toLocaleString()}</dd></div>)}</dl>
-      <button className="text-button" onClick={onRecords}>이번 달 대화 기록</button><button className="text-button" onClick={onTitle}>시작 화면</button>
-    </aside>
+    <MonthlySidebar month={game.event.month} title={game.event.title} description={monthlyDescriptions[game.event.month] ?? game.event.goal} stats={game.stats} fansAvailable={!!game.completed_events.p2_m04_showcase}
+      tasks={serverMonthTasks(game)}>
+      <button className="operation-button" onClick={onRecords}><span>이번 달 대화 기록</span><span aria-hidden="true">→</span></button><button className="quiet-button" onClick={onTitle}>← 시작 화면</button>
+    </MonthlySidebar>
     {portrait && <div className="interview-portrait"><PhotoSlot {...(background === sceneBackgrounds.stage && game.event.month === 4 && line.expression === 'surprised' ? showcaseMistakePhoto(line.speakerId) : dialoguePhoto(line.speakerId, line.expression))} name={line.name}/></div>}
     <div className="interview-dock">{children}</div>
   </section>;

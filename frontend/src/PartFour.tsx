@@ -1,3 +1,4 @@
+import { MonthlySidebar, monthlyDescriptions } from './MonthlySidebar';
 import { monthEndGuide } from './monthEndGuide.ts';
 import { secretaryText } from './narrationText';
 import { changeMonth } from './monthTransition';
@@ -150,7 +151,16 @@ export default function PartFour({session, server}:{
     :line.speaker==='narrator'&&s.phase!=='ending'?<NarrationScene newcomerName={s.newcomer.name} title={part4Titles[month]} location={`${month}개월차 · ${stage?'무대':'대표실'}`} background={background} text={line.text} className="part3-stage part4-stage"><button className="primary-button" disabled={locked} onClick={()=>run({type:'next'})}>{nextLabel} →</button></NarrationScene>
     :<section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage part3-stage part4-stage ${s.phase==='result'?'month-end-scene':''}`} aria-label={`${month}개월차 ${part4Titles[month]}`} style={{backgroundImage:`url("${sceneBackgrounds.office}")`}}>
       {!interviews&&s.phase!=='ending'&&<div className="scene-resource-status"><ResourceStatus compact fundsWon={s.stats.funds_won} month={month}/></div>}
-      <aside className="interview-info month-tasks"><p className="section-kicker">{month}개월차 · 대표실</p><h1>{part4Titles[month]}</h1><dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(k=><div key={k}><dt>{labels[k]}</dt><dd>{s.stats[k].toLocaleString()}{k==='fans'?<small>명</small>:<small> / 100</small>}</dd></div>)}</dl><p>목표 · {gameGoals.find(g=>g.id===s.goal)?.label??'선택 전'}</p>{s.route&&<p>{s.route==='overseas'?'해외':'국내'} 루트</p>}<button className="operation-button" onClick={()=>setModal('records')}>활동·면담 기록 보기 →</button></aside>
+      <MonthlySidebar month={month} title={part4Titles[month]} description={monthlyDescriptions[month]} stats={s.stats}
+        tasks={[
+          ...(month === 13 ? [{label:'신입 면담',done:part4Count(s,s.newcomer.id)>0},{label:`기록 조사 · ${s.evidence.length}/3개`,done:s.evidence.length===3}] : []),
+          ...(month === 19 ? [{label:`멤버 면담 · ${interviewMembers(s).filter(member=>part4Count(s,member.id)>0).length}/4명`,done:!missing.length}] : []),
+          ...(month === 20 && s.route === 'overseas' ? [{label:'백하연과 대응 상의',done:part4Count(s,'baek_hayeon')>=3}] : []),
+          {label:month===23?'멤버들의 마지막 인사':month===24?'재계약 의향 선택':'이번 달 활동 결정',done:month===23?s.cursor>=7:s.results[month]!=null},
+        ]}>
+        {s.goal && <p className="monthly-sidebar-context">목표 · {gameGoals.find(g=>g.id===s.goal)?.label}{s.route && ` · ${s.route==='overseas'?'해외':'국내'} 루트`}</p>}
+        <button className="operation-button" onClick={()=>setModal('records')}><span>활동·면담 기록 보기</span><span aria-hidden="true">→</span></button>
+      </MonthlySidebar>
       {s.phase!=='ending'&&<div className="interview-portrait"><PhotoSlot {...dialoguePhoto(line.speaker, line.expression)} name={line.name}/></div>}
       <div className="interview-dock">{s.phase==='ending'?<section className="part3-completion"><p className="section-kicker">ENDING</p><h2>{part4EndingCopy(s).title}</h2><p className="part4-ending-text">{part4EndingCopy(s).text}</p><dl className="month-summary"><div><dt>최종 자금 / 최초 자금</dt><dd>{amount('funds_won',s.stats.funds_won)} / 20.00억원</dd></div><div><dt>팀워크 · 인지도 · 팬</dt><dd>{s.stats.teamwork} · {s.stats.awareness} · {s.stats.fans.toLocaleString()}명</dd></div></dl></section>
       :<>{interviews&&month===19&&<nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{interviewMembers(s).map(m=><button key={m.id} aria-pressed={s.target===m.id} disabled={locked} onClick={()=>run({type:'target',id:m.id})}><strong>{m.name}</strong><small>{part4Count(s,m.id)}/8회</small></button>)}</nav>}
