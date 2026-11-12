@@ -1,0 +1,20 @@
+.interview-room > .monthly-sidebar { align-self: start; color: white; min-width: 0; }
+.interview-room > .monthly-sidebar > .section-kicker { color: white; font-size: 13px; font-weight: 600; letter-spacing: .03em; line-height: 1.6; margin: 0 0 8px; }
+.interview-room > .monthly-sidebar > h1 { font-size: 23px; font-weight: 600; line-height: 1.5; letter-spacing: 0; margin: 0 0 8px; word-break: keep-all; overflow-wrap: anywhere; }
+.interview-room > .monthly-sidebar > .monthly-sidebar-description { color: white; font-size: 13px; line-height: 1.8; margin: 0 0 16px; word-break: keep-all; }
+.monthly-sidebar .team-status-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.monthly-sidebar .team-status-value { display: flex; flex-direction: column; align-items: start; gap: 4px; padding: 0 0 8px; border-bottom: 1px solid rgb(255 255 255 / 30%); }
+.interview-room .monthly-sidebar .team-status-value > span { color: white; font-size: 11px; line-height: 1.6; word-break: keep-all; }
+.monthly-sidebar .team-status-value > strong { color: white; font-size: 23px; font-weight: 600; line-height: 1.5; white-space: nowrap; font-variant-numeric: tabular-nums; letter-spacing: -.03em; }
+.interview-room .monthly-sidebar > .month-checklist { display: block; padding: 0; margin: 16px 0; list-style: none; font-size: 12px; line-height: 2; word-break: keep-all; }
+.interview-room .monthly-sidebar > .operation-button { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; min-height: 48px; margin: 0; padding: 12px 0; border: 0; border-bottom: 1px solid rgb(255 255 255 / 30%); border-radius: 0; background: none; color: white; font-size: 13px; text-align: left; }
+@media (min-width: 1001px) {
+  #root .interview-room > aside.monthly-sidebar { width: 232px; flex: 0 0 232px; padding: 0; }
+}
+@media (max-width: 1000px) {
+  .interview-room > .monthly-sidebar { display: block; }
+  .interview-room .monthly-sidebar .team-status-values { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+}
+@media (max-width: 420px) {
+  .interview-room .monthly-sidebar .team-status-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

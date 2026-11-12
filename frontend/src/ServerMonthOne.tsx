@@ -1,3 +1,4 @@
+import { MonthlySidebar } from './MonthlySidebar';
 import { monthEndGuide } from './monthEndGuide';
 import { MonthEndDeltas } from './MonthEndDeltas';
 import { secretaryText } from './narrationText';
@@ -59,14 +60,11 @@ export function ServerMonthOne({ game, busy, pending, text, onTextChange, onSend
   if (!complete && opening.phase !== 'play') return <MonthlyOpening game={game} phase={opening.phase} onNext={opening.advance} disabled={busy || !!pending}/>;
 
   return <section className={`interview-room month-one month-photo-stage month-one-photos ${complete ? 'month-end-scene' : ''}`} aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
-    <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
-      <section className="team-status-summary" aria-label="팀 능력치"><div className="team-status-values">{([
-        ['팀워크', game.stats.teamwork], ['스트레스·피로도', game.stats.fatigue], ['인지도', '-'], ['팬 수', '-'],
-      ] as const).map(([label, value]) => <div className="team-status-value" key={label}><span>{label}</span><strong>{value.toLocaleString()}</strong></div>)}</div></section>
+    <MonthlySidebar month={1} title="같은 무대를 향해" description={`${candidate.name}의 팀 적응을 도와주세요.`} stats={game.stats}>
       <ol className="month-checklist"><li>{training ? `✓ 집중 훈련 · ${training.label}` : '○ 집중 훈련 선택'}</li><li>{discussed === 4 ? '✓' : '○'} 멤버 면담 · {discussed}/4명</li><li>{rule ? `✓ 합숙 규칙 · ${rule.label}` : '○ 합숙 규칙 선택'}</li></ol>
       <button className="operation-button" disabled={locked} onClick={() => void openActivity('training')}><span>{training ? '집중 훈련 변경' : '집중 훈련 선택'}</span><span aria-hidden="true">→</span></button>
       <button className="operation-button" disabled={locked} onClick={() => void openActivity('rule')}><span>{rule ? '합숙 규칙 변경' : '합숙 규칙 선택'}</span><span aria-hidden="true">→</span></button><button className="quiet-button" disabled={busy || !!pending} onClick={onTitle}>← 시작 화면</button>
-    </aside>
+    </MonthlySidebar>
     <div className="interview-portrait"><PhotoSlot {...dialoguePhoto(secretarySpeaking ? 'baek_hayeon' : portraitPerson.id, feedback?.speakerId ? undefined : displayed.expression)} name={secretarySpeaking ? '백하연' : portraitPerson.name}/></div>
     <div className="interview-dock">
       {!complete && <div className="month-people" aria-label="첫 달 대화 상대">{conversationTargets.map(person => <button key={person.id} aria-pressed={target?.id === person.id} disabled={locked} onClick={() => void onConversationChange(person.id)}>{person.name}<small>{`${monthOneInterviewCount(game,person.id)}/8회${hasMemberDiscussion(game,person.id) ? ' · 면담함' : ' · 면담 전'}`}</small></button>)}</div>}

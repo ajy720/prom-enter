@@ -7,7 +7,7 @@ import { Modal } from './Modal';
 import { ChatComposer } from './ChatComposer';
 import { PhotoSlot } from './PhotoSlot';
 import { useDialogueHistory } from './DialogueNavigation';
-import { TeamStatus } from './TeamStatus';
+import { MonthlySidebar } from './MonthlySidebar';
 import { debutMembers, characterPortraits, dialoguePhoto, sceneBackgrounds, type IntroCharacter } from './introContent';
 import type { CandidateId } from './interviewState';
 import { dormRules, monthQuestions, monthReply, trainingOptions } from './monthOneContent';
@@ -58,12 +58,10 @@ export function MonthOne({ candidate, nickname, state, onUpdate, onTitle, onCast
   return <div ref={viewportRef} className="prologue-shell">
     <header className="intro-topbar"><button className="text-button intro-brand" onClick={onTitle}>prom::enter.</button><span>Part 2 · 1개월차 · 어색한 첫 합숙</span></header>
     {introductory && displayed.speaker === '이야기' ? <NarrationScene newcomerName={candidate.name} title="어색한 첫 합숙" location="1개월차 · 연습실" background={sceneBackgrounds.practice} text={displayed.text}><div className="intro-navigation"><button className="primary-button" onClick={() => history.reviewing ? history.next() : onUpdate(current => ({...current,scene:current.scene+1}))}>다음 →</button></div></NarrationScene> : <section className={`interview-room month-one month-photo-stage month-one-photos ${state.completed ? 'month-end-scene' : ''}`} aria-label="1개월차 어색한 첫 합숙" style={{ backgroundImage: `url("${sceneBackgrounds.practice}")` }}>
-      <aside className="interview-info glass-panel month-tasks"><p className="section-kicker">PROMYOU · 첫 합숙</p><h1>같은 무대를 향해</h1><p>{candidate.name}의 팀 적응을 도와주세요.</p>
-
-        <TeamStatus/>
+      <MonthlySidebar month={1} title="같은 무대를 향해" description={`${candidate.name}의 팀 적응을 도와주세요.`} stats={{teamwork:40,fatigue:20,trust:0,awareness:0,fans:0,funds_won:2000000000}}>
         <ol className="month-checklist"><li>{state.training ? '✓' : '○'} 집중 훈련 {training?.label ?? '선택'}</li><li>{talked === 4 ? '✓' : '○'} 멤버 면담 {talked}/4</li><li>{state.rule ? '✓' : '○'} 합숙 규칙 정하기</li></ol>
         {!introductory && !state.completed && <><button className="operation-button" onClick={() => setMenu('training')}><span>집중 훈련 {training ? '변경' : '선택'}</span><span aria-hidden="true">→</span></button><button className="operation-button" onClick={() => setMenu('rule')}><span>합숙 규칙 {rule ? '변경' : '선택'}</span><span aria-hidden="true">→</span></button></>}
-      </aside>
+      </MonthlySidebar>
       <div className="interview-portrait"><PhotoSlot src={displayed.portrait} name={displayed.photoName} caption="반신 사진 자리"/></div>
       <div className="interview-dock">
         {!introductory && !state.completed && <div className="month-people" aria-label="대화 상대">{people.map(target => <button key={target.id} aria-pressed={speaker === target.id} onClick={() => { setSpeaker(target.id as MonthSpeaker); setText(''); }}>{target.name}<small>{target.id === 'newcomer' ? '신입' : hasDiscussion(state, target.id as MonthSpeaker) ? '면담 완료' : '면담 전'}</small></button>)}</div>}

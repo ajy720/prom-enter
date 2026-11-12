@@ -1,3 +1,5 @@
+import { MonthlySidebar, monthlyDescriptions } from './MonthlySidebar';
+import { EndingScene } from './EndingScene';
 import { secretaryText } from './narrationText';
 import { changeMonth } from './monthTransition';
 import { PlayModeInfo } from './PlayModeInfo';
@@ -161,19 +163,22 @@ export default function PartThree({ session, server }: {
     {session && <p className="six-demo-entry">현재 구간 · 임시 대사·브라우저 저장</p>}
     {(error || serverDraft.error) && <p className="error-banner" role="alert">{error || serverDraft.error}</p>}
     {modal !== 'confirm' && <StoryRequestError controls={controls}/>}{storageError && <p className="error-banner" role="alert">{storageError}</p>}
-    {!blocked && narration ? <NarrationScene newcomerName={save.newcomer.name} title={part3Titles[month]} location={`${month}개월차 · ${officeScene ? '대표실' : '무대'}`} background={officeScene ? sceneBackgrounds.office : sceneBackgrounds.stage} text={line.text} className="part3-stage">
+    {!blocked && save.phase === 'ending' ? <EndingScene title="잊혀진 그룹" text="반복된 어려움 속에서 그룹은 끝내 다시 일어설 기회를 얻지 못했다. 2~7개월차의 모든 사건이 실패 또는 거절로 끝나며, 멤버들은 무대에서 내려와 각자의 길을 준비했다. 한때 함께 꿈꾸었던 무대는 기록 속에 남았다." kind="sad" stats={save.stats} storageKey={`prom-ending-view:${save.sourceId ?? 'sample'}:early`} newcomer={save.newcomer} onTitle={() => { if (server) server.onTitle(); else if (session) session.onTitle(); else location.assign('/'); }}/>
+    : !blocked && narration ? <NarrationScene newcomerName={save.newcomer.name} title={part3Titles[month]} location={`${month}개월차 · ${officeScene ? '대표실' : '무대'}`} background={officeScene ? sceneBackgrounds.office : sceneBackgrounds.stage} text={line.text} className="part3-stage">
       <div className="monthly-buttons"><button className="primary-button" disabled={locked} onClick={next}>{save.phase === 'result' ? month === 7 && [2,3,4,5,6,7].every(m => save.results[m] === 'failure') ? '이야기 마무리' : `${month + 1}개월차로` : save.cursor < intro.length - 1 ? '다음' : month === 12 ? '반기 결산 마치기' : [7,10].includes(month) ? '면담 시작' : month === 11 ? '수상 소감 작성' : '선택하기'} →</button></div>
     </NarrationScene> : !blocked && <section className={`interview-room month-one month-photo-stage month-one-photos center-month six-demo-stage part3-stage ${save.phase === 'result' ? 'month-end-scene' : ''} ${narration ? 'part3-narration' : ''} ${month === 12 ? 'part3-awards' : ''} ${awardSpeech ? 'part3-award-speech' : ''}`} aria-label={`${month}개월차 ${part3Titles[month]}`} style={{ backgroundImage: `url("${officeScene ? sceneBackgrounds.office : sceneBackgrounds.stage}")` }}>
       {!interviews && !awardSpeech && <div className="scene-resource-status"><ResourceStatus compact fundsWon={save.stats.funds_won} month={month}/></div>}
-      <aside className="interview-info month-tasks"><p className="section-kicker">{month}개월차 · {officeScene ? '대표실' : '무대'}</p><h1>{part3Titles[month]}</h1>
-        <dl className="monthly-stats">{(['teamwork','fatigue','trust','awareness','fans'] as const).map(k => <div key={k}><dt>{labels[k]}</dt><dd>{save.stats[k].toLocaleString()}{k === 'fans' ? <small>명</small> : <small> / 100</small>}</dd></div>)}</dl>
+      <MonthlySidebar month={month} title={part3Titles[month]} description={monthlyDescriptions[month]} stats={save.stats}
+        tasks={[
+          ...([7,10].includes(month) ? [{label: `멤버 면담 · ${members.filter(member => part3Count(save,member.id) > 0 && (month === 10 || member.id === save.newcomer.id)).length}/${month === 7 ? 1 : 4}명`, done: !missing.length}] : []),
+          {label: ({7:'대응 방향 선택',8:'컨디션 관리 선택',9:'광고 제안 결정',10:'컴백 센터 선택',11:'수상 소감 작성',12:'첫해 결산 확인'} as Record<number,string>)[month], done: month === 12 ? save.phase === 'complete' : save.results[month] != null},
+        ]}>
         <button className="operation-button" onClick={() => setModal('records')}>활동·면담 기록 보기 →</button>
 
-      </aside>
+      </MonthlySidebar>
       {!narration && !['ending','complete'].includes(save.phase) && <div className="interview-portrait"><PhotoSlot {...(awardSpeech ? {src: awardPortraits[save.newcomer.id]} : dialoguePhoto(line.speaker, line.expression))} name={line.name}/></div>}
       <div className="interview-dock">
-        {save.phase === 'ending' ? <section className="part3-completion"><p className="section-kicker">ENDING</p><h2>잊혀진 그룹</h2><p>반복된 어려움 속에서 그룹은 끝내 다시 일어설 기회를 얻지 못했다. 2~7개월차의 모든 사건이 실패 또는 거절로 끝나며, 멤버들은 무대에서 내려와 각자의 길을 준비했다.</p><p>한때 함께 꿈꾸었던 무대는 기록 속에 남았다.</p></section>
-        : save.phase === 'complete' ? <section className="part3-completion"><p className="section-kicker">PART 3 COMPLETE</p><h2>우리의 첫해를 마치며</h2><p>{save.results[12] === 'success' ? '신인상 트로피와 함께 첫해의 활동을 마쳤습니다.' : '아쉬움과 다음 무대를 향한 약속을 남기며 첫해의 활동을 마쳤습니다.'}</p><p>이제 13~24개월차의 이야기로 이어집니다. 현재 신입과 스텟, 지난 기록을 그대로 이어갑니다.</p><button className="primary-button" disabled={locked} onClick={continuePartFour}>13개월차 · Part 4 시작 →</button></section>
+        {save.phase === 'complete' ? <section className="part3-completion"><p className="section-kicker">PART 3 COMPLETE</p><h2>우리의 첫해를 마치며</h2><p>{save.results[12] === 'success' ? '신인상 트로피와 함께 첫해의 활동을 마쳤습니다.' : '아쉬움과 다음 무대를 향한 약속을 남기며 첫해의 활동을 마쳤습니다.'}</p><p>이제 13~24개월차의 이야기로 이어집니다. 현재 신입과 스텟, 지난 기록을 그대로 이어갑니다.</p><button className="primary-button" disabled={locked} onClick={continuePartFour}>13개월차 · Part 4 시작 →</button></section>
         : <>
           {interviews && month === 10 && <nav className="month-people center-member-tabs" aria-label="이번 달 면담 상대">{members.map(m => <button key={m.id} aria-pressed={save.target === m.id} disabled={locked} onClick={async () => { if (await run({ type: 'target', id: m.id })) setText(''); }}><strong>{m.name}</strong><small>{part3Count(save,m.id)}/8회 · {part3Count(save,m.id) ? '면담함' : '면담 전'}</small></button>)}</nav>}
           <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2>{!server && save.phase !== 'result' && <span className="mode-label">프런트 데모</span>}</header><div className="dialogue-content" role="log" aria-live="polite"><p>{line.speaker === 'baek_hayeon' ? secretaryText(line.text, save.newcomer.name) : line.text}</p></div>{(save.phase === 'result' || (month === 12 && save.phase === 'intro' && save.cursor === intro.length - 1)) && (Object.keys(save.lastDelta).length ? <dl className="six-demo-deltas" aria-label="이번 달 스텟 변화">{Object.entries(save.lastDelta).map(([k,v]) => <div key={k}><dt>{labels[k as keyof Stats]}</dt><dd>{v! > 0 ? '+' : ''}{amount(k,v!)}</dd></div>)}</dl> : <p className="monthly-note">스텟 변화 없음</p>)}</section>
