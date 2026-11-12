@@ -124,8 +124,12 @@ async function monthTwo(page:Page,selected:string) {
 }
 async function sixMonths(page:Page,selected:string,failure=false) {
   await opening(page);
+  await expect(page.getByRole('textbox',{name:'공개 질책 중단 대화',exact:true})).toHaveCount(0);
+  await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
+  await expect(page.locator('.monthly-buttons > span')).toHaveText('3 / 3');
+  await shot(page,'reprimand-stop-button');
   await expect(page.locator('.monthly-stats > div').filter({has:page.locator('dt', {hasText:'인지도'})}).locator('dd')).toHaveText('-');
-  const stopped=await serverChat(page,'공개 질책 중단 대화','공개 질책을 중단해줘');
+  const stopped=await serverAction(page,()=>page.getByRole('button',{name:'공개질책 중단하기 →',exact:true}).click());
   expect(stopped.history.at(-1).messages.map((m:{speaker_id:string})=>m.speaker_id)).toEqual(['newcomer','yuna','secretary']);
   if (!failure) {
     await page.evaluate(({id,turnId})=>{const key=`prom-server-monthly:${id}:p2_m03_rehearsal:stop:${turnId}`;localStorage.setItem(key,'read');localStorage.setItem(key+':cursor','1');},{id:stopped.game_id,turnId:stopped.history.at(-1).id});

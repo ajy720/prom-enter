@@ -27,6 +27,25 @@ def test_arrival_is_sein_dialogue_not_narration_and_no_turn_is_fabricated(sessio
     assert response.status_code==422
 
 
+def test_stop_button_bypasses_analysis_and_can_retry_without_duplicate_effects(session, monkeypatch):
+    client, provider, game = month_three(session)
+
+    def unexpected_analysis(*args):
+        raise AssertionError('The stop button must not depend on model input analysis')
+
+    monkeypatch.setattr(provider, 'analyze', unexpected_analysis)
+    provider.fail = True
+    send(client, game, 'stop_reprimand', action=True, key='stop-button', status=502)
+    assert client.get(f"/api/games/{game['game_id']}").json() == game
+    provider.fail = False
+    result = send(client, game, 'stop_reprimand', action=True, key='stop-button')
+    assert result['rehearsal']['phase'] == 'interviews'
+    assert result['stats'] == game['stats']
+    assert result['history'][-1]['ai_trace']['analysis_calls'] == 0
+    assert [m['speaker_id'] for m in result['history'][-1]['messages']] == ['newcomer', 'yuna', 'secretary']
+    assert send(client, game, 'stop_reprimand', action=True, key='stop-button') == result
+
+
 @pytest.mark.parametrize('text',['공개 질책을 중단해줘','세인아, 공개적인 질책은 그만하고 각자 이야기를 듣자.','질책하지 마','그만해','멈춰',
     '그만하자','세인아 그만하고 각자 이야기하자','공개적으로 혼내지 마','공개적인 질책은 멈춰줘','이제 그만',
     '세인아, 그만하세요. 신입의 이야기도 들어보자.','질책을 하지 말자','멈추자. 한 명씩 면담하자',

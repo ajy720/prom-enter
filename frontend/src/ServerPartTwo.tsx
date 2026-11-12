@@ -40,14 +40,14 @@ function Scene({game, line, children, onTitle, onRecords, background = game.even
   </section>;
 }
 
-function Sequence({game, lines, storageKey, onDone, disabled, title, footer, onTitle, onRecords}: {game: Game; lines: Line[]; storageKey: string; onDone: () => void; disabled: boolean; title: string; footer?: ReactNode; onTitle: () => void; onRecords: () => void}) {
+function Sequence({game, lines, storageKey, onDone, disabled, title, footer, onTitle, onRecords, doneLabel}: {game: Game; lines: Line[]; storageKey: string; onDone: () => void; disabled: boolean; title: string; footer?: ReactNode; onTitle: () => void; onRecords: () => void; doneLabel?: string}) {
   const [cursor,setCursor] = useState(() => savedCursor(storageKey, lines.length));
   const [error,setError] = useState('');
   const line = lines[cursor];
   function move(index: number) { try { localStorage.setItem(storageKey + ':cursor', String(index)); setCursor(index); setError(''); } catch { setError('읽은 위치를 저장하지 못했습니다. 다시 시도해주세요.'); } }
   const stage = game.event.month === 4 && storageKey.endsWith(':opening') && !lines.slice(0,cursor + 1).some(item => item.speakerId === 'baek_hayeon');
   const background = stage ? sceneBackgrounds.stage : game.event.month >= 4 ? sceneBackgrounds.office : sceneBackgrounds.practice;
-  const navigation = <><div className="monthly-buttons"><button className="text-button" disabled={disabled || cursor === 0} onClick={() => move(cursor - 1)}>이전</button><span>{cursor + 1} / {lines.length}</span><button className="primary-button" disabled={disabled} onClick={() => cursor < lines.length - 1 ? move(cursor + 1) : onDone()}>{cursor < lines.length - 1 ? '다음' : title === '이번 달 결과' ? game.event.id === 'p2_complete' ? '반기 결산 보기' : `${game.event.month}개월차 시작하기` : '계속하기'} →</button></div>{error && <p role="alert">{error}</p>}</>;
+  const navigation = <><div className="monthly-buttons"><button className="text-button" disabled={disabled || cursor === 0} onClick={() => move(cursor - 1)}>이전</button><span>{cursor + 1} / {lines.length}</span><button className="primary-button" disabled={disabled} onClick={() => cursor < lines.length - 1 ? move(cursor + 1) : onDone()}>{cursor < lines.length - 1 ? '다음' : doneLabel ?? (title === '이번 달 결과' ? game.event.id === 'p2_complete' ? '반기 결산 보기' : `${game.event.month}개월차 시작하기` : '계속하기')} →</button></div>{error && <p role="alert">{error}</p>}</>;
   if (line.speakerId === 'narrator' || (game.event.month === 4 && line.speakerId === 'reporter')) return <NarrationScene newcomerName={game.character.name} speaker={line.name} title={game.event.title} location={`${game.event.month}개월차 · ${stage ? '쇼케이스 무대' : game.event.month >= 4 ? '대표실' : game.event.scene}`} background={background} text={line.text} className="server-part-two">{cursor === lines.length - 1 && footer}{navigation}</NarrationScene>;
   return <Scene game={game} line={line} background={background} onTitle={onTitle} onRecords={onRecords}>
     <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><span>{title}</span></header><div className="dialogue-content" role="log" aria-live="polite"><p>{['baek_hayeon', 'secretary'].includes(line.speakerId) ? secretaryText(line.text, game.character.name) : line.text}</p></div></section>
@@ -111,8 +111,11 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
     const lines = [...(boundary.month_completion?.reason === 'limit' ? messageLines(game,boundary).filter(item => item.speakerId !== 'baek_hayeon') : []),
       {speakerId:'narrator',name:'나레이션',text:boundary.result_narration ?? boundary.facts.join(' ')}];
     content = <Sequence key={resultKey} {...shared} lines={lines} storageKey={resultKey} disabled={locked} title="이번 달 결과" onDone={() => acknowledge(resultKey, () => setResultRead(true))} footer={<><p>{boundary.outcome === 'success' ? '성공' : '실패'}</p><Delta delta={boundary.stat_delta}/></>}/>;
-  } else if (!complete && !openingRead && openingLines.length) {
-    content = <Sequence key={prefix + ':opening'} {...shared} lines={openingLines} storageKey={prefix + ':opening'} disabled={locked} title="이번 달 이야기" onDone={() => acknowledge(prefix + ':opening', () => setOpeningRead(true))}/>;
+  } else if (!complete && (!openingRead || isReprimand) && !stopped && openingLines.length) {
+    content = <Sequence key={prefix + ':opening'} {...shared} lines={openingLines} storageKey={prefix + ':opening'} disabled={locked} title="이번 달 이야기" doneLabel={isReprimand ? '공개질책 중단하기' : undefined} onDone={async () => {
+      if (isReprimand && !await onSend('stop_reprimand')) return;
+      acknowledge(prefix + ':opening', () => setOpeningRead(true));
+    }}/>;
   } else if (stopped && !stopRead) {
     content = <Sequence key={stopKey} {...shared} lines={messageLines(game,stopped)} storageKey={stopKey} disabled={locked} title="질책 중단 후 대화" onDone={() => acknowledge(stopKey, () => setStopRead(true))}/>;
   } else if (complete) {
@@ -121,7 +124,7 @@ export function ServerPartTwo({game, busy, pending, text, onTextChange, onSend, 
     content = <Scene {...shared} line={line}>
       {status && <nav className="month-people center-people center-member-tabs" aria-label={`${month}개월차 면담 상대`}>{status.members.map(person => <button key={person.character_id} disabled={locked} aria-pressed={targetId === person.character_id} onClick={() => void onConversationChange(person.character_id)}><strong>{person.name}</strong><small>{person.turn_count}/{status.turn_limit}회{person.completed ? ' · 완료' : ''}</small></button>)}</nav>}
       <section className="dialogue-box"><header className="dialogue-header"><h2>{line.name}</h2><button className="text-button" onClick={() => setRecords(true)}>대화 기록</button></header><div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{feedback ? <PendingResponse feedback={feedback}/> : <p>{['baek_hayeon', 'secretary'].includes(line.speakerId) ? secretaryText(line.text, game.character.name) : line.text}</p>}</div></section>
-      {(!status || (member && !member.completed)) && <ChatComposer id="server-monthly-message" label={isReprimand ? '공개 질책 중단 대화' : status ? `${month}개월차 면담` : '백하연과 대화'} text={text} placeholder={isReprimand ? '공개 질책을 멈추도록 이야기하기' : status ? `${member?.name}에게 이야기하기` : '백하연에게 이야기하기'} disabled={locked} onTextChange={onTextChange} onSend={() => onSend()} suggestions={isReprimand ? ['세인아, 공개적인 질책은 그만하고 각자 이야기를 듣자.'] : status ? month === 2 ? ['센터를 정할 때 어떤 점을 고려하면 좋을까?'] : ['방금 어떤 마음이었는지 이야기해줄래?'] : month === 6 ? ['신입을 예능에 출연시켜줘.', '다른 멤버를 대신 출연시켜줘.'] : ['현재 상황에서 어떤 점을 고려하면 좋을까?']}/>}
+      {!isReprimand && (!status || (member && !member.completed)) && <ChatComposer id="server-monthly-message" label={status ? `${month}개월차 면담` : '백하연과 대화'} text={text} placeholder={status ? `${member?.name}에게 이야기하기` : '백하연에게 이야기하기'} disabled={locked} onTextChange={onTextChange} onSend={() => onSend()} suggestions={status ? month === 2 ? ['센터를 정할 때 어떤 점을 고려하면 좋을까?'] : ['방금 어떤 마음이었는지 이야기해줄래?'] : month === 6 ? ['신입을 예능에 출연시켜줘.', '다른 멤버를 대신 출연시켜줘.'] : ['현재 상황에서 어떤 점을 고려하면 좋을까?']}/>}
       {status && <div className="monthly-buttons"><p className="monthly-note">멤버별 최소 1회 · 최대 8회 면담{!status.can_finish && ' · 아직 면담하지 않은 멤버가 있습니다.'}</p><button className="primary-button" disabled={locked || !status.can_finish} onClick={() => void onSend(month === 2 ? 'finish_center_interviews' : 'mediate_rehearsal')}>면담 완료</button></div>}
       {last && <Delta delta={last.stat_delta}/>}
       {month === 4 && <div className="month-options" aria-label="쇼케이스 대응 선택">{game.event.actions.map(action => <button key={action.id} disabled={locked} onClick={() => setChoice(action)}><strong>{action.label}</strong><span>{action.id === 'encourage_newcomer' ? '멤버의 마음을 살피고 용기를 북돋습니다.' : action.id === 'request_member_support' ? '멤버들이 서로를 지지하도록 요청합니다.' : action.id === 'respond_press' ? '기사에 대한 공식 대응을 준비합니다.' : '무대에서 사과하며 현장 분위기를 풀어갑니다.'}</span></button>)}</div>}

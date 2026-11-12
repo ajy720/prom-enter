@@ -72,9 +72,10 @@ export function ServerRehearsal({ game, busy, pending, text, onTextChange, onSen
         <div className="dialogue-content" role="log" aria-live="polite" aria-busy={busy}>{feedback ? <PendingResponse feedback={feedback}/> : <p>{['baek_hayeon','secretary'].includes(speakerId) ? secretaryText(displayed.text, game.character.name) : displayed.text}</p>}</div>
         {!interviewing && <DialogueNavigation index={index} count={frames.length} onPrevious={() => read(Math.max(0,index - 1))} onNext={() => read(Math.min(frames.length - 1,index + 1))} onLatest={() => read(frames.length - 1)} disabled={locked}/>}
       </section>
-      <ChatComposer id="rehearsal-message" label={interviewing ? '리허설 면담 대화' : '공개 질책 중단 대화'} text={text} disabled={locked || reviewing} onTextChange={onTextChange} onSend={() => onSend()}
-        placeholder={interviewing ? `${target?.name ?? '멤버'}에게 이야기하기` : '공개 질책을 멈추도록 이야기하기'}
-        suggestions={interviewing ? ['방금 어떤 마음이었는지 이야기해줄래?', '앞으로 함께 연습하려면 어떤 도움이 필요할까?'] : ['세인아, 공개적인 질책은 그만하고 각자 이야기를 듣자.']}/>
+      {interviewing ? <ChatComposer id="rehearsal-message" label="리허설 면담 대화" text={text} disabled={locked || reviewing} onTextChange={onTextChange} onSend={() => onSend()}
+        placeholder={`${target?.name ?? '멤버'}에게 이야기하기`}
+        suggestions={['방금 어떤 마음이었는지 이야기해줄래?', '앞으로 함께 연습하려면 어떤 도움이 필요할까?']}/>
+        : <button className="primary-button" disabled={locked || reviewing} onClick={() => void onSend('stop_reprimand')}>공개 질책 중단하기</button>}
       {interviewing && <div className="monthly-buttons"><button className="primary-button" disabled={locked || !finish} onClick={() => void confirmFinish()}>면담 마무리·리허설 진행 →</button></div>}
     </div>
     <Modal open={records} title="3개월차 면담 기록" className="records-modal" onClose={() => setRecords(false)}>{records && <MonthlyInterviewRecords game={game}/>}</Modal>
