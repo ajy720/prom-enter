@@ -3,6 +3,7 @@ import re
 from app.member_text import member_reference
 from app.models import Analysis, Assessment, Dialogue, Message
 from app.ai.routing import offline_intent
+from app.game import rehearsal
 
 MONTH_ONE_COMPLETION_MESSAGE = '대표님, 첫 달 계획을 정리했습니다. 정해주신 방향에 맞춰 멤버들의 훈련과 합숙 생활을 챙기겠습니다. 모두가 조금씩 호흡을 맞춰갈 수 있도록 저도 곁에서 돕겠습니다.'
 
@@ -322,11 +323,11 @@ class DemoProvider:
             body='아직 서로 어색해서 그래요. 제가 먼저 말을 걸어볼게요. 힘든 건 혼자 참지 않았으면 좋겠어요!'
         else:
             body='저…… 아직 조금 걱정되지만, 말씀은 기억할게요.' if direction.openness == 'guarded' else '대표님, 이번에는 제 생각도 말씀드리고 싶어요.'
-        if actor.get('result_event_id') == 'p2_m03_rehearsal' and any('공개 질책을 중단했습니다.' in fact for fact in facts):
+        if actor.get('result_event_id') == rehearsal.EVENT and any('공개 질책을 중단했습니다.' in fact for fact in facts):
             if profile['id'] == 'yuna':
-                body = '네, 대표님. 여기서 그만할게요. 제 말이 날카로웠어요. 면담에서 차분히 이야기하겠습니다.'
+                body = rehearsal.STOP_REPLIES['yuna']
             elif 'newcomer' in actor.get('allowed_speakers', []):
-                body = '대표님, 멈춰주셔서 감사해요. 조금 진정하고 면담에서 제 이야기도 말씀드릴게요.'
+                body = rehearsal.STOP_REPLIES['newcomer']
         if direction.emotion == 'tired' and not clarification:
             body='조금 지쳤어요. 잠깐 숨을 돌려도 될까요?'
         promises=[m['text'] for m in actor['memories'] if m['kind']=='promise' and m['text']!=text]
