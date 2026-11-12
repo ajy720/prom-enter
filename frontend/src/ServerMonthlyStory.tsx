@@ -53,7 +53,7 @@ function part3View(game: Game): Part3Save {
       : month === 10 ? `${part3Members(save).find(member => member.id === choice)?.name} 센터 선택`
       : `수상 소감 작성 완료\n${save.speech}`;
     save.records.push({month, name: '대표님', text: label ?? '', kind: 'choice'});
-    save.records.push({month, name: '나레이션', text: part3Result({...scene, records: save.records}), kind: 'result'});
+    save.records.push({month, name: '백하연', text: part3Result({...scene, records: save.records}), kind: 'result'});
   }
   return save;
 }
@@ -98,7 +98,7 @@ function part4View(game: Game): Part4Save {
     const result = results[month];
     if (result) {
       const text = part4ResultText(month, result, save.route, decision.choices.choice, decision.reasons);
-      save.records.push({month, name: '나레이션', text, kind: 'result'});
+      save.records.push({month, name: '백하연', text, kind: 'result'});
       if (month === save.month) save.resultText = text;
     }
   }

@@ -19,7 +19,7 @@ async function read(page:Page) {
 }
 async function select(page:Page,name:string) {await page.getByRole('button',{name}).click();}
 async function confirm(page:Page) {await page.getByRole('button',{name:'선택 확인 →',exact:true}).click();await page.getByRole('dialog',{name:'이번 달 결정 확인'}).getByRole('button',{name:'결정 확정',exact:true}).click();}
-async function nextMonth(page:Page) {await page.locator('.narration-scene > .monthly-intro-copy > .primary-button').click();await read(page);}
+async function nextMonth(page:Page) {await page.locator('.month-end-scene .dialogue-box > .primary-button').click();await read(page);}
 async function interviews(page:Page) {
   const s=await state(page);
   for(const member of [s.newcomer,{id:'dahyun',name:'리안'},{id:'haram',name:'도하'},{id:'yuna',name:'세인'}]) {

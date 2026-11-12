@@ -117,7 +117,7 @@ async function monthOne(page:Page,selected:string) {
   await shot(page,'month-one');
   await page.getByRole('button',{name:/첫 달 계획 확인/}).click();
   await serverAction(page,()=>page.getByRole('button',{name:'첫 달 계획 확정',exact:true}).click());
-  await resume(page); await expect(page.getByRole('heading',{name:'프로뮤의 첫걸음을 준비했어요.'})).toBeVisible();
+  await resume(page); await expect(page.getByRole('region',{name:'1개월차 완료'}).getByRole('heading',{name:'백하연',exact:true})).toBeVisible();
   await serverAction(page,()=>page.getByRole('button',{name:/2개월차로/}).click());
 }
 async function monthTwo(page:Page,selected:string) {
@@ -198,7 +198,9 @@ async function sixMonths(page:Page,selected:string,failure=false) {
   const result=await serverChat(page,'백하연과 대화','신입 출연시켜줘');
   expect(result.event.id).toBe('p2_complete');
   expect(result.completed_events.p2_m06_variety).toBe(failure?'failure':'success');
-  await expect(page.getByRole('log')).toContainText(failure?'악플':'인지도');
+  await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
+  await expect(page.getByRole('log')).toContainText(failure?'아쉬웠던 부분':'좋은 반응');
+  await expect(page.locator('.dialogue-box')).not.toContainText(/성공|실패/);
   await opening(page);
   const next = await serverAction(page,()=>page.getByRole('button',{name:'7개월차로 →',exact:true}).click());
   expect(next.event.id).toBe('p2_m07');
@@ -367,6 +369,9 @@ test('데모 화면 그대로 첫 화면부터 24개월 결말까지 같은 서�
   await expect(page.getByRole('dialog',{name:'컨디션 관리',exact:true})).toBeVisible();
   await storySelect(page, /^휴가 제공/);
   await storyConfirm(page, '선택 확인 →');
+  await expect(page.locator('.dialogue-header h2')).toHaveText('백하연');
+  await expect(page.locator('.dialogue-box')).not.toContainText(/성공|실패|판정/);
+  await shot(page, 'month-eight-guide');
   await storyStep(page, '9개월차로 →');
   for (let i = 0; i < 3; i++) await storyStep(page, '다음 →');
   await storyStep(page, '선택하기 →');
@@ -534,7 +539,7 @@ test('로컬 수상 성공: 소감 원문·트로피·반기 정리 순서와 �
   await expect(page.getByRole('log')).toContainText('스페셜 무대');
   await page.getByRole('button',{name:'다음 →',exact:true}).click();
   await expect(page.getByRole('log')).toContainText('트로피를 진열장에 하나 더 추가'); await shot(page,'trophy');
-  await page.getByRole('button',{name:'다음 →',exact:true}).click(); await expect(page.getByRole('log')).toContainText('지난 반기를 정리');
+  await page.getByRole('button',{name:'다음 →',exact:true}).click(); await expect(page.getByRole('log')).toContainText('다음 무대를 준비');
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('prom-playthrough-v2:e2e_award')!).part3.stats)).toEqual(before);
 });
 test('로컬 전 사건 실패 엔딩과 이어하기',async({page})=>{
